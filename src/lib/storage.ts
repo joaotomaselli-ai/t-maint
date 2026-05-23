@@ -65,8 +65,8 @@ export function getSettings(): Settings {
   if (!isBrowser()) return { companyName: "", technicianName: "" };
   try {
     return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") ||
-      { companyName: "Tech CNC Manutenção", technicianName: "" };
-  } catch { return { companyName: "Tech CNC Manutenção", technicianName: "" }; }
+      { companyName: "Tomaselli CNC", technicianName: "" };
+  } catch { return { companyName: "Tomaselli CNC", technicianName: "" }; }
 }
 export function saveSettings(s: Settings) {
   if (!isBrowser()) return;
