@@ -77,8 +77,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Tomaselli CNC — Gestão de Manutenção" },
       { name: "description", content: "Registro profissional de atividades de manutenção CNC, controle de horas, deslocamento e geração de relatórios por cliente." },
       { property: "og:title", content: "Tomaselli CNC — Gestão de Manutenção" },
-      { property: "og:description", content: "Registro de atividades, horas e quilometragem com relatórios por cliente." },
+      { property: "og:description", content: "Registro profissional de atividades de manutenção CNC, controle de horas, deslocamento e geração de relatórios por cliente." },
       { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Tomaselli CNC — Gestão de Manutenção" },
+      { name: "twitter:description", content: "Registro profissional de atividades de manutenção CNC, controle de horas, deslocamento e geração de relatórios por cliente." },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [
       {
