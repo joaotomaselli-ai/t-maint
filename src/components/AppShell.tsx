@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2 } from "lucide-react";
+import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2, HardHat } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 const nav = [
   { to: "/", label: "Painel", icon: LayoutDashboard },
   { to: "/clientes", label: "Clientes", icon: Users },
+  { to: "/tecnicos", label: "Técnicos", icon: HardHat },
   { to: "/atividades", label: "Atividades", icon: Wrench },
   { to: "/relatorios", label: "Relatórios", icon: FileText },
   { to: "/configuracoes", label: "Configurações", icon: SettingsIcon },
