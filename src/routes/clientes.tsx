@@ -80,13 +80,19 @@ function Clientes() {
                   <Input type="number" step="0.01" value={editing.kmRate || ""} onChange={e => setEditing({ ...editing, kmRate: Number(e.target.value) })} placeholder="2,50" />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>CNPJ</Label>
+                  <Input value={editing.cnpj || ""} onChange={e => setEditing({ ...editing, cnpj: e.target.value })} placeholder="00.000.000/0000-00" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Telefone</Label>
+                  <Input value={editing.phone || ""} onChange={e => setEditing({ ...editing, phone: e.target.value })} placeholder="(00) 00000-0000" />
+                </div>
+              </div>
               <div className="grid gap-2">
                 <Label>Endereço</Label>
                 <Input value={editing.address || ""} onChange={e => setEditing({ ...editing, address: e.target.value })} placeholder="Rua, número, cidade" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Contato</Label>
-                <Input value={editing.contact || ""} onChange={e => setEditing({ ...editing, contact: e.target.value })} placeholder="Telefone ou e-mail" />
               </div>
             </div>
             <DialogFooter>
