@@ -13,7 +13,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/clientes")({ component: Clientes });
 
 type Editing = Omit<Client, "id"> & { id?: string };
-const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, address: "", contact: "" });
+const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, cnpj: "", phone: "", address: "" });
 
 function Clientes() {
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients();
