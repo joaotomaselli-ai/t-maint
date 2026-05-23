@@ -42,14 +42,13 @@ export type Settings = {
   logoUrl?: string;
 };
 
-// ----- mappers -----
 const fromClient = (r: any): Client => ({
   id: r.id, name: r.name,
   hourlyRate: Number(r.hourly_rate), kmRate: Number(r.km_rate),
   address: r.address ?? "", contact: r.contact ?? "",
 });
 
-const toClient = (c: Partial<Client>) => ({
+const toClientRow = (c: Omit<Client, "id">) => ({
   name: c.name,
   hourly_rate: c.hourlyRate ?? 0,
   km_rate: c.kmRate ?? 0,
@@ -79,7 +78,7 @@ const fromReport = (r: any): ServiceReport => ({
   createdAt: r.created_at,
 });
 
-const toReport = (r: Partial<ServiceReport>) => ({
+const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
   order_number: r.orderNumber ?? "",
   client_id: r.clientId,
   date: r.date,
@@ -108,7 +107,6 @@ const fromProfile = (r: any): Settings => ({
   logoUrl: r.logo_url ?? "",
 });
 
-// ----- clients -----
 export async function listClients(): Promise<Client[]> {
   const { data, error } = await supabase.from("clients").select("*").order("name");
   if (error) throw error;
@@ -116,13 +114,13 @@ export async function listClients(): Promise<Client[]> {
 }
 export async function createClient(c: Omit<Client, "id">, userId: string): Promise<Client> {
   const { data, error } = await supabase.from("clients")
-    .insert({ ...toClient(c), user_id: userId }).select().single();
+    .insert({ ...toClientRow(c), user_id: userId }).select().single();
   if (error) throw error;
   return fromClient(data);
 }
 export async function updateClient(c: Client): Promise<Client> {
   const { data, error } = await supabase.from("clients")
-    .update(toClient(c)).eq("id", c.id).select().single();
+    .update(toClientRow(c)).eq("id", c.id).select().single();
   if (error) throw error;
   return fromClient(data);
 }
@@ -131,7 +129,6 @@ export async function deleteClient(id: string): Promise<void> {
   if (error) throw error;
 }
 
-// ----- reports -----
 export async function listReports(): Promise<ServiceReport[]> {
   const { data, error } = await supabase.from("service_reports").select("*").order("date", { ascending: false });
   if (error) throw error;
@@ -139,13 +136,13 @@ export async function listReports(): Promise<ServiceReport[]> {
 }
 export async function createReport(r: Omit<ServiceReport, "id" | "createdAt">, userId: string): Promise<ServiceReport> {
   const { data, error } = await supabase.from("service_reports")
-    .insert({ ...toReport(r), user_id: userId }).select().single();
+    .insert({ ...toReportRow(r), user_id: userId }).select().single();
   if (error) throw error;
   return fromReport(data);
 }
 export async function updateReport(r: ServiceReport): Promise<ServiceReport> {
   const { data, error } = await supabase.from("service_reports")
-    .update(toReport(r)).eq("id", r.id).select().single();
+    .update(toReportRow(r)).eq("id", r.id).select().single();
   if (error) throw error;
   return fromReport(data);
 }
@@ -154,7 +151,6 @@ export async function deleteReport(id: string): Promise<void> {
   if (error) throw error;
 }
 
-// ----- profile / settings -----
 export async function getProfile(userId: string): Promise<Settings> {
   const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
   if (error) throw error;
@@ -175,7 +171,6 @@ export async function upsertProfile(userId: string, s: Settings): Promise<Settin
   return fromProfile(data);
 }
 
-// ----- helpers (calculation) -----
 export function diffHours(start: string, end: string): number {
   if (!start || !end) return 0;
   const [sh, sm] = start.split(":").map(Number);
