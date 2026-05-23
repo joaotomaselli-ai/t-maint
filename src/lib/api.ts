@@ -163,6 +163,28 @@ export async function deleteClient(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function listTechnicians(): Promise<Technician[]> {
+  const { data, error } = await supabase.from("technicians").select("*").order("name");
+  if (error) throw error;
+  return (data ?? []).map(fromTechnician);
+}
+export async function createTechnician(t: Omit<Technician, "id">, userId: string): Promise<Technician> {
+  const { data, error } = await supabase.from("technicians")
+    .insert({ ...toTechnicianRow(t), user_id: userId }).select().single();
+  if (error) throw error;
+  return fromTechnician(data);
+}
+export async function updateTechnician(t: Technician): Promise<Technician> {
+  const { data, error } = await supabase.from("technicians")
+    .update(toTechnicianRow(t)).eq("id", t.id).select().single();
+  if (error) throw error;
+  return fromTechnician(data);
+}
+export async function deleteTechnician(id: string): Promise<void> {
+  const { error } = await supabase.from("technicians").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function listReports(): Promise<ServiceReport[]> {
   const { data, error } = await supabase.from("service_reports").select("*").order("date", { ascending: false });
   if (error) throw error;
