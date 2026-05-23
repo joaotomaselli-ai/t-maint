@@ -29,7 +29,7 @@ function Configuracoes() {
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
             <Label>Nome da empresa</Label>
-            <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Ex: Tech CNC Manutenção Industrial" />
+            <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Ex: Tomaselli CNC" />
           </div>
           <div className="grid gap-2">
             <Label>Nome do técnico</Label>

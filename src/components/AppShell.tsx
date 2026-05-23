@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Cog className="h-5 w-5" />
           </div>
           <div>
-            <div className="font-bold text-base leading-tight">CNC Service</div>
+            <div className="font-bold text-base leading-tight">Tomaselli CNC</div>
             <div className="text-xs text-sidebar-foreground/60">Gestão de Manutenção</div>
           </div>
         </div>
@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <Cog className="h-5 w-5" />
-            <span className="font-bold">CNC Service</span>
+            <span className="font-bold">Tomaselli CNC</span>
           </div>
         </div>
         <nav className="flex overflow-x-auto px-2 pb-2 gap-1">
