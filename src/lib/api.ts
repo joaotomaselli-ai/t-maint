@@ -42,6 +42,8 @@ export type ServiceReport = {
   km: number;
   observation?: string;
   technician: string;
+  overtimeWeekdayHours: number;
+  overtimeWeekendHours: number;
   createdAt: string;
 };
 
