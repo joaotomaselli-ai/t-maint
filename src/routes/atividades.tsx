@@ -213,13 +213,16 @@ function Atividades() {
   );
 }
 
-function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSave }: {
+function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, technicians, onSave }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   editing: Editing; setEditing: (e: Editing) => void;
-  clients: Client[]; onSave: () => void;
+  clients: Client[]; technicians: Technician[]; onSave: () => void;
 }) {
   const client = clients.find((c) => c.id === editing.clientId);
+  const technician = technicians.find((tc) => tc.name === editing.technician);
   const t = reportTotals(editing as ServiceReport, client);
+  const tt = technicianTotals(editing as ServiceReport, technician);
+  const profit = t.hoursValue - tt.hoursValue;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -255,7 +258,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSa
               <Input value={editing.machine} onChange={e => setEditing({ ...editing, machine: e.target.value })} placeholder="Ex: Fresa CNC, Torno Convencional" />
             </div>
             <div className="grid gap-2">
-              <Label>Solicitante</Label>
+              <Label>Solicitante *</Label>
               <Input value={editing.requester} onChange={e => setEditing({ ...editing, requester: e.target.value })} placeholder="Nome do responsável" />
             </div>
             <div className="grid gap-2">
@@ -296,8 +299,25 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSa
                 <Input type="number" step="1" value={editing.km || ""} onChange={e => setEditing({ ...editing, km: Number(e.target.value) })} placeholder="50" />
               </div>
               <div className="grid gap-2">
-                <Label>Técnico</Label>
-                <Input value={editing.technician} onChange={e => setEditing({ ...editing, technician: e.target.value })} />
+                <Label>Técnico *</Label>
+                <Select value={editing.technician} onValueChange={(v) => setEditing({ ...editing, technician: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {technicians.map((tc) => <SelectItem key={tc.id} value={tc.name}>{tc.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label>Horas especiais durante a semana</Label>
+                <Input type="number" step="0.5" min="0" value={editing.overtimeWeekdayHours || ""}
+                  onChange={e => setEditing({ ...editing, overtimeWeekdayHours: Number(e.target.value) })} placeholder="0" />
+              </div>
+              <div className="grid gap-2">
+                <Label>Horas especiais no final de semana</Label>
+                <Input type="number" step="0.5" min="0" value={editing.overtimeWeekendHours || ""}
+                  onChange={e => setEditing({ ...editing, overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
               </div>
             </div>
           </section>
@@ -307,14 +327,43 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSa
             <Textarea rows={2} value={editing.observation || ""} onChange={e => setEditing({ ...editing, observation: e.target.value })} />
           </div>
 
-          {client && (
+          {(client || technician) && (
             <Card className="bg-primary/5 border-primary/20">
               <CardHeader className="pb-2"><CardTitle className="text-base">Apuração</CardTitle></CardHeader>
-              <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                <div><div className="text-muted-foreground text-xs">Horas totais</div><div className="font-semibold">{fmtHours(t.totalHours)}</div></div>
-                <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{fmtCurrency(t.hoursValue)}</div></div>
-                <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{fmtCurrency(t.kmValue)}</div></div>
-                <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg text-primary">{fmtCurrency(t.total)}</div></div>
+              <CardContent className="space-y-4 text-sm">
+                {client && (
+                  <div>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">A receber do cliente</div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div><div className="text-muted-foreground text-xs">Horas totais</div><div className="font-semibold">{fmtHours(t.totalHours)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{fmtCurrency(t.hoursValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{fmtCurrency(t.kmValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg text-primary">{fmtCurrency(t.total)}</div></div>
+                    </div>
+                  </div>
+                )}
+                {technician && (
+                  <div className="pt-3 border-t border-primary/20">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">A repassar para o técnico</div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div><div className="text-muted-foreground text-xs">Horas totais</div><div className="font-semibold">{fmtHours(tt.totalHours)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{fmtCurrency(tt.hoursValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{fmtCurrency(tt.kmValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg">{fmtCurrency(tt.total)}</div></div>
+                    </div>
+                    {(tt.ovtWk > 0 || tt.ovtWe > 0) && (
+                      <div className="text-xs text-muted-foreground mt-2">
+                        Regulares: {fmtHours(tt.regularHours)} · Especiais semana: {fmtHours(tt.ovtWk)} · Especiais fim de semana: {fmtHours(tt.ovtWe)}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {client && technician && (
+                  <div className="pt-3 border-t border-primary/20 flex items-center justify-between">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase">Lucro em horas (receber − pagar)</div>
+                    <div className={`font-bold text-lg ${profit >= 0 ? "text-success" : "text-destructive"}`}>{fmtCurrency(profit)}</div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
