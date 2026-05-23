@@ -5,39 +5,49 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useClients } from "@/hooks/use-storage";
-import { uid, fmtCurrency, type Client } from "@/lib/storage";
+import { useClients } from "@/hooks/use-data";
+import { fmtCurrency, type Client } from "@/lib/api";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/clientes")({ component: Clientes });
 
-const empty = (): Client => ({ id: "", name: "", hourlyRate: 0, kmRate: 0, address: "", contact: "" });
+type Editing = Omit<Client, "id"> & { id?: string };
+const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, address: "", contact: "" });
 
 function Clientes() {
-  const [clients, setClients] = useClients();
+  const { clients, addClient, updateClient, deleteClient, isLoading } = useClients();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Client>(empty());
+  const [editing, setEditing] = useState<Editing>(empty());
 
   const startNew = () => { setEditing(empty()); setOpen(true); };
   const startEdit = (c: Client) => { setEditing(c); setOpen(true); };
 
-  const save = () => {
+  const save = async () => {
     if (!editing.name.trim()) { toast.error("Informe o nome do cliente"); return; }
-    if (editing.id) {
-      setClients(clients.map(c => c.id === editing.id ? editing : c));
-      toast.success("Cliente atualizado");
-    } else {
-      setClients([...clients, { ...editing, id: uid() }]);
-      toast.success("Cliente cadastrado");
+    try {
+      if (editing.id) {
+        await updateClient.mutateAsync(editing as Client);
+        toast.success("Cliente atualizado");
+      } else {
+        const { id: _drop, ...rest } = editing;
+        await addClient.mutateAsync(rest);
+        toast.success("Cliente cadastrado");
+      }
+      setOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao salvar");
     }
-    setOpen(false);
   };
 
-  const remove = (id: string) => {
-    if (!confirm("Remover este cliente? As atividades ligadas a ele continuarão existindo.")) return;
-    setClients(clients.filter(c => c.id !== id));
-    toast.success("Cliente removido");
+  const remove = async (id: string) => {
+    if (!confirm("Remover este cliente? As atividades vinculadas também serão excluídas.")) return;
+    try {
+      await deleteClient.mutateAsync(id);
+      toast.success("Cliente removido");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao remover");
+    }
   };
 
   return (
@@ -72,22 +82,24 @@ function Clientes() {
               </div>
               <div className="grid gap-2">
                 <Label>Endereço</Label>
-                <Input value={editing.address} onChange={e => setEditing({ ...editing, address: e.target.value })} placeholder="Rua, número, cidade" />
+                <Input value={editing.address || ""} onChange={e => setEditing({ ...editing, address: e.target.value })} placeholder="Rua, número, cidade" />
               </div>
               <div className="grid gap-2">
                 <Label>Contato</Label>
-                <Input value={editing.contact} onChange={e => setEditing({ ...editing, contact: e.target.value })} placeholder="Telefone ou e-mail" />
+                <Input value={editing.contact || ""} onChange={e => setEditing({ ...editing, contact: e.target.value })} placeholder="Telefone ou e-mail" />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button onClick={save}>Salvar</Button>
+              <Button onClick={save} disabled={addClient.isPending || updateClient.isPending}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </header>
 
-      {clients.length === 0 ? (
+      {isLoading ? (
+        <Card><CardContent className="py-16 text-center text-muted-foreground">Carregando...</CardContent></Card>
+      ) : clients.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />

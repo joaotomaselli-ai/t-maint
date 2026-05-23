@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useClients, useReports } from "@/hooks/use-storage";
-import { reportTotals, fmtCurrency, fmtHours } from "@/lib/storage";
+import { useClients, useReports } from "@/hooks/use-data";
+import { reportTotals, fmtCurrency, fmtHours } from "@/lib/api";
 import { Wrench, Users, Clock, DollarSign, Plus, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -10,8 +10,8 @@ import { ptBR } from "date-fns/locale";
 export const Route = createFileRoute("/")({ component: Dashboard });
 
 function Dashboard() {
-  const [clients] = useClients();
-  const [reports] = useReports();
+  const { clients } = useClients();
+  const { reports } = useReports();
 
   const clientMap = new Map(clients.map(c => [c.id, c]));
   const stats = reports.reduce((acc, r) => {

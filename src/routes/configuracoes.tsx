@@ -5,17 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useSettings } from "@/hooks/use-storage";
+import { useSettings } from "@/hooks/use-data";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { LogOut } from "lucide-react";
 
 export const Route = createFileRoute("/configuracoes")({ component: Configuracoes });
 
 function Configuracoes() {
-  const [settings, setSettings] = useSettings();
+  const { settings, saveSettings } = useSettings();
+  const { user, signOut } = useAuth();
   const [form, setForm] = useState(settings);
   useEffect(() => setForm(settings), [settings]);
 
-  const save = () => { setSettings(form); toast.success("Configurações salvas"); };
+  const save = async () => {
+    try {
+      await saveSettings.mutateAsync(form);
+      toast.success("Configurações salvas");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao salvar");
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -50,16 +60,21 @@ function Configuracoes() {
             <Textarea rows={2} value={form.address || ""} onChange={e => setForm({ ...form, address: e.target.value })} />
           </div>
           <div className="flex justify-end">
-            <Button onClick={save} size="lg">Salvar configurações</Button>
+            <Button onClick={save} size="lg" disabled={saveSettings.isPending}>Salvar configurações</Button>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Sobre seus dados</CardTitle></CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>Os dados são salvos localmente neste navegador. Para fazer backup, exporte os relatórios em PDF.</p>
-          <p>Para sincronizar entre dispositivos e ter login, podemos ativar o Lovable Cloud em uma próxima versão.</p>
+        <CardHeader><CardTitle>Conta</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="text-sm">
+            <div className="text-muted-foreground">Conectado como</div>
+            <div className="font-medium">{user?.email}</div>
+          </div>
+          <Button variant="outline" onClick={signOut} className="gap-2">
+            <LogOut className="h-4 w-4" /> Sair
+          </Button>
         </CardContent>
       </Card>
     </div>
