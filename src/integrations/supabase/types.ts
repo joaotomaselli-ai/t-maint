@@ -14,7 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          address: string | null
+          contact: string | null
+          created_at: string
+          hourly_rate: number
+          id: string
+          km_rate: number
+          name: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          contact?: string | null
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          km_rate?: number
+          name: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          contact?: string | null
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          km_rate?: number
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          cnpj: string | null
+          company_name: string
+          created_at: string
+          id: string
+          logo_url: string | null
+          phone: string | null
+          technician_name: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          cnpj?: string | null
+          company_name?: string
+          created_at?: string
+          id: string
+          logo_url?: string | null
+          phone?: string | null
+          technician_name?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          cnpj?: string | null
+          company_name?: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          technician_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_reports: {
+        Row: {
+          client_id: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          km: number
+          machine: string
+          observation: string | null
+          order_number: string
+          requester: string
+          service_end: string
+          service_start: string
+          summary: string
+          technician: string
+          travel_back_end: string
+          travel_back_start: string
+          travel_out_end: string
+          travel_out_start: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          date: string
+          description?: string
+          id?: string
+          km?: number
+          machine?: string
+          observation?: string | null
+          order_number?: string
+          requester?: string
+          service_end?: string
+          service_start?: string
+          summary?: string
+          technician?: string
+          travel_back_end?: string
+          travel_back_start?: string
+          travel_out_end?: string
+          travel_out_start?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          km?: number
+          machine?: string
+          observation?: string | null
+          order_number?: string
+          requester?: string
+          service_end?: string
+          service_start?: string
+          summary?: string
+          technician?: string
+          travel_back_end?: string
+          travel_back_start?: string
+          travel_out_end?: string
+          travel_out_start?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_reports_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
