@@ -57,6 +57,7 @@ export type Settings = {
 const fromClient = (r: any): Client => ({
   id: r.id, name: r.name,
   hourlyRate: Number(r.hourly_rate), kmRate: Number(r.km_rate),
+  cnpj: r.cnpj ?? "", phone: r.phone ?? "",
   address: r.address ?? "", contact: r.contact ?? "",
 });
 
@@ -64,8 +65,29 @@ const toClientRow = (c: Omit<Client, "id">) => ({
   name: c.name,
   hourly_rate: c.hourlyRate ?? 0,
   km_rate: c.kmRate ?? 0,
+  cnpj: c.cnpj || null,
+  phone: c.phone || null,
   address: c.address || null,
   contact: c.contact || null,
+});
+
+const fromTechnician = (r: any): Technician => ({
+  id: r.id,
+  name: r.name,
+  hourlyRate: Number(r.hourly_rate),
+  kmRate: Number(r.km_rate),
+  overtimeWeekdayRate: Number(r.overtime_weekday_rate),
+  overtimeWeekendRate: Number(r.overtime_weekend_rate),
+  monthlyFixedHours: r.monthly_fixed_hours == null ? null : Number(r.monthly_fixed_hours),
+});
+
+const toTechnicianRow = (t: Omit<Technician, "id">) => ({
+  name: t.name,
+  hourly_rate: t.hourlyRate ?? 0,
+  km_rate: t.kmRate ?? 0,
+  overtime_weekday_rate: t.overtimeWeekdayRate ?? 0,
+  overtime_weekend_rate: t.overtimeWeekendRate ?? 0,
+  monthly_fixed_hours: t.monthlyFixedHours == null || Number.isNaN(t.monthlyFixedHours as number) ? null : t.monthlyFixedHours,
 });
 
 const fromReport = (r: any): ServiceReport => ({
