@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listClients, createClient, updateClient, deleteClient,
   listReports, createReport, updateReport, deleteReport,
+  listTechnicians, createTechnician, updateTechnician, deleteTechnician,
   getProfile, upsertProfile,
-  type Client, type ServiceReport, type Settings,
+  type Client, type ServiceReport, type Settings, type Technician,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
