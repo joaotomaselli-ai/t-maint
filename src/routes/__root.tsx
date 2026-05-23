@@ -9,6 +9,8 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { AppShell } from "@/components/AppShell";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -72,14 +74,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "CNC Service — Gestão de Manutenção" },
+      { name: "description", content: "Registro profissional de atividades de manutenção CNC, controle de horas, deslocamento e geração de relatórios por cliente." },
+      { property: "og:title", content: "CNC Service — Gestão de Manutenção" },
+      { property: "og:description", content: "Registro de atividades, horas e quilometragem com relatórios por cliente." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -113,7 +112,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <AppShell>
+        <Outlet />
+      </AppShell>
+      <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
 }
