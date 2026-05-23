@@ -121,7 +121,8 @@ function Clientes() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-lg truncate">{c.name}</h3>
-                    {c.contact && <p className="text-xs text-muted-foreground truncate">{c.contact}</p>}
+                    {c.phone && <p className="text-xs text-muted-foreground truncate">{c.phone}</p>}
+                    {c.cnpj && <p className="text-xs text-muted-foreground truncate">CNPJ: {c.cnpj}</p>}
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button variant="ghost" size="icon" onClick={() => startEdit(c)}><Pencil className="h-4 w-4" /></Button>
