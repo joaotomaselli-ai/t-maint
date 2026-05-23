@@ -100,6 +100,8 @@ export type Database = {
           machine: string
           observation: string | null
           order_number: string
+          overtime_weekday_hours: number
+          overtime_weekend_hours: number
           requester: string
           service_end: string
           service_start: string
@@ -122,6 +124,8 @@ export type Database = {
           machine?: string
           observation?: string | null
           order_number?: string
+          overtime_weekday_hours?: number
+          overtime_weekend_hours?: number
           requester?: string
           service_end?: string
           service_start?: string
@@ -144,6 +148,8 @@ export type Database = {
           machine?: string
           observation?: string | null
           order_number?: string
+          overtime_weekday_hours?: number
+          overtime_weekend_hours?: number
           requester?: string
           service_end?: string
           service_start?: string

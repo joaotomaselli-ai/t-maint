@@ -42,6 +42,8 @@ export type ServiceReport = {
   km: number;
   observation?: string;
   technician: string;
+  overtimeWeekdayHours: number;
+  overtimeWeekendHours: number;
   createdAt: string;
 };
 
@@ -109,6 +111,8 @@ const fromReport = (r: any): ServiceReport => ({
   km: Number(r.km ?? 0),
   observation: r.observation ?? "",
   technician: r.technician ?? "",
+  overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
+  overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
   createdAt: r.created_at,
 });
 
@@ -130,6 +134,8 @@ const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
   km: r.km ?? 0,
   observation: r.observation || null,
   technician: r.technician ?? "",
+  overtime_weekday_hours: r.overtimeWeekdayHours ?? 0,
+  overtime_weekend_hours: r.overtimeWeekendHours ?? 0,
 });
 
 const fromProfile = (r: any): Settings => ({
@@ -246,6 +252,24 @@ export function reportTotals(r: ServiceReport, client?: Client) {
   const hoursValue = totalHours * hourlyRate;
   const kmValue = (r.km || 0) * kmRate;
   return { travelOut, service, travelBack, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
+}
+
+export function technicianTotals(r: ServiceReport, technician?: Technician) {
+  const travelOut = diffHours(r.travelOutStart, r.travelOutEnd);
+  const service = diffHours(r.serviceStart, r.serviceEnd);
+  const travelBack = diffHours(r.travelBackStart, r.travelBackEnd);
+  const totalHours = travelOut + service + travelBack;
+  const ovtWk = Math.max(0, r.overtimeWeekdayHours || 0);
+  const ovtWe = Math.max(0, r.overtimeWeekendHours || 0);
+  const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
+  const regularHours = Math.max(0, totalHours - specialTotal);
+  const hourlyRate = technician?.hourlyRate ?? 0;
+  const kmRate = technician?.kmRate ?? 0;
+  const ovtWkRate = technician?.overtimeWeekdayRate ?? 0;
+  const ovtWeRate = technician?.overtimeWeekendRate ?? 0;
+  const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
+  const kmValue = (r.km || 0) * kmRate;
+  return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 export function fmtCurrency(n: number) {
