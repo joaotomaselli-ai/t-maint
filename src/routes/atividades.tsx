@@ -33,6 +33,7 @@ const empty = (technician = ""): Editing => ({
 
 function Atividades() {
   const { clients } = useClients();
+  const { technicians } = useTechnicians();
   const { reports, addReport, updateReport, deleteReport } = useReports();
   const { settings } = useSettings();
   const [open, setOpen] = useState(false);
@@ -61,6 +62,7 @@ function Atividades() {
 
   const startNew = () => {
     if (clients.length === 0) { toast.error("Cadastre um cliente primeiro"); return; }
+    if (technicians.length === 0) { toast.error("Cadastre um técnico primeiro"); return; }
     setEditing(empty(settings.technicianName));
     setOpen(true);
   };
@@ -69,6 +71,8 @@ function Atividades() {
   const save = async () => {
     if (!editing.clientId) { toast.error("Selecione o cliente"); return; }
     if (!editing.machine.trim()) { toast.error("Informe a máquina"); return; }
+    if (!editing.requester.trim()) { toast.error("Informe o solicitante"); return; }
+    if (!editing.technician.trim()) { toast.error("Selecione o técnico"); return; }
     try {
       if (editing.id) {
         await updateReport.mutateAsync(editing as ServiceReport);
