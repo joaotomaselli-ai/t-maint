@@ -5,8 +5,20 @@ export type Client = {
   name: string;
   hourlyRate: number;
   kmRate: number;
+  cnpj?: string;
+  phone?: string;
   address?: string;
   contact?: string;
+};
+
+export type Technician = {
+  id: string;
+  name: string;
+  hourlyRate: number;
+  kmRate: number;
+  overtimeWeekdayRate: number;
+  overtimeWeekendRate: number;
+  monthlyFixedHours?: number | null;
 };
 
 export type ServiceType = "corretiva" | "preventiva";
