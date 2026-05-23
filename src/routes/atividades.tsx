@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useClients, useReports, useSettings } from "@/hooks/use-storage";
-import { uid, reportTotals, fmtCurrency, fmtHours, type ServiceReport } from "@/lib/storage";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useClients, useReports, useSettings } from "@/hooks/use-data";
+import { reportTotals, fmtCurrency, fmtHours, type Client, type ServiceReport, type ServiceType } from "@/lib/api";
 import { exportSingleReport } from "@/lib/pdf";
 import { Plus, Pencil, Trash2, FileDown, Wrench, Search } from "lucide-react";
 import { format } from "date-fns";
@@ -17,24 +17,25 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/atividades")({ component: Atividades });
 
-const empty = (technician = ""): ServiceReport => ({
-  id: "", orderNumber: "", clientId: "",
+type Editing = Omit<ServiceReport, "id" | "createdAt"> & { id?: string; createdAt?: string };
+
+const empty = (technician = ""): Editing => ({
+  orderNumber: "", clientId: "",
   date: new Date().toISOString().slice(0, 10),
-  machine: "", requester: "", type: "corretiva",
+  machine: "", requester: "", type: "corretiva" as ServiceType,
   description: "", summary: "",
   travelOutStart: "", travelOutEnd: "",
   serviceStart: "", serviceEnd: "",
   travelBackStart: "", travelBackEnd: "",
   km: 0, observation: "", technician,
-  createdAt: new Date().toISOString(),
 });
 
 function Atividades() {
-  const [clients] = useClients();
-  const [reports, setReports] = useReports();
-  const [settings] = useSettings();
+  const { clients } = useClients();
+  const { reports, addReport, updateReport, deleteReport } = useReports();
+  const { settings } = useSettings();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<ServiceReport>(empty());
+  const [editing, setEditing] = useState<Editing>(empty());
   const [search, setSearch] = useState("");
   const [filterClient, setFilterClient] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
@@ -58,33 +59,39 @@ function Atividades() {
   }, [reports, filterClient, filterType, search, clientMap]);
 
   const startNew = () => {
-    if (clients.length === 0) {
-      toast.error("Cadastre um cliente primeiro");
-      return;
-    }
+    if (clients.length === 0) { toast.error("Cadastre um cliente primeiro"); return; }
     setEditing(empty(settings.technicianName));
     setOpen(true);
   };
   const startEdit = (r: ServiceReport) => { setEditing(r); setOpen(true); };
 
-  const save = () => {
+  const save = async () => {
     if (!editing.clientId) { toast.error("Selecione o cliente"); return; }
     if (!editing.machine.trim()) { toast.error("Informe a máquina"); return; }
-    if (editing.id) {
-      setReports(reports.map(r => r.id === editing.id ? editing : r));
-      toast.success("Atividade atualizada");
-    } else {
-      const nextNum = (Math.max(0, ...reports.map(r => parseInt(r.orderNumber) || 0)) + 1).toString().padStart(4, "0");
-      setReports([...reports, { ...editing, id: uid(), orderNumber: editing.orderNumber || nextNum }]);
-      toast.success("Atividade registrada");
+    try {
+      if (editing.id) {
+        await updateReport.mutateAsync(editing as ServiceReport);
+        toast.success("Atividade atualizada");
+      } else {
+        const nextNum = (Math.max(0, ...reports.map(r => parseInt(r.orderNumber) || 0)) + 1).toString().padStart(4, "0");
+        const { id: _i, createdAt: _c, ...payload } = editing;
+        await addReport.mutateAsync({ ...payload, orderNumber: editing.orderNumber || nextNum });
+        toast.success("Atividade registrada");
+      }
+      setOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao salvar");
     }
-    setOpen(false);
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Excluir esta atividade?")) return;
-    setReports(reports.filter(r => r.id !== id));
-    toast.success("Atividade excluída");
+    try {
+      await deleteReport.mutateAsync(id);
+      toast.success("Atividade excluída");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro");
+    }
   };
 
   const exportPdf = (r: ServiceReport) => {
@@ -201,9 +208,13 @@ function Atividades() {
   );
 }
 
-function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSave }: any) {
-  const client = clients.find((c: any) => c.id === editing.clientId);
-  const t = reportTotals(editing, client);
+function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSave }: {
+  open: boolean; onOpenChange: (v: boolean) => void;
+  editing: Editing; setEditing: (e: Editing) => void;
+  clients: Client[]; onSave: () => void;
+}) {
+  const client = clients.find((c) => c.id === editing.clientId);
+  const t = reportTotals(editing as ServiceReport, client);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -219,7 +230,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSa
               <Select value={editing.clientId} onValueChange={(v) => setEditing({ ...editing, clientId: v })}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {clients.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -244,7 +255,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSa
             </div>
             <div className="grid gap-2">
               <Label>Tipo *</Label>
-              <Select value={editing.type} onValueChange={(v) => setEditing({ ...editing, type: v })}>
+              <Select value={editing.type} onValueChange={(v) => setEditing({ ...editing, type: v as ServiceType })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="corretiva">Corretiva</SelectItem>
@@ -288,7 +299,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, onSa
 
           <div className="grid gap-2">
             <Label>Observação</Label>
-            <Textarea rows={2} value={editing.observation} onChange={e => setEditing({ ...editing, observation: e.target.value })} />
+            <Textarea rows={2} value={editing.observation || ""} onChange={e => setEditing({ ...editing, observation: e.target.value })} />
           </div>
 
           {client && (

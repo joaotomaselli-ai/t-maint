@@ -1,6 +1,9 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog } from "lucide-react";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
 
 const nav = [
   { to: "/", label: "Painel", icon: LayoutDashboard },
@@ -12,6 +15,27 @@ const nav = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { location } = useRouterState();
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const isPublic = location.pathname === "/login";
+
+  useEffect(() => {
+    if (!loading && !user && !isPublic) {
+      navigate({ to: "/login" });
+    }
+  }, [loading, user, isPublic, navigate]);
+
+  if (isPublic) return <>{children}</>;
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
@@ -44,8 +68,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-4 text-xs text-sidebar-foreground/50 border-t border-sidebar-border">
-          v1.0 · dados salvos localmente
+        <div className="p-3 border-t border-sidebar-border space-y-2">
+          <div className="px-2 text-xs text-sidebar-foreground/60 truncate">{user.email}</div>
+          <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start gap-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <LogOut className="h-4 w-4" /> Sair
+          </Button>
         </div>
       </aside>
 
@@ -56,6 +83,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Cog className="h-5 w-5" />
             <span className="font-bold">Tomaselli CNC</span>
           </div>
+          <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
         <nav className="flex overflow-x-auto px-2 pb-2 gap-1">
           {nav.map(({ to, label, icon: Icon }) => {

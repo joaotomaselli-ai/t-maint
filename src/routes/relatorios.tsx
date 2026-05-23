@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useClients, useReports, useSettings } from "@/hooks/use-storage";
-import { reportTotals, fmtCurrency, fmtHours } from "@/lib/storage";
+import { useClients, useReports, useSettings } from "@/hooks/use-data";
+import { reportTotals, fmtCurrency, fmtHours } from "@/lib/api";
 import { exportClientReport } from "@/lib/pdf";
 import { FileDown, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -14,9 +14,9 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/relatorios")({ component: Relatorios });
 
 function Relatorios() {
-  const [clients] = useClients();
-  const [reports] = useReports();
-  const [settings] = useSettings();
+  const { clients } = useClients();
+  const { reports } = useReports();
+  const { settings } = useSettings();
   const [clientId, setClientId] = useState<string>("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
