@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useClients, useReports, useSettings } from "@/hooks/use-data";
-import { reportTotals, fmtCurrency, fmtHours, type Client, type ServiceReport, type ServiceType } from "@/lib/api";
+import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
+import { reportTotals, technicianTotals, fmtCurrency, fmtHours, type Client, type ServiceReport, type ServiceType, type Technician } from "@/lib/api";
 import { exportSingleReport } from "@/lib/pdf";
 import { Plus, Pencil, Trash2, FileDown, Wrench, Search } from "lucide-react";
 import { format } from "date-fns";
@@ -28,6 +28,7 @@ const empty = (technician = ""): Editing => ({
   serviceStart: "", serviceEnd: "",
   travelBackStart: "", travelBackEnd: "",
   km: 0, observation: "", technician,
+  overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
 });
 
 function Atividades() {
