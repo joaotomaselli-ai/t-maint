@@ -207,7 +207,7 @@ function Atividades() {
       <ActivityDialog
         open={open} onOpenChange={setOpen}
         editing={editing} setEditing={setEditing}
-        clients={clients} onSave={save}
+        clients={clients} technicians={technicians} onSave={save}
       />
     </div>
   );
