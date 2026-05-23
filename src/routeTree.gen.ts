@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TecnicosRouteImport } from './routes/tecnicos'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
@@ -16,6 +17,11 @@ import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as AtividadesRouteImport } from './routes/atividades'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TecnicosRoute = TecnicosRouteImport.update({
+  id: '/tecnicos',
+  path: '/tecnicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/login': typeof LoginRoute
   '/relatorios': typeof RelatoriosRoute
+  '/tecnicos': typeof TecnicosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/login': typeof LoginRoute
   '/relatorios': typeof RelatoriosRoute
+  '/tecnicos': typeof TecnicosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/login': typeof LoginRoute
   '/relatorios': typeof RelatoriosRoute
+  '/tecnicos': typeof TecnicosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/login'
     | '/relatorios'
+    | '/tecnicos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/login'
     | '/relatorios'
+    | '/tecnicos'
   id:
     | '__root__'
     | '/'
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/login'
     | '/relatorios'
+    | '/tecnicos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,10 +118,18 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   LoginRoute: typeof LoginRoute
   RelatoriosRoute: typeof RelatoriosRoute
+  TecnicosRoute: typeof TecnicosRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tecnicos': {
+      id: '/tecnicos'
+      path: '/tecnicos'
+      fullPath: '/tecnicos'
+      preLoaderRoute: typeof TecnicosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/relatorios': {
       id: '/relatorios'
       path: '/relatorios'
@@ -162,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   LoginRoute: LoginRoute,
   RelatoriosRoute: RelatoriosRoute,
+  TecnicosRoute: TecnicosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

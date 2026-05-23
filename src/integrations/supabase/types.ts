@@ -17,32 +17,38 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          cnpj: string | null
           contact: string | null
           created_at: string
           hourly_rate: number
           id: string
           km_rate: number
           name: string
+          phone: string | null
           user_id: string
         }
         Insert: {
           address?: string | null
+          cnpj?: string | null
           contact?: string | null
           created_at?: string
           hourly_rate?: number
           id?: string
           km_rate?: number
           name: string
+          phone?: string | null
           user_id: string
         }
         Update: {
           address?: string | null
+          cnpj?: string | null
           contact?: string | null
           created_at?: string
           hourly_rate?: number
           id?: string
           km_rate?: number
           name?: string
+          phone?: string | null
           user_id?: string
         }
         Relationships: []
@@ -159,6 +165,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      technicians: {
+        Row: {
+          created_at: string
+          hourly_rate: number
+          id: string
+          km_rate: number
+          monthly_fixed_hours: number | null
+          name: string
+          overtime_weekday_rate: number
+          overtime_weekend_rate: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          km_rate?: number
+          monthly_fixed_hours?: number | null
+          name: string
+          overtime_weekday_rate?: number
+          overtime_weekend_rate?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          km_rate?: number
+          monthly_fixed_hours?: number | null
+          name?: string
+          overtime_weekday_rate?: number
+          overtime_weekend_rate?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

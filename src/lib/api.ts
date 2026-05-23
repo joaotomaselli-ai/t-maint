@@ -5,8 +5,20 @@ export type Client = {
   name: string;
   hourlyRate: number;
   kmRate: number;
+  cnpj?: string;
+  phone?: string;
   address?: string;
   contact?: string;
+};
+
+export type Technician = {
+  id: string;
+  name: string;
+  hourlyRate: number;
+  kmRate: number;
+  overtimeWeekdayRate: number;
+  overtimeWeekendRate: number;
+  monthlyFixedHours?: number | null;
 };
 
 export type ServiceType = "corretiva" | "preventiva";
@@ -45,6 +57,7 @@ export type Settings = {
 const fromClient = (r: any): Client => ({
   id: r.id, name: r.name,
   hourlyRate: Number(r.hourly_rate), kmRate: Number(r.km_rate),
+  cnpj: r.cnpj ?? "", phone: r.phone ?? "",
   address: r.address ?? "", contact: r.contact ?? "",
 });
 
@@ -52,8 +65,29 @@ const toClientRow = (c: Omit<Client, "id">) => ({
   name: c.name,
   hourly_rate: c.hourlyRate ?? 0,
   km_rate: c.kmRate ?? 0,
+  cnpj: c.cnpj || null,
+  phone: c.phone || null,
   address: c.address || null,
   contact: c.contact || null,
+});
+
+const fromTechnician = (r: any): Technician => ({
+  id: r.id,
+  name: r.name,
+  hourlyRate: Number(r.hourly_rate),
+  kmRate: Number(r.km_rate),
+  overtimeWeekdayRate: Number(r.overtime_weekday_rate),
+  overtimeWeekendRate: Number(r.overtime_weekend_rate),
+  monthlyFixedHours: r.monthly_fixed_hours == null ? null : Number(r.monthly_fixed_hours),
+});
+
+const toTechnicianRow = (t: Omit<Technician, "id">) => ({
+  name: t.name,
+  hourly_rate: t.hourlyRate ?? 0,
+  km_rate: t.kmRate ?? 0,
+  overtime_weekday_rate: t.overtimeWeekdayRate ?? 0,
+  overtime_weekend_rate: t.overtimeWeekendRate ?? 0,
+  monthly_fixed_hours: t.monthlyFixedHours == null || Number.isNaN(t.monthlyFixedHours as number) ? null : t.monthlyFixedHours,
 });
 
 const fromReport = (r: any): ServiceReport => ({
@@ -126,6 +160,28 @@ export async function updateClient(c: Client): Promise<Client> {
 }
 export async function deleteClient(id: string): Promise<void> {
   const { error } = await supabase.from("clients").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function listTechnicians(): Promise<Technician[]> {
+  const { data, error } = await supabase.from("technicians").select("*").order("name");
+  if (error) throw error;
+  return (data ?? []).map(fromTechnician);
+}
+export async function createTechnician(t: Omit<Technician, "id">, userId: string): Promise<Technician> {
+  const { data, error } = await supabase.from("technicians")
+    .insert({ ...toTechnicianRow(t), user_id: userId }).select().single();
+  if (error) throw error;
+  return fromTechnician(data);
+}
+export async function updateTechnician(t: Technician): Promise<Technician> {
+  const { data, error } = await supabase.from("technicians")
+    .update(toTechnicianRow(t)).eq("id", t.id).select().single();
+  if (error) throw error;
+  return fromTechnician(data);
+}
+export async function deleteTechnician(id: string): Promise<void> {
+  const { error } = await supabase.from("technicians").delete().eq("id", id);
   if (error) throw error;
 }
 

@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listClients, createClient, updateClient, deleteClient,
   listReports, createReport, updateReport, deleteReport,
+  listTechnicians, createTechnician, updateTechnician, deleteTechnician,
   getProfile, upsertProfile,
-  type Client, type ServiceReport, type Settings,
+  type Client, type ServiceReport, type Settings, type Technician,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -78,4 +79,32 @@ export function useSettings() {
   });
   const settings: Settings = q.data ?? { companyName: "", technicianName: "" };
   return { settings, isLoading: q.isLoading, saveSettings: save };
+}
+
+export function useTechnicians() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const enabled = !!user;
+  const q = useQuery({
+    queryKey: ["technicians", user?.id],
+    queryFn: listTechnicians,
+    enabled,
+  });
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["technicians", user?.id] });
+  return {
+    technicians: q.data ?? [],
+    isLoading: q.isLoading,
+    addTechnician: useMutation({
+      mutationFn: (t: Omit<Technician, "id">) => createTechnician(t, user!.id),
+      onSuccess: invalidate,
+    }),
+    updateTechnician: useMutation({
+      mutationFn: (t: Technician) => updateTechnician(t),
+      onSuccess: invalidate,
+    }),
+    deleteTechnician: useMutation({
+      mutationFn: (id: string) => deleteTechnician(id),
+      onSuccess: invalidate,
+    }),
+  };
 }

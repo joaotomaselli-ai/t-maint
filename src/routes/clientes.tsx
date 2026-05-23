@@ -13,7 +13,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/clientes")({ component: Clientes });
 
 type Editing = Omit<Client, "id"> & { id?: string };
-const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, address: "", contact: "" });
+const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, cnpj: "", phone: "", address: "" });
 
 function Clientes() {
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients();
@@ -80,13 +80,19 @@ function Clientes() {
                   <Input type="number" step="0.01" value={editing.kmRate || ""} onChange={e => setEditing({ ...editing, kmRate: Number(e.target.value) })} placeholder="2,50" />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>CNPJ</Label>
+                  <Input value={editing.cnpj || ""} onChange={e => setEditing({ ...editing, cnpj: e.target.value })} placeholder="00.000.000/0000-00" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Telefone</Label>
+                  <Input value={editing.phone || ""} onChange={e => setEditing({ ...editing, phone: e.target.value })} placeholder="(00) 00000-0000" />
+                </div>
+              </div>
               <div className="grid gap-2">
                 <Label>Endereço</Label>
                 <Input value={editing.address || ""} onChange={e => setEditing({ ...editing, address: e.target.value })} placeholder="Rua, número, cidade" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Contato</Label>
-                <Input value={editing.contact || ""} onChange={e => setEditing({ ...editing, contact: e.target.value })} placeholder="Telefone ou e-mail" />
               </div>
             </div>
             <DialogFooter>
@@ -115,7 +121,8 @@ function Clientes() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-lg truncate">{c.name}</h3>
-                    {c.contact && <p className="text-xs text-muted-foreground truncate">{c.contact}</p>}
+                    {c.phone && <p className="text-xs text-muted-foreground truncate">{c.phone}</p>}
+                    {c.cnpj && <p className="text-xs text-muted-foreground truncate">CNPJ: {c.cnpj}</p>}
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button variant="ghost" size="icon" onClick={() => startEdit(c)}><Pencil className="h-4 w-4" /></Button>
