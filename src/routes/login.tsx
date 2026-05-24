@@ -71,7 +71,7 @@ function LoginPage() {
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground mb-3">
             <Cog className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold">Tomaselli CNC</h1>
+          <h1 className="text-2xl font-bold">T-Maint</h1>
           <p className="text-muted-foreground text-sm mt-1">Gestão de Manutenção Industrial</p>
         </div>
 
@@ -106,7 +106,7 @@ function LoginPage() {
                 <form onSubmit={signUp} className="space-y-3">
                   <div className="grid gap-2">
                     <Label>Nome da empresa *</Label>
-                    <Input required value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Ex: Tomaselli CNC" />
+                    <Input required value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Ex: T-Maint" />
                   </div>
                   <div className="grid gap-2">
                     <Label>Seu nome</Label>
