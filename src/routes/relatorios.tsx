@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
 import { reportTotals, technicianTotals, fmtCurrency, fmtHours } from "@/lib/api";
-import { exportClientReport, exportTechnicianReport } from "@/lib/pdf";
+// PDF lib is imported dynamically inside click handlers to avoid SSR issues
 import { FileDown, FileText, HardHat, Users } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,12 +59,19 @@ function ClientReport() {
     return acc;
   }, { hours: 0, km: 0, total: 0 }), [filtered, client]);
 
-  const generate = () => {
+  const generate = async () => {
     if (!client) { toast.error("Selecione um cliente"); return; }
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
-    exportClientReport(client, filtered, settings, { from, to });
-    toast.success("Relatório gerado");
+    try {
+      const { exportClientReport } = await import("@/lib/pdf");
+      exportClientReport(client, filtered, settings, { from, to });
+      toast.success("Relatório gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar PDF");
+    }
   };
+
 
   return (
     <div className="space-y-6">
@@ -186,12 +193,19 @@ function TechnicianReport() {
     return acc;
   }, { hours: 0, ovtWk: 0, ovtWe: 0, km: 0, total: 0 }), [filtered, technician]);
 
-  const generate = () => {
+  const generate = async () => {
     if (!technician) { toast.error("Selecione um técnico"); return; }
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
-    exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient);
-    toast.success("Relatório gerado");
+    try {
+      const { exportTechnicianReport } = await import("@/lib/pdf");
+      exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient);
+      toast.success("Relatório gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar PDF");
+    }
   };
+
 
   return (
     <div className="space-y-6">

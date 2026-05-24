@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
 import { reportTotals, technicianTotals, fmtCurrency, fmtHours, type Client, type ServiceReport, type ServiceType, type Technician } from "@/lib/api";
-import { exportSingleReport } from "@/lib/pdf";
+// pdf lib imported dynamically inside the handler to avoid SSR issues
 import { Plus, Pencil, Trash2, FileDown, Wrench, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -99,9 +99,15 @@ function Atividades() {
     }
   };
 
-  const exportPdf = (r: ServiceReport) => {
-    exportSingleReport(r, clientMap.get(r.clientId), settings);
+  const exportPdf = async (r: ServiceReport) => {
+    try {
+      const { exportSingleReport } = await import("@/lib/pdf");
+      exportSingleReport(r, clientMap.get(r.clientId), settings);
+    } catch (e) {
+      console.error(e);
+    }
   };
+
 
   const totals = useMemo(() => {
     return filtered.reduce((acc, r) => {
