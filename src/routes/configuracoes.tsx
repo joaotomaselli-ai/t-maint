@@ -42,8 +42,8 @@ function Configuracoes() {
             <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Ex: Tomaselli CNC" />
           </div>
           <div className="grid gap-2">
-            <Label>Nome do técnico</Label>
-            <Input value={form.technicianName} onChange={e => setForm({ ...form, technicianName: e.target.value })} placeholder="Seu nome completo" />
+            <Label>E-mail</Label>
+            <Input type="email" value={form.email || ""} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="contato@empresa.com" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
