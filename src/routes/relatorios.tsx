@@ -59,12 +59,19 @@ function ClientReport() {
     return acc;
   }, { hours: 0, km: 0, total: 0 }), [filtered, client]);
 
-  const generate = () => {
+  const generate = async () => {
     if (!client) { toast.error("Selecione um cliente"); return; }
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
-    exportClientReport(client, filtered, settings, { from, to });
-    toast.success("Relatório gerado");
+    try {
+      const { exportClientReport } = await import("@/lib/pdf");
+      exportClientReport(client, filtered, settings, { from, to });
+      toast.success("Relatório gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar PDF");
+    }
   };
+
 
   return (
     <div className="space-y-6">
