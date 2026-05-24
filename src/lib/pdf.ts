@@ -236,7 +236,7 @@ export function exportTechnicianReport(
   period?: { from?: string; to?: string },
   filterClient?: Client,
 ) {
-  const { technicianTotals } = require("./api") as typeof import("./api");
+  // technicianTotals imported at top
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
 
