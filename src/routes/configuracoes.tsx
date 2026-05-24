@@ -39,7 +39,7 @@ function Configuracoes() {
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
             <Label>Nome da empresa</Label>
-            <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Ex: Tomaselli CNC" />
+            <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Ex: T-Maint" />
           </div>
           <div className="grid gap-2">
             <Label>E-mail</Label>
