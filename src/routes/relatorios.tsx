@@ -5,15 +5,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useClients, useReports, useSettings } from "@/hooks/use-data";
-import { reportTotals, fmtCurrency, fmtHours } from "@/lib/api";
-import { exportClientReport } from "@/lib/pdf";
-import { FileDown, FileText } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
+import { reportTotals, technicianTotals, fmtCurrency, fmtHours } from "@/lib/api";
+import { exportClientReport, exportTechnicianReport } from "@/lib/pdf";
+import { FileDown, FileText, HardHat, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/relatorios")({ component: Relatorios });
 
 function Relatorios() {
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight">Relatórios</h1>
+        <p className="text-muted-foreground mt-1">Gere relatórios consolidados em PDF</p>
+      </header>
+
+      <Tabs defaultValue="clientes" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>
+          <TabsTrigger value="tecnicos" className="gap-2"><HardHat className="h-4 w-4" /> Técnicos</TabsTrigger>
+        </TabsList>
+        <TabsContent value="clientes"><ClientReport /></TabsContent>
+        <TabsContent value="tecnicos"><TechnicianReport /></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function ClientReport() {
   const { clients } = useClients();
   const { reports } = useReports();
   const { settings } = useSettings();
@@ -34,10 +55,9 @@ function Relatorios() {
 
   const totals = useMemo(() => filtered.reduce((acc, r) => {
     const t = reportTotals(r, client);
-    acc.hours += t.totalHours; acc.service += t.service; acc.travel += t.travelOut + t.travelBack;
-    acc.km += r.km || 0; acc.hoursValue += t.hoursValue; acc.kmValue += t.kmValue; acc.total += t.total;
+    acc.hours += t.totalHours; acc.km += r.km || 0; acc.total += t.total;
     return acc;
-  }, { hours: 0, service: 0, travel: 0, km: 0, hoursValue: 0, kmValue: 0, total: 0 }), [filtered, client]);
+  }, { hours: 0, km: 0, total: 0 }), [filtered, client]);
 
   const generate = () => {
     if (!client) { toast.error("Selecione um cliente"); return; }
@@ -48,13 +68,8 @@ function Relatorios() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Relatórios</h1>
-        <p className="text-muted-foreground mt-1">Gere relatórios consolidados por cliente em PDF</p>
-      </header>
-
       <Card>
-        <CardHeader><CardTitle>Configurar relatório</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Configurar relatório por cliente</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-[1fr_180px_180px_auto]">
           <div className="grid gap-2">
             <Label>Cliente *</Label>
@@ -122,6 +137,155 @@ function Relatorios() {
                       <tr>
                         <td colSpan={4} className="p-2">TOTAL</td>
                         <td className="p-2 text-right">{fmtHours(totals.hours)}</td>
+                        <td className="p-2 text-right">{totals.km}</td>
+                        <td className="p-2 text-right text-primary">{fmtCurrency(totals.total)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+const ALL_CLIENTS = "__all__";
+
+function TechnicianReport() {
+  const { clients } = useClients();
+  const { technicians } = useTechnicians();
+  const { reports } = useReports();
+  const { settings } = useSettings();
+  const [technicianId, setTechnicianId] = useState<string>("");
+  const [clientId, setClientId] = useState<string>(ALL_CLIENTS);
+  const [from, setFrom] = useState<string>("");
+  const [to, setTo] = useState<string>("");
+
+  const technician = technicians.find(t => t.id === technicianId);
+  const clientsById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
+  const filterClient = clientId !== ALL_CLIENTS ? clients.find(c => c.id === clientId) : undefined;
+
+  // Match by technician name (reports store technician as text)
+  const filtered = useMemo(() => {
+    if (!technician) return [];
+    return reports
+      .filter(r => (r.technician || "").trim().toLowerCase() === technician.name.trim().toLowerCase())
+      .filter(r => clientId === ALL_CLIENTS || r.clientId === clientId)
+      .filter(r => !from || r.date >= from)
+      .filter(r => !to || r.date <= to)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [reports, technician, clientId, from, to]);
+
+  const totals = useMemo(() => filtered.reduce((acc, r) => {
+    const t = technicianTotals(r, technician);
+    acc.hours += t.totalHours; acc.ovtWk += t.ovtWk; acc.ovtWe += t.ovtWe;
+    acc.km += r.km || 0; acc.total += t.total;
+    return acc;
+  }, { hours: 0, ovtWk: 0, ovtWe: 0, km: 0, total: 0 }), [filtered, technician]);
+
+  const generate = () => {
+    if (!technician) { toast.error("Selecione um técnico"); return; }
+    if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
+    exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient);
+    toast.success("Relatório gerado");
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle>Configurar relatório por técnico</CardTitle></CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_160px_160px_auto]">
+          <div className="grid gap-2">
+            <Label>Técnico *</Label>
+            <Select value={technicianId} onValueChange={setTechnicianId}>
+              <SelectTrigger><SelectValue placeholder="Selecione um técnico" /></SelectTrigger>
+              <SelectContent>
+                {technicians.length === 0 && <div className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum técnico cadastrado</div>}
+                {technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Cliente</Label>
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_CLIENTS}>Todos os clientes (geral)</SelectItem>
+                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2"><Label>De</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
+          <div className="grid gap-2"><Label>Até</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
+          <div className="flex items-end">
+            <Button onClick={generate} className="gap-2 w-full lg:w-auto" size="lg" disabled={!technicianId || filtered.length === 0}>
+              <FileDown className="h-4 w-4" /> Gerar PDF
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {technician && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" /> Prévia — {technician.name}
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                ({filterClient ? filterClient.name : "Todos os clientes"})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {filtered.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground">Nenhuma atividade encontrada para este técnico.</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+                  <Stat label="Atendimentos" value={String(filtered.length)} />
+                  <Stat label="Horas totais" value={fmtHours(totals.hours)} />
+                  <Stat label="HE semana" value={fmtHours(totals.ovtWk)} />
+                  <Stat label="HE fim de semana" value={fmtHours(totals.ovtWe)} />
+                  <Stat label="A pagar" value={fmtCurrency(totals.total)} highlight />
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted text-left">
+                      <tr>
+                        <th className="p-2">OS</th><th className="p-2">Data</th>
+                        <th className="p-2">Cliente</th>
+                        <th className="p-2 text-right">Horas</th>
+                        <th className="p-2 text-right">HE Sem.</th>
+                        <th className="p-2 text-right">HE F.S.</th>
+                        <th className="p-2 text-right">KM</th>
+                        <th className="p-2 text-right">A pagar</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {filtered.map(r => {
+                        const t = technicianTotals(r, technician);
+                        return (
+                          <tr key={r.id}>
+                            <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
+                            <td className="p-2">{r.date.split("-").reverse().join("/")}</td>
+                            <td className="p-2">{clientsById[r.clientId]?.name ?? "—"}</td>
+                            <td className="p-2 text-right">{fmtHours(t.totalHours)}</td>
+                            <td className="p-2 text-right">{fmtHours(t.ovtWk)}</td>
+                            <td className="p-2 text-right">{fmtHours(t.ovtWe)}</td>
+                            <td className="p-2 text-right">{r.km}</td>
+                            <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot className="bg-muted font-semibold">
+                      <tr>
+                        <td colSpan={3} className="p-2">TOTAL</td>
+                        <td className="p-2 text-right">{fmtHours(totals.hours)}</td>
+                        <td className="p-2 text-right">{fmtHours(totals.ovtWk)}</td>
+                        <td className="p-2 text-right">{fmtHours(totals.ovtWe)}</td>
                         <td className="p-2 text-right">{totals.km}</td>
                         <td className="p-2 text-right text-primary">{fmtCurrency(totals.total)}</td>
                       </tr>
