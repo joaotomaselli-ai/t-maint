@@ -142,6 +142,7 @@ const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
 const fromProfile = (r: any): Settings => ({
   companyName: r.company_name ?? "",
   technicianName: r.technician_name ?? "",
+  email: r.email ?? "",
   cnpj: r.cnpj ?? "",
   phone: r.phone ?? "",
   address: r.address ?? "",
