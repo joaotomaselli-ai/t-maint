@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
 import { reportTotals, technicianTotals, fmtCurrency, fmtHours, type Client, type ServiceReport, type ServiceType, type Technician } from "@/lib/api";
-import { exportSingleReport } from "@/lib/pdf";
+// pdf lib imported dynamically inside the handler to avoid SSR issues
 import { Plus, Pencil, Trash2, FileDown, Wrench, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
