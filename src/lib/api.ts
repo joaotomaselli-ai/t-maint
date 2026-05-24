@@ -50,6 +50,7 @@ export type ServiceReport = {
 export type Settings = {
   companyName: string;
   technicianName: string;
+  email?: string;
   cnpj?: string;
   phone?: string;
   address?: string;
