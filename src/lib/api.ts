@@ -226,6 +226,7 @@ export async function upsertProfile(userId: string, s: Settings): Promise<Settin
     id: userId,
     company_name: s.companyName,
     technician_name: s.technicianName,
+    email: s.email || null,
     cnpj: s.cnpj || null,
     phone: s.phone || null,
     address: s.address || null,
