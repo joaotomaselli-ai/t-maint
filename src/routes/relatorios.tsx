@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
 import { reportTotals, technicianTotals, fmtCurrency, fmtHours } from "@/lib/api";
-import { exportClientReport, exportTechnicianReport } from "@/lib/pdf";
+// PDF lib is imported dynamically inside click handlers to avoid SSR issues
 import { FileDown, FileText, HardHat, Users } from "lucide-react";
 import { toast } from "sonner";
 
