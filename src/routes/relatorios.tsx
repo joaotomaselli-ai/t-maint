@@ -193,12 +193,19 @@ function TechnicianReport() {
     return acc;
   }, { hours: 0, ovtWk: 0, ovtWe: 0, km: 0, total: 0 }), [filtered, technician]);
 
-  const generate = () => {
+  const generate = async () => {
     if (!technician) { toast.error("Selecione um técnico"); return; }
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
-    exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient);
-    toast.success("Relatório gerado");
+    try {
+      const { exportTechnicianReport } = await import("@/lib/pdf");
+      exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient);
+      toast.success("Relatório gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar PDF");
+    }
   };
+
 
   return (
     <div className="space-y-6">
