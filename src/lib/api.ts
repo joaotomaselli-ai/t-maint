@@ -50,6 +50,7 @@ export type ServiceReport = {
 export type Settings = {
   companyName: string;
   technicianName: string;
+  email?: string;
   cnpj?: string;
   phone?: string;
   address?: string;
@@ -141,6 +142,7 @@ const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
 const fromProfile = (r: any): Settings => ({
   companyName: r.company_name ?? "",
   technicianName: r.technician_name ?? "",
+  email: r.email ?? "",
   cnpj: r.cnpj ?? "",
   phone: r.phone ?? "",
   address: r.address ?? "",
@@ -224,6 +226,7 @@ export async function upsertProfile(userId: string, s: Settings): Promise<Settin
     id: userId,
     company_name: s.companyName,
     technician_name: s.technicianName,
+    email: s.email || null,
     cnpj: s.cnpj || null,
     phone: s.phone || null,
     address: s.address || null,
