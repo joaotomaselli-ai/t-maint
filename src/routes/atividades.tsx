@@ -99,9 +99,15 @@ function Atividades() {
     }
   };
 
-  const exportPdf = (r: ServiceReport) => {
-    exportSingleReport(r, clientMap.get(r.clientId), settings);
+  const exportPdf = async (r: ServiceReport) => {
+    try {
+      const { exportSingleReport } = await import("@/lib/pdf");
+      exportSingleReport(r, clientMap.get(r.clientId), settings);
+    } catch (e) {
+      console.error(e);
+    }
   };
+
 
   const totals = useMemo(() => {
     return filtered.reduce((acc, r) => {
