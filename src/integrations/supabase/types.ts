@@ -264,6 +264,80 @@ export type Database = {
           },
         ]
       }
+      service_sessions: {
+        Row: {
+          activities_done: string
+          activity_id: string
+          created_at: string
+          date: string
+          id: string
+          km: number
+          observation: string | null
+          overtime_weekday_hours: number
+          overtime_weekend_hours: number
+          position: number
+          service_end: string
+          service_start: string
+          technician_id: string | null
+          travel_back_end: string
+          travel_back_start: string
+          travel_out_end: string
+          travel_out_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activities_done?: string
+          activity_id: string
+          created_at?: string
+          date?: string
+          id?: string
+          km?: number
+          observation?: string | null
+          overtime_weekday_hours?: number
+          overtime_weekend_hours?: number
+          position?: number
+          service_end?: string
+          service_start?: string
+          technician_id?: string | null
+          travel_back_end?: string
+          travel_back_start?: string
+          travel_out_end?: string
+          travel_out_start?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activities_done?: string
+          activity_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          km?: number
+          observation?: string | null
+          overtime_weekday_hours?: number
+          overtime_weekend_hours?: number
+          position?: number
+          service_end?: string
+          service_start?: string
+          technician_id?: string | null
+          travel_back_end?: string
+          travel_back_start?: string
+          travel_out_end?: string
+          travel_out_start?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_sessions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "service_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       technicians: {
         Row: {
           created_at: string
