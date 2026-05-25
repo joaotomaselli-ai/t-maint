@@ -258,15 +258,21 @@ export async function listAttachments(activityId: string): Promise<ActivityAttac
 export async function uploadAttachment(
   userId: string, activityId: string, kind: AttachmentKind, file: File
 ): Promise<ActivityAttachment> {
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${userId}/${activityId}/${kind}/${crypto.randomUUID()}.${ext}`;
+  const nameParts = file.name.split(".");
+  const ext = nameParts.length > 1 ? (nameParts.pop() || "bin").toLowerCase() : "bin";
+  const safeExt = ext.replace(/[^a-z0-9]/g, "").slice(0, 8) || "bin";
+  const path = `${userId}/${activityId}/${kind}/${crypto.randomUUID()}.${safeExt}`;
   const up = await supabase.storage.from("activity-attachments")
-    .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
+    .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
   if (up.error) throw up.error;
   const { data, error } = await supabase.from("activity_attachments")
     .insert({ user_id: userId, activity_id: activityId, kind, storage_path: path })
     .select().single();
-  if (error) throw error;
+  if (error) {
+    // rollback storage object if DB insert fails
+    await supabase.storage.from("activity-attachments").remove([path]).catch(() => {});
+    throw error;
+  }
   return fromAttachment(data);
 }
 

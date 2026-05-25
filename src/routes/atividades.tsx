@@ -189,7 +189,11 @@ function Atividades() {
         // Upload pending
         for (const p of editingExtras.pendingAttachments) {
           try { await uploadAttachment(user.id, activityId, p.kind, p.file); }
-          catch (e) { console.error(e); toast.error("Falha ao enviar um anexo"); }
+          catch (e: any) {
+            console.error("Upload attachment failed:", e);
+            const msg = e?.message || e?.error || JSON.stringify(e);
+            toast.error(`Falha ao enviar "${p.file.name}": ${msg}`);
+          }
         }
       }
 
@@ -806,7 +810,7 @@ function AttachmentBlock({ kind, label, extras, setExtras }: {
         <span className="text-xs font-medium">{label}</span>
         <label className="cursor-pointer text-xs inline-flex items-center gap-1 text-primary hover:underline">
           <Upload className="h-3 w-3" /> Anexar
-          <input type="file" accept="image/*" multiple className="hidden"
+          <input type="file" multiple className="hidden"
             onChange={e => { onFiles(e.target.files); e.target.value = ""; }} />
         </label>
       </div>
@@ -814,15 +818,22 @@ function AttachmentBlock({ kind, label, extras, setExtras }: {
         {existing.map(a => (
           <ExistingThumb key={a.id} att={a} onRemove={() => removeExisting(a.id)} />
         ))}
-        {pending.map((p, i) => (
-          <div key={i} className="relative w-16 h-16 rounded border overflow-hidden bg-muted">
-            <img src={p.previewUrl} alt="" className="w-full h-full object-cover" />
-            <button type="button" onClick={() => removePending(i)}
-              className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
+        {pending.map((p, i) => {
+          const isImage = p.file.type.startsWith("image/");
+          return (
+            <div key={i} className="relative w-16 h-16 rounded border overflow-hidden bg-muted flex items-center justify-center">
+              {isImage ? (
+                <img src={p.previewUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-[9px] text-center px-1 break-all line-clamp-3">{p.file.name}</div>
+              )}
+              <button type="button" onClick={() => removePending(i)}
+                className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          );
+        })}
         {existing.length + pending.length === 0 && (
           <span className="text-xs text-muted-foreground">Nenhum anexo</span>
         )}
@@ -840,9 +851,20 @@ function ExistingThumb({ att, onRemove }: { att: ActivityAttachment; onRemove: (
       .catch(() => {});
     return () => { mounted = false; };
   }, [att.storagePath]);
+  const ext = att.storagePath.split(".").pop()?.toLowerCase() || "";
+  const isImage = ["jpg","jpeg","png","gif","webp","bmp","heic","heif","svg"].includes(ext);
   return (
-    <div className="relative w-16 h-16 rounded border overflow-hidden bg-muted">
-      {url && <img src={url} alt="" className="w-full h-full object-cover" />}
+    <div className="relative w-16 h-16 rounded border overflow-hidden bg-muted flex items-center justify-center">
+      {isImage && url ? (
+        <a href={url} target="_blank" rel="noreferrer" className="w-full h-full block">
+          <img src={url} alt="" className="w-full h-full object-cover" />
+        </a>
+      ) : (
+        <a href={url || "#"} target="_blank" rel="noreferrer"
+          className="text-[9px] text-center px-1 break-all line-clamp-3 underline">
+          {ext.toUpperCase() || "FILE"}
+        </a>
+      )}
       <button type="button" onClick={onRemove}
         className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
         <X className="h-3 w-3" />
