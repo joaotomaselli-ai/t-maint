@@ -354,6 +354,7 @@ export type ServiceSession = {
   overtimeWeekendHours: number;
   activitiesDone: string;
   observation?: string;
+  discountHours: number;
   position: number;
 };
 
