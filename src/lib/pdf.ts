@@ -124,9 +124,11 @@ export function exportSingleReport(
   r: ServiceReport,
   client: Client | undefined,
   settings: Settings,
-  opts: { includeValues?: boolean } = {},
+  opts: { includeValues?: boolean; sessions?: ServiceSession[]; technicians?: Technician[] } = {},
 ) {
   const includeValues = opts.includeValues !== false;
+  const sessions = opts.sessions ?? [];
+  const technicians = opts.technicians ?? [];
   const isPreventive = r.type === "preventiva";
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
