@@ -7,19 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
+import { useClients, useReports, useSettings, useTechnicians, useAllSessions } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import {
   reportTotals, technicianTotals, fmtCurrency, fmtHours,
   listAttachments, uploadAttachment, deleteAttachment,
   listActivityTechnicians, replaceActivityTechnicians,
+  listSessions, createSession, updateSession, deleteSession,
+  reportTotalsWithSessions,
   type Client, type ServiceReport, type ServiceType, type Technician,
   type ActivityAttachment, type ActivityTechnician, type AttachmentKind,
+  type ServiceSession,
 } from "@/lib/api";
-import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X } from "lucide-react";
+import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/atividades")({ component: Atividades });
 
@@ -48,7 +52,9 @@ function Atividades() {
   const { technicians } = useTechnicians();
   const { reports, addReport, updateReport, deleteReport } = useReports();
   const { settings } = useSettings();
+  const { sessions: allSessions } = useAllSessions();
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
   const [editingExtras, setEditingExtras] = useState<{
@@ -56,7 +62,14 @@ function Atividades() {
     pendingAttachments: { kind: AttachmentKind; file: File; previewUrl: string }[];
     removedAttachmentIds: Set<string>;
     activityTechnicians: ActivityTechnician[];
-  }>({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
+    sessions: ServiceSession[];                    // existing (loaded)
+    newSessions: Omit<ServiceSession, "id">[];     // to insert
+    editedSessions: Map<string, ServiceSession>;   // id -> updated
+    removedSessionIds: Set<string>;
+  }>({
+    existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(),
+    activityTechnicians: [], sessions: [], newSessions: [], editedSessions: new Map(), removedSessionIds: new Set(),
+  });
   const [search, setSearch] = useState("");
   const [filterClient, setFilterClient] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
@@ -64,6 +77,15 @@ function Atividades() {
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
   const techMap = useMemo(() => new Map(technicians.map(t => [t.id, t])), [technicians]);
+  const sessionsByActivity = useMemo(() => {
+    const m = new Map<string, ServiceSession[]>();
+    for (const s of allSessions) {
+      const arr = m.get(s.activityId) ?? [];
+      arr.push(s);
+      m.set(s.activityId, arr);
+    }
+    return m;
+  }, [allSessions]);
 
   const filtered = useMemo(() => {
     return [...reports]
@@ -81,18 +103,33 @@ function Atividades() {
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   }, [reports, filterClient, filterType, search, clientMap]);
 
+  const emptyExtras = () => ({
+    existingAttachments: [] as ActivityAttachment[],
+    pendingAttachments: [] as { kind: AttachmentKind; file: File; previewUrl: string }[],
+    removedAttachmentIds: new Set<string>(),
+    activityTechnicians: [] as ActivityTechnician[],
+    sessions: [] as ServiceSession[],
+    newSessions: [] as Omit<ServiceSession, "id">[],
+    editedSessions: new Map<string, ServiceSession>(),
+    removedSessionIds: new Set<string>(),
+  });
+
   const startNew = () => {
     if (clients.length === 0) { toast.error("Cadastre um cliente primeiro"); return; }
     if (technicians.length === 0) { toast.error("Cadastre um técnico primeiro"); return; }
     setEditing(empty(settings.technicianName));
-    setEditingExtras({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
+    setEditingExtras(emptyExtras());
     setOpen(true);
   };
 
   const startEdit = async (r: ServiceReport) => {
     setEditing(r);
-    setEditingExtras({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
+    setEditingExtras(emptyExtras());
     setOpen(true);
+    try {
+      const sess = await listSessions(r.id);
+      setEditingExtras(prev => ({ ...prev, sessions: sess }));
+    } catch (e) { console.error(e); }
     if (r.type === "preventiva") {
       try {
         const [att, ats] = await Promise.all([listAttachments(r.id), listActivityTechnicians(r.id)]);
@@ -155,6 +192,22 @@ function Atividades() {
         }
       }
 
+      // Persist sessions (add / update / remove)
+      if (activityId && user) {
+        try {
+          for (const id of editingExtras.removedSessionIds) {
+            try { await deleteSession(id); } catch (e) { console.error(e); }
+          }
+          for (const [, sess] of editingExtras.editedSessions) {
+            try { await updateSession(sess); } catch (e) { console.error(e); }
+          }
+          for (const sess of editingExtras.newSessions) {
+            try { await createSession({ ...sess, activityId }, user.id); } catch (e) { console.error(e); }
+          }
+          qc.invalidateQueries({ queryKey: ["sessions", user.id] });
+        } catch (e) { console.error(e); }
+      }
+
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
@@ -175,11 +228,12 @@ function Atividades() {
 
   const totals = useMemo(() => {
     return filtered.reduce((acc, r) => {
-      const t = reportTotals(r, clientMap.get(r.clientId));
-      acc.hours += t.totalHours; acc.value += t.total; acc.km += r.km || 0;
+      const sess = sessionsByActivity.get(r.id) ?? [];
+      const t = reportTotalsWithSessions(r, sess, clientMap.get(r.clientId));
+      acc.hours += t.totalHours; acc.value += t.total; acc.km += t.km;
       return acc;
     }, { hours: 0, value: 0, km: 0 });
-  }, [filtered, clientMap]);
+  }, [filtered, clientMap, sessionsByActivity]);
 
   return (
     <div className="space-y-6">
@@ -233,7 +287,8 @@ function Atividades() {
         <div className="space-y-3">
           {filtered.map(r => {
             const c = clientMap.get(r.clientId);
-            const t = reportTotals(r, c);
+            const sess = sessionsByActivity.get(r.id) ?? [];
+            const t = reportTotalsWithSessions(r, sess, c);
             return (
               <Card key={r.id} className="hover:shadow-elegant transition-shadow">
                 <CardContent className="p-5">
@@ -245,6 +300,11 @@ function Atividades() {
                           {r.type === "corretiva" ? "Corretiva" : "Preventiva"}
                         </span>
                         <span className="text-xs text-muted-foreground">{format(new Date(r.date + "T00:00:00"), "dd 'de' MMMM, yyyy", { locale: ptBR })}</span>
+                        {sess.length > 0 && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                            +{sess.length} sessão{sess.length > 1 ? "s" : ""}
+                          </span>
+                        )}
                       </div>
                       <h3 className="font-semibold text-lg mt-2">{c?.name || "Cliente removido"}</h3>
                       <p className="text-sm text-muted-foreground">{r.machine} {r.requester && `· Sol.: ${r.requester}`}</p>
@@ -252,7 +312,7 @@ function Atividades() {
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span>Serviço: <b className="text-foreground">{fmtHours(t.service)}</b></span>
                         <span>Deslocamento: <b className="text-foreground">{fmtHours(t.travelOut + t.travelBack)}</b></span>
-                        <span>KM: <b className="text-foreground">{r.km}</b></span>
+                        <span>KM: <b className="text-foreground">{t.km}</b></span>
                       </div>
                     </div>
                     <div className="flex sm:flex-col items-end gap-2 shrink-0">
@@ -284,22 +344,27 @@ function Atividades() {
       <PdfChoiceDialog
         state={pdfChoice} onClose={() => setPdfChoice({ open: false })}
         clientMap={clientMap} settings={settings}
+        sessionsByActivity={sessionsByActivity} technicians={technicians}
       />
+
     </div>
   );
 }
 
-function PdfChoiceDialog({ state, onClose, clientMap, settings }: {
+function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivity, technicians }: {
   state: PdfChoice;
   onClose: () => void;
   clientMap: Map<string, Client>;
   settings: any;
+  sessionsByActivity: Map<string, ServiceSession[]>;
+  technicians: Technician[];
 }) {
   if (!state.report) {
     return <Dialog open={state.open} onOpenChange={onClose}><DialogContent /></Dialog>;
   }
   const r = state.report;
   const client = clientMap.get(r.clientId);
+  const sessions = sessionsByActivity.get(r.id) ?? [];
 
   const exportInformative = async () => {
     try {
@@ -311,10 +376,11 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings }: {
   const exportOperational = async (includeValues: boolean) => {
     try {
       const { exportSingleReport } = await import("@/lib/pdf");
-      exportSingleReport(r, client, settings, { includeValues });
+      exportSingleReport(r, client, settings, { includeValues, sessions, technicians });
       onClose();
     } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
   };
+
 
   return (
     <Dialog open={state.open} onOpenChange={onClose}>
@@ -358,6 +424,10 @@ type Extras = {
   pendingAttachments: { kind: AttachmentKind; file: File; previewUrl: string }[];
   removedAttachmentIds: Set<string>;
   activityTechnicians: ActivityTechnician[];
+  sessions: ServiceSession[];
+  newSessions: Omit<ServiceSession, "id">[];
+  editedSessions: Map<string, ServiceSession>;
+  removedSessionIds: Set<string>;
 };
 
 function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave }: {
@@ -612,6 +682,15 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
             <Textarea rows={2} value={editing.observation || ""} onChange={e => setEditing({ ...editing, observation: e.target.value })} />
           </div>
 
+          {editing.id ? (
+            <SessionsSection extras={extras} setExtras={setExtras} technicians={technicians} />
+          ) : (
+            <div className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+              Após salvar a OS, você poderá adicionar sessões adicionais de trabalho (mais dias, outros técnicos, novas atividades) dentro desta mesma ordem.
+            </div>
+          )}
+
+
           {showApur && techTotalsForApur && (
             <Card className="bg-primary/5 border-primary/20">
               <CardHeader className="pb-2"><CardTitle className="text-base">Apuração</CardTitle></CardHeader>
@@ -772,4 +851,196 @@ function TimeRange({ label, startVal, endVal, onStart, onEnd, hours }: { label: 
       <div className="text-xs text-muted-foreground">{fmtHours(hours)}</div>
     </div>
   );
+}
+
+function emptyDraftSession(): Omit<ServiceSession, "id"> {
+  return {
+    activityId: "",
+    technicianId: null,
+    date: new Date().toISOString().slice(0, 10),
+    travelOutStart: "", travelOutEnd: "",
+    serviceStart: "", serviceEnd: "",
+    travelBackStart: "", travelBackEnd: "",
+    km: 0,
+    overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
+    activitiesDone: "", observation: "",
+    position: 1,
+  };
+}
+
+function SessionsSection({ extras, setExtras, technicians }: {
+  extras: Extras;
+  setExtras: React.Dispatch<React.SetStateAction<Extras>>;
+  technicians: Technician[];
+}) {
+  const techMap = useMemo(() => new Map(technicians.map(t => [t.id, t])), [technicians]);
+
+  const liveSessions = extras.sessions
+    .filter(s => !extras.removedSessionIds.has(s.id))
+    .map(s => extras.editedSessions.get(s.id) ?? s);
+
+  const addSession = () => {
+    setExtras(prev => ({
+      ...prev,
+      newSessions: [...prev.newSessions, emptyDraftSession()],
+    }));
+  };
+  const updateExisting = (id: string, patch: Partial<ServiceSession>) => {
+    setExtras(prev => {
+      const current = prev.editedSessions.get(id) ?? prev.sessions.find(s => s.id === id)!;
+      const next = new Map(prev.editedSessions);
+      next.set(id, { ...current, ...patch });
+      return { ...prev, editedSessions: next };
+    });
+  };
+  const removeExisting = (id: string) => {
+    if (!confirm("Excluir esta sessão?")) return;
+    setExtras(prev => {
+      const next = new Set(prev.removedSessionIds);
+      next.add(id);
+      return { ...prev, removedSessionIds: next };
+    });
+  };
+  const updateDraft = (idx: number, patch: Partial<Omit<ServiceSession, "id">>) => {
+    setExtras(prev => ({
+      ...prev,
+      newSessions: prev.newSessions.map((s, i) => i === idx ? { ...s, ...patch } : s),
+    }));
+  };
+  const removeDraft = (idx: number) => {
+    setExtras(prev => ({
+      ...prev,
+      newSessions: prev.newSessions.filter((_, i) => i !== idx),
+    }));
+  };
+
+  return (
+    <section className="grid gap-3 rounded-lg border p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold">Sessões adicionais de trabalho</div>
+          <div className="text-xs text-muted-foreground">Acrescente outros dias, técnicos e atividades dentro desta mesma OS.</div>
+        </div>
+        <Button type="button" size="sm" variant="outline" onClick={addSession}>
+          <CalendarPlus className="h-4 w-4 mr-1" /> Adicionar sessão
+        </Button>
+      </div>
+
+      {liveSessions.length === 0 && extras.newSessions.length === 0 && (
+        <p className="text-sm text-muted-foreground">Nenhuma sessão adicional.</p>
+      )}
+
+      {liveSessions.map((s) => (
+        <SessionCard
+          key={s.id}
+          session={s}
+          technicians={technicians}
+          techMap={techMap}
+          onChange={(patch) => updateExisting(s.id, patch)}
+          onRemove={() => removeExisting(s.id)}
+        />
+      ))}
+
+      {extras.newSessions.map((s, idx) => (
+        <SessionCard
+          key={`new-${idx}`}
+          session={s}
+          technicians={technicians}
+          techMap={techMap}
+          isNew
+          onChange={(patch) => updateDraft(idx, patch)}
+          onRemove={() => removeDraft(idx)}
+        />
+      ))}
+    </section>
+  );
+}
+
+function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove }: {
+  session: ServiceSession | Omit<ServiceSession, "id">;
+  technicians: Technician[];
+  techMap: Map<string, Technician>;
+  isNew?: boolean;
+  onChange: (patch: Partial<ServiceSession>) => void;
+  onRemove: () => void;
+}) {
+  const s = session;
+  const tech = s.technicianId ? techMap.get(s.technicianId) : undefined;
+  const travelOut = diffHoursLocal(s.travelOutStart, s.travelOutEnd);
+  const service = diffHoursLocal(s.serviceStart, s.serviceEnd);
+  const travelBack = diffHoursLocal(s.travelBackStart, s.travelBackEnd);
+  const totalHours = travelOut + service + travelBack;
+
+  return (
+    <div className="rounded-md border bg-muted/30 p-3 grid gap-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-muted-foreground">
+          {isNew ? "Nova sessão" : "Sessão registrada"}
+          {tech && ` · ${tech.name}`}
+        </span>
+        <Button type="button" variant="ghost" size="icon" onClick={onRemove}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[140px_1fr_120px]">
+        <div className="grid gap-1">
+          <Label className="text-xs">Data</Label>
+          <Input type="date" value={s.date} onChange={e => onChange({ date: e.target.value })} />
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs">Técnico</Label>
+          <Select value={s.technicianId ?? ""} onValueChange={v => onChange({ technicianId: v })}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              {technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs">KM</Label>
+          <Input type="number" step="1" value={s.km || ""} onChange={e => onChange({ km: Number(e.target.value) })} placeholder="0" />
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <TimeRange label="Viagem de ida" startVal={s.travelOutStart} endVal={s.travelOutEnd}
+          onStart={v => onChange({ travelOutStart: v })} onEnd={v => onChange({ travelOutEnd: v })} hours={travelOut} />
+        <TimeRange label="Serviço" startVal={s.serviceStart} endVal={s.serviceEnd}
+          onStart={v => onChange({ serviceStart: v })} onEnd={v => onChange({ serviceEnd: v })} hours={service} />
+        <TimeRange label="Viagem de volta" startVal={s.travelBackStart} endVal={s.travelBackEnd}
+          onStart={v => onChange({ travelBackStart: v })} onEnd={v => onChange({ travelBackEnd: v })} hours={travelBack} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1">
+          <Label className="text-xs">HE semana</Label>
+          <Input type="number" step="0.5" min="0" value={s.overtimeWeekdayHours || ""}
+            onChange={e => onChange({ overtimeWeekdayHours: Number(e.target.value) })} placeholder="0" />
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs">HE fim de semana</Label>
+          <Input type="number" step="0.5" min="0" value={s.overtimeWeekendHours || ""}
+            onChange={e => onChange({ overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
+        </div>
+      </div>
+      <div className="grid gap-1">
+        <Label className="text-xs">Atividades realizadas neste dia</Label>
+        <Textarea rows={2} value={s.activitiesDone}
+          onChange={e => onChange({ activitiesDone: e.target.value })}
+          placeholder="O que foi executado nesta sessão" />
+      </div>
+      <div className="grid gap-1">
+        <Label className="text-xs">Observação</Label>
+        <Input value={s.observation ?? ""} onChange={e => onChange({ observation: e.target.value })} placeholder="opcional" />
+      </div>
+      <div className="text-xs text-muted-foreground">Total da sessão: <b>{fmtHours(totalHours)}</b></div>
+    </div>
+  );
+}
+
+function diffHoursLocal(start: string, end: string): number {
+  if (!start || !end) return 0;
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let mins = (eh * 60 + em) - (sh * 60 + sm);
+  if (mins < 0) mins += 24 * 60;
+  return mins / 60;
 }

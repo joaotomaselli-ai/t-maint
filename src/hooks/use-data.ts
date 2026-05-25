@@ -4,7 +4,8 @@ import {
   listReports, createReport, updateReport, deleteReport,
   listTechnicians, createTechnician, updateTechnician, deleteTechnician,
   getProfile, upsertProfile,
-  type Client, type ServiceReport, type Settings, type Technician,
+  listAllSessions,
+  type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -107,4 +108,14 @@ export function useTechnicians() {
       onSuccess: invalidate,
     }),
   };
+}
+
+export function useAllSessions() {
+  const { user } = useAuth();
+  const q = useQuery({
+    queryKey: ["sessions", user?.id],
+    queryFn: listAllSessions,
+    enabled: !!user,
+  });
+  return { sessions: (q.data ?? []) as ServiceSession[], isLoading: q.isLoading };
 }
