@@ -109,3 +109,13 @@ export function useTechnicians() {
     }),
   };
 }
+
+export function useAllSessions() {
+  const { user } = useAuth();
+  const q = useQuery({
+    queryKey: ["sessions", user?.id],
+    queryFn: listAllSessions,
+    enabled: !!user,
+  });
+  return { sessions: (q.data ?? []) as ServiceSession[], isLoading: q.isLoading };
+}
