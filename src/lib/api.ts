@@ -49,7 +49,7 @@ export type ServiceReport = {
   createdAt: string;
 };
 
-export type AttachmentKind = "mechanical_before" | "mechanical_after" | "electrical_before" | "electrical_after";
+export type AttachmentKind = "mechanical_before" | "mechanical_after" | "electrical_before" | "electrical_after" | "future_replacements";
 
 export type ActivityAttachment = {
   id: string;
