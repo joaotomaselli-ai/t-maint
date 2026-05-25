@@ -3,7 +3,7 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Client, ServiceReport, Settings, ServiceSession, Technician } from "./api";
-import { reportTotals, technicianTotals, fmtCurrency, fmtHours, sessionClientTotals, sessionTechnicianTotals, reportTotalsWithSessions } from "./api";
+import { reportTotals, technicianTotals, fmtCurrency, fmtHours, reportTotalsWithSessions } from "./api";
 
 export function exportClientReport(
   client: Client,
