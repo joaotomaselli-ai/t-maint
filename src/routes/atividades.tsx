@@ -846,3 +846,195 @@ function TimeRange({ label, startVal, endVal, onStart, onEnd, hours }: { label: 
     </div>
   );
 }
+
+function emptyDraftSession(): Omit<ServiceSession, "id"> {
+  return {
+    activityId: "",
+    technicianId: null,
+    date: new Date().toISOString().slice(0, 10),
+    travelOutStart: "", travelOutEnd: "",
+    serviceStart: "", serviceEnd: "",
+    travelBackStart: "", travelBackEnd: "",
+    km: 0,
+    overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
+    activitiesDone: "", observation: "",
+    position: 1,
+  };
+}
+
+function SessionsSection({ extras, setExtras, technicians }: {
+  extras: Extras;
+  setExtras: React.Dispatch<React.SetStateAction<Extras>>;
+  technicians: Technician[];
+}) {
+  const techMap = useMemo(() => new Map(technicians.map(t => [t.id, t])), [technicians]);
+
+  const liveSessions = extras.sessions
+    .filter(s => !extras.removedSessionIds.has(s.id))
+    .map(s => extras.editedSessions.get(s.id) ?? s);
+
+  const addSession = () => {
+    setExtras(prev => ({
+      ...prev,
+      newSessions: [...prev.newSessions, emptyDraftSession()],
+    }));
+  };
+  const updateExisting = (id: string, patch: Partial<ServiceSession>) => {
+    setExtras(prev => {
+      const current = prev.editedSessions.get(id) ?? prev.sessions.find(s => s.id === id)!;
+      const next = new Map(prev.editedSessions);
+      next.set(id, { ...current, ...patch });
+      return { ...prev, editedSessions: next };
+    });
+  };
+  const removeExisting = (id: string) => {
+    if (!confirm("Excluir esta sessão?")) return;
+    setExtras(prev => {
+      const next = new Set(prev.removedSessionIds);
+      next.add(id);
+      return { ...prev, removedSessionIds: next };
+    });
+  };
+  const updateDraft = (idx: number, patch: Partial<Omit<ServiceSession, "id">>) => {
+    setExtras(prev => ({
+      ...prev,
+      newSessions: prev.newSessions.map((s, i) => i === idx ? { ...s, ...patch } : s),
+    }));
+  };
+  const removeDraft = (idx: number) => {
+    setExtras(prev => ({
+      ...prev,
+      newSessions: prev.newSessions.filter((_, i) => i !== idx),
+    }));
+  };
+
+  return (
+    <section className="grid gap-3 rounded-lg border p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold">Sessões adicionais de trabalho</div>
+          <div className="text-xs text-muted-foreground">Acrescente outros dias, técnicos e atividades dentro desta mesma OS.</div>
+        </div>
+        <Button type="button" size="sm" variant="outline" onClick={addSession}>
+          <CalendarPlus className="h-4 w-4 mr-1" /> Adicionar sessão
+        </Button>
+      </div>
+
+      {liveSessions.length === 0 && extras.newSessions.length === 0 && (
+        <p className="text-sm text-muted-foreground">Nenhuma sessão adicional.</p>
+      )}
+
+      {liveSessions.map((s) => (
+        <SessionCard
+          key={s.id}
+          session={s}
+          technicians={technicians}
+          techMap={techMap}
+          onChange={(patch) => updateExisting(s.id, patch)}
+          onRemove={() => removeExisting(s.id)}
+        />
+      ))}
+
+      {extras.newSessions.map((s, idx) => (
+        <SessionCard
+          key={`new-${idx}`}
+          session={s}
+          technicians={technicians}
+          techMap={techMap}
+          isNew
+          onChange={(patch) => updateDraft(idx, patch)}
+          onRemove={() => removeDraft(idx)}
+        />
+      ))}
+    </section>
+  );
+}
+
+function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove }: {
+  session: ServiceSession | Omit<ServiceSession, "id">;
+  technicians: Technician[];
+  techMap: Map<string, Technician>;
+  isNew?: boolean;
+  onChange: (patch: Partial<ServiceSession>) => void;
+  onRemove: () => void;
+}) {
+  const s = session;
+  const tech = s.technicianId ? techMap.get(s.technicianId) : undefined;
+  const travelOut = diffHoursLocal(s.travelOutStart, s.travelOutEnd);
+  const service = diffHoursLocal(s.serviceStart, s.serviceEnd);
+  const travelBack = diffHoursLocal(s.travelBackStart, s.travelBackEnd);
+  const totalHours = travelOut + service + travelBack;
+
+  return (
+    <div className="rounded-md border bg-muted/30 p-3 grid gap-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-muted-foreground">
+          {isNew ? "Nova sessão" : "Sessão registrada"}
+          {tech && ` · ${tech.name}`}
+        </span>
+        <Button type="button" variant="ghost" size="icon" onClick={onRemove}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[140px_1fr_120px]">
+        <div className="grid gap-1">
+          <Label className="text-xs">Data</Label>
+          <Input type="date" value={s.date} onChange={e => onChange({ date: e.target.value })} />
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs">Técnico</Label>
+          <Select value={s.technicianId ?? ""} onValueChange={v => onChange({ technicianId: v })}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              {technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs">KM</Label>
+          <Input type="number" step="1" value={s.km || ""} onChange={e => onChange({ km: Number(e.target.value) })} placeholder="0" />
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <TimeRange label="Viagem de ida" startVal={s.travelOutStart} endVal={s.travelOutEnd}
+          onStart={v => onChange({ travelOutStart: v })} onEnd={v => onChange({ travelOutEnd: v })} hours={travelOut} />
+        <TimeRange label="Serviço" startVal={s.serviceStart} endVal={s.serviceEnd}
+          onStart={v => onChange({ serviceStart: v })} onEnd={v => onChange({ serviceEnd: v })} hours={service} />
+        <TimeRange label="Viagem de volta" startVal={s.travelBackStart} endVal={s.travelBackEnd}
+          onStart={v => onChange({ travelBackStart: v })} onEnd={v => onChange({ travelBackEnd: v })} hours={travelBack} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1">
+          <Label className="text-xs">HE semana</Label>
+          <Input type="number" step="0.5" min="0" value={s.overtimeWeekdayHours || ""}
+            onChange={e => onChange({ overtimeWeekdayHours: Number(e.target.value) })} placeholder="0" />
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs">HE fim de semana</Label>
+          <Input type="number" step="0.5" min="0" value={s.overtimeWeekendHours || ""}
+            onChange={e => onChange({ overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
+        </div>
+      </div>
+      <div className="grid gap-1">
+        <Label className="text-xs">Atividades realizadas neste dia</Label>
+        <Textarea rows={2} value={s.activitiesDone}
+          onChange={e => onChange({ activitiesDone: e.target.value })}
+          placeholder="O que foi executado nesta sessão" />
+      </div>
+      <div className="grid gap-1">
+        <Label className="text-xs">Observação</Label>
+        <Input value={s.observation ?? ""} onChange={e => onChange({ observation: e.target.value })} placeholder="opcional" />
+      </div>
+      <div className="text-xs text-muted-foreground">Total da sessão: <b>{fmtHours(totalHours)}</b></div>
+    </div>
+  );
+}
+
+function diffHoursLocal(start: string, end: string): number {
+  if (!start || !end) return 0;
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let mins = (eh * 60 + em) - (sh * 60 + sm);
+  if (mins < 0) mins += 24 * 60;
+  return mins / 60;
+}
