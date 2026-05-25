@@ -489,12 +489,13 @@ export function reportTotals(r: ServiceReport, client?: Client) {
   const travelOut = diffHours(r.travelOutStart, r.travelOutEnd);
   const service = diffHours(r.serviceStart, r.serviceEnd);
   const travelBack = diffHours(r.travelBackStart, r.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, r.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const hourlyRate = client?.hourlyRate ?? 0;
   const kmRate = client?.kmRate ?? 0;
   const hoursValue = totalHours * hourlyRate;
   const kmValue = (r.km || 0) * kmRate;
-  return { travelOut, service, travelBack, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 export function technicianTotals(r: ServiceReport, technician?: Technician) {
