@@ -103,18 +103,33 @@ function Atividades() {
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   }, [reports, filterClient, filterType, search, clientMap]);
 
+  const emptyExtras = () => ({
+    existingAttachments: [] as ActivityAttachment[],
+    pendingAttachments: [] as { kind: AttachmentKind; file: File; previewUrl: string }[],
+    removedAttachmentIds: new Set<string>(),
+    activityTechnicians: [] as ActivityTechnician[],
+    sessions: [] as ServiceSession[],
+    newSessions: [] as Omit<ServiceSession, "id">[],
+    editedSessions: new Map<string, ServiceSession>(),
+    removedSessionIds: new Set<string>(),
+  });
+
   const startNew = () => {
     if (clients.length === 0) { toast.error("Cadastre um cliente primeiro"); return; }
     if (technicians.length === 0) { toast.error("Cadastre um técnico primeiro"); return; }
     setEditing(empty(settings.technicianName));
-    setEditingExtras({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
+    setEditingExtras(emptyExtras());
     setOpen(true);
   };
 
   const startEdit = async (r: ServiceReport) => {
     setEditing(r);
-    setEditingExtras({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
+    setEditingExtras(emptyExtras());
     setOpen(true);
+    try {
+      const sess = await listSessions(r.id);
+      setEditingExtras(prev => ({ ...prev, sessions: sess }));
+    } catch (e) { console.error(e); }
     if (r.type === "preventiva") {
       try {
         const [att, ats] = await Promise.all([listAttachments(r.id), listActivityTechnicians(r.id)]);
