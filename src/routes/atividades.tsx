@@ -1018,7 +1018,7 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
         <TimeRange label="Viagem de volta" startVal={s.travelBackStart} endVal={s.travelBackEnd}
           onStart={v => onChange({ travelBackStart: v })} onEnd={v => onChange({ travelBackEnd: v })} hours={travelBack} />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         <div className="grid gap-1">
           <Label className="text-xs">HE semana</Label>
           <Input type="number" step="0.5" min="0" value={s.overtimeWeekdayHours || ""}
@@ -1028,6 +1028,11 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
           <Label className="text-xs">HE fim de semana</Label>
           <Input type="number" step="0.5" min="0" value={s.overtimeWeekendHours || ""}
             onChange={e => onChange({ overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs">Desconto de horas</Label>
+          <Input type="number" step="0.25" min="0" value={s.discountHours || ""}
+            onChange={e => onChange({ discountHours: Number(e.target.value) })} placeholder="0" />
         </div>
       </div>
       <div className="grid gap-1">
