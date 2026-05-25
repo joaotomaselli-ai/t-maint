@@ -351,17 +351,20 @@ function Atividades() {
   );
 }
 
-function PdfChoiceDialog({ state, onClose, clientMap, settings }: {
+function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivity, technicians }: {
   state: PdfChoice;
   onClose: () => void;
   clientMap: Map<string, Client>;
   settings: any;
+  sessionsByActivity: Map<string, ServiceSession[]>;
+  technicians: Technician[];
 }) {
   if (!state.report) {
     return <Dialog open={state.open} onOpenChange={onClose}><DialogContent /></Dialog>;
   }
   const r = state.report;
   const client = clientMap.get(r.clientId);
+  const sessions = sessionsByActivity.get(r.id) ?? [];
 
   const exportInformative = async () => {
     try {
@@ -373,10 +376,11 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings }: {
   const exportOperational = async (includeValues: boolean) => {
     try {
       const { exportSingleReport } = await import("@/lib/pdf");
-      exportSingleReport(r, client, settings, { includeValues });
+      exportSingleReport(r, client, settings, { includeValues, sessions, technicians });
       onClose();
     } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
   };
+
 
   return (
     <Dialog open={state.open} onOpenChange={onClose}>
