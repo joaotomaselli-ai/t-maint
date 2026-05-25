@@ -344,7 +344,9 @@ function Atividades() {
       <PdfChoiceDialog
         state={pdfChoice} onClose={() => setPdfChoice({ open: false })}
         clientMap={clientMap} settings={settings}
+        sessionsByActivity={sessionsByActivity} technicians={technicians}
       />
+
     </div>
   );
 }
