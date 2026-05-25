@@ -228,11 +228,12 @@ function Atividades() {
 
   const totals = useMemo(() => {
     return filtered.reduce((acc, r) => {
-      const t = reportTotals(r, clientMap.get(r.clientId));
-      acc.hours += t.totalHours; acc.value += t.total; acc.km += r.km || 0;
+      const sess = sessionsByActivity.get(r.id) ?? [];
+      const t = reportTotalsWithSessions(r, sess, clientMap.get(r.clientId));
+      acc.hours += t.totalHours; acc.value += t.total; acc.km += t.km;
       return acc;
     }, { hours: 0, value: 0, km: 0 });
-  }, [filtered, clientMap]);
+  }, [filtered, clientMap, sessionsByActivity]);
 
   return (
     <div className="space-y-6">
