@@ -9,7 +9,7 @@ const nav = [
   { to: "/", label: "Painel", icon: LayoutDashboard },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/tecnicos", label: "Técnicos", icon: HardHat },
-  { to: "/atividades", label: "Nova OS", icon: Wrench },
+  { to: "/atividades", label: "Ordem de Serviço", icon: Wrench },
   { to: "/relatorios", label: "Relatórios", icon: FileText },
   { to: "/configuracoes", label: "Configurações", icon: SettingsIcon },
 ];
