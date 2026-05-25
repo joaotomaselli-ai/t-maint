@@ -29,11 +29,11 @@ function Dashboard() {
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Painel</h1>
-          <p className="text-muted-foreground mt-1">Visão geral das suas atividades de manutenção</p>
+          <p className="text-muted-foreground mt-1">Visão geral das suas OS de manutenção</p>
         </div>
         <Link to="/atividades">
           <Button size="lg" className="gap-2">
-            <Plus className="h-4 w-4" /> Nova atividade
+            <Plus className="h-4 w-4" /> Nova OS
           </Button>
         </Link>
       </header>
@@ -47,18 +47,18 @@ function Dashboard() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> Atividades recentes</CardTitle>
+          <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> OS recentes</CardTitle>
           <Link to="/atividades"><Button variant="ghost" size="sm">Ver todas</Button></Link>
         </CardHeader>
         <CardContent>
           {recent.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Wrench className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">Nenhuma atividade registrada ainda</p>
+              <p className="font-medium">Nenhuma OS registrada ainda</p>
               <p className="text-sm mt-1">Cadastre seus clientes e comece a registrar atendimentos.</p>
               <div className="flex justify-center gap-2 mt-4">
                 <Link to="/clientes"><Button variant="outline" size="sm">Cadastrar cliente</Button></Link>
-                <Link to="/atividades"><Button size="sm">Nova atividade</Button></Link>
+                <Link to="/atividades"><Button size="sm">Nova OS</Button></Link>
               </div>
             </div>
           ) : (
