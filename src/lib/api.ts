@@ -440,7 +440,8 @@ export function sessionTechnicianTotals(s: ServiceSession, technician?: Technici
   const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
   const service = diffHours(s.serviceStart, s.serviceEnd);
   const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, s.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const ovtWk = Math.max(0, s.overtimeWeekdayHours || 0);
   const ovtWe = Math.max(0, s.overtimeWeekendHours || 0);
   const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
@@ -451,7 +452,7 @@ export function sessionTechnicianTotals(s: ServiceSession, technician?: Technici
   const ovtWeRate = technician?.overtimeWeekendRate ?? 0;
   const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
   const kmValue = (s.km || 0) * kmRate;
-  return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { totalHours, regularHours, discount, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 /** Sum the primary report row + all its sessions, from the client billing side */
