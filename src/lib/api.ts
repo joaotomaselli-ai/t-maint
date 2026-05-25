@@ -237,6 +237,81 @@ export async function deleteReport(id: string): Promise<void> {
   if (error) throw error;
 }
 
+const fromAttachment = (r: any): ActivityAttachment => ({
+  id: r.id,
+  activityId: r.activity_id,
+  kind: r.kind,
+  storagePath: r.storage_path,
+  caption: r.caption ?? "",
+});
+
+export async function listAttachments(activityId: string): Promise<ActivityAttachment[]> {
+  const { data, error } = await supabase.from("activity_attachments")
+    .select("*").eq("activity_id", activityId).order("created_at");
+  if (error) throw error;
+  return (data ?? []).map(fromAttachment);
+}
+
+export async function uploadAttachment(
+  userId: string, activityId: string, kind: AttachmentKind, file: File
+): Promise<ActivityAttachment> {
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${userId}/${activityId}/${kind}/${crypto.randomUUID()}.${ext}`;
+  const up = await supabase.storage.from("activity-attachments")
+    .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
+  if (up.error) throw up.error;
+  const { data, error } = await supabase.from("activity_attachments")
+    .insert({ user_id: userId, activity_id: activityId, kind, storage_path: path })
+    .select().single();
+  if (error) throw error;
+  return fromAttachment(data);
+}
+
+export async function deleteAttachment(att: ActivityAttachment): Promise<void> {
+  await supabase.storage.from("activity-attachments").remove([att.storagePath]);
+  const { error } = await supabase.from("activity_attachments").delete().eq("id", att.id);
+  if (error) throw error;
+}
+
+export async function getAttachmentUrl(storagePath: string): Promise<string> {
+  const { data, error } = await supabase.storage.from("activity-attachments")
+    .createSignedUrl(storagePath, 60 * 10);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+const fromActTech = (r: any): ActivityTechnician => ({
+  id: r.id,
+  activityId: r.activity_id,
+  technicianId: r.technician_id,
+  position: Number(r.position),
+  overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
+  overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
+});
+
+export async function listActivityTechnicians(activityId: string): Promise<ActivityTechnician[]> {
+  const { data, error } = await supabase.from("activity_technicians")
+    .select("*").eq("activity_id", activityId).order("position");
+  if (error) throw error;
+  return (data ?? []).map(fromActTech);
+}
+
+export async function replaceActivityTechnicians(
+  userId: string, activityId: string, rows: ActivityTechnician[]
+): Promise<void> {
+  const del = await supabase.from("activity_technicians").delete().eq("activity_id", activityId);
+  if (del.error) throw del.error;
+  if (rows.length === 0) return;
+  const payload = rows.map(r => ({
+    user_id: userId, activity_id: activityId,
+    technician_id: r.technicianId, position: r.position,
+    overtime_weekday_hours: r.overtimeWeekdayHours ?? 0,
+    overtime_weekend_hours: r.overtimeWeekendHours ?? 0,
+  }));
+  const { error } = await supabase.from("activity_technicians").insert(payload);
+  if (error) throw error;
+}
+
 export async function getProfile(userId: string): Promise<Settings> {
   const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
   if (error) throw error;
