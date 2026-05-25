@@ -40,6 +40,7 @@ const empty = (technician = ""): Editing => ({
   km: 0, observation: "", technician,
   overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
   futureReplacements: "",
+  discountHours: 0,
 });
 
 type PdfChoice = {
