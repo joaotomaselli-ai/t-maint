@@ -604,10 +604,16 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               <TimeRange label="Viagem de volta" startVal={editing.travelBackStart} endVal={editing.travelBackEnd}
                 onStart={v => setEditing({ ...editing, travelBackStart: v })} onEnd={v => setEditing({ ...editing, travelBackEnd: v })} hours={t.travelBack} />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div className="grid gap-2">
                 <Label>Quilometragem total (km)</Label>
                 <Input type="number" step="1" value={editing.km || ""} onChange={e => setEditing({ ...editing, km: Number(e.target.value) })} placeholder="50" />
+              </div>
+              <div className="grid gap-2">
+                <Label>Desconto de horas</Label>
+                <Input type="number" step="0.25" min="0" value={editing.discountHours || ""}
+                  onChange={e => setEditing({ ...editing, discountHours: Number(e.target.value) })}
+                  placeholder="Ex: 1.5 (intervalo sem atendimento)" />
               </div>
               {!isPreventive && (
                 <div className="grid gap-2">
