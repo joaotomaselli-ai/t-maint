@@ -134,6 +134,7 @@ const fromReport = (r: any): ServiceReport => ({
   technician: r.technician ?? "",
   overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
   overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
+  futureReplacements: r.future_replacements ?? "",
   createdAt: r.created_at,
 });
 
@@ -157,6 +158,7 @@ const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
   technician: r.technician ?? "",
   overtime_weekday_hours: r.overtimeWeekdayHours ?? 0,
   overtime_weekend_hours: r.overtimeWeekendHours ?? 0,
+  future_replacements: r.futureReplacements ?? "",
 });
 
 const fromProfile = (r: any): Settings => ({
