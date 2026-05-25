@@ -1,0 +1,2 @@
+ALTER TABLE public.service_reports ADD COLUMN IF NOT EXISTS discount_hours numeric NOT NULL DEFAULT 0;
+ALTER TABLE public.service_sessions ADD COLUMN IF NOT EXISTS discount_hours numeric NOT NULL DEFAULT 0;

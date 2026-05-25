@@ -45,6 +45,7 @@ export type ServiceReport = {
   overtimeWeekdayHours: number;
   overtimeWeekendHours: number;
   futureReplacements?: string;
+  discountHours: number;
   createdAt: string;
 };
 
@@ -135,6 +136,7 @@ const fromReport = (r: any): ServiceReport => ({
   overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
   overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
   futureReplacements: r.future_replacements ?? "",
+  discountHours: Number(r.discount_hours ?? 0),
   createdAt: r.created_at,
 });
 
@@ -159,6 +161,7 @@ const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
   overtime_weekday_hours: r.overtimeWeekdayHours ?? 0,
   overtime_weekend_hours: r.overtimeWeekendHours ?? 0,
   future_replacements: r.futureReplacements ?? "",
+  discount_hours: r.discountHours ?? 0,
 });
 
 const fromProfile = (r: any): Settings => ({
@@ -351,6 +354,7 @@ export type ServiceSession = {
   overtimeWeekendHours: number;
   activitiesDone: string;
   observation?: string;
+  discountHours: number;
   position: number;
 };
 
@@ -370,6 +374,7 @@ const fromSession = (r: any): ServiceSession => ({
   overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
   activitiesDone: r.activities_done ?? "",
   observation: r.observation ?? "",
+  discountHours: Number(r.discount_hours ?? 0),
   position: Number(r.position ?? 1),
 });
 
@@ -388,6 +393,7 @@ const toSessionRow = (s: Omit<ServiceSession, "id">) => ({
   overtime_weekend_hours: s.overtimeWeekendHours ?? 0,
   activities_done: s.activitiesDone ?? "",
   observation: s.observation || null,
+  discount_hours: s.discountHours ?? 0,
   position: s.position ?? 1,
 });
 
@@ -423,17 +429,19 @@ export function sessionClientTotals(s: ServiceSession, client?: Client) {
   const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
   const service = diffHours(s.serviceStart, s.serviceEnd);
   const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, s.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const hoursValue = totalHours * (client?.hourlyRate ?? 0);
   const kmValue = (s.km || 0) * (client?.kmRate ?? 0);
-  return { travelOut, service, travelBack, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 export function sessionTechnicianTotals(s: ServiceSession, technician?: Technician) {
   const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
   const service = diffHours(s.serviceStart, s.serviceEnd);
   const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, s.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const ovtWk = Math.max(0, s.overtimeWeekdayHours || 0);
   const ovtWe = Math.max(0, s.overtimeWeekendHours || 0);
   const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
@@ -444,7 +452,7 @@ export function sessionTechnicianTotals(s: ServiceSession, technician?: Technici
   const ovtWeRate = technician?.overtimeWeekendRate ?? 0;
   const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
   const kmValue = (s.km || 0) * kmRate;
-  return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { totalHours, regularHours, discount, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 /** Sum the primary report row + all its sessions, from the client billing side */
@@ -481,19 +489,21 @@ export function reportTotals(r: ServiceReport, client?: Client) {
   const travelOut = diffHours(r.travelOutStart, r.travelOutEnd);
   const service = diffHours(r.serviceStart, r.serviceEnd);
   const travelBack = diffHours(r.travelBackStart, r.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, r.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const hourlyRate = client?.hourlyRate ?? 0;
   const kmRate = client?.kmRate ?? 0;
   const hoursValue = totalHours * hourlyRate;
   const kmValue = (r.km || 0) * kmRate;
-  return { travelOut, service, travelBack, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 export function technicianTotals(r: ServiceReport, technician?: Technician) {
   const travelOut = diffHours(r.travelOutStart, r.travelOutEnd);
   const service = diffHours(r.serviceStart, r.serviceEnd);
   const travelBack = diffHours(r.travelBackStart, r.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, r.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const ovtWk = Math.max(0, r.overtimeWeekdayHours || 0);
   const ovtWe = Math.max(0, r.overtimeWeekendHours || 0);
   const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
@@ -504,7 +514,7 @@ export function technicianTotals(r: ServiceReport, technician?: Technician) {
   const ovtWeRate = technician?.overtimeWeekendRate ?? 0;
   const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
   const kmValue = (r.km || 0) * kmRate;
-  return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { totalHours, regularHours, discount, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 export function fmtCurrency(n: number) {

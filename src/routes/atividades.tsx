@@ -40,6 +40,7 @@ const empty = (technician = ""): Editing => ({
   km: 0, observation: "", technician,
   overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
   futureReplacements: "",
+  discountHours: 0,
 });
 
 type PdfChoice = {
@@ -603,10 +604,16 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               <TimeRange label="Viagem de volta" startVal={editing.travelBackStart} endVal={editing.travelBackEnd}
                 onStart={v => setEditing({ ...editing, travelBackStart: v })} onEnd={v => setEditing({ ...editing, travelBackEnd: v })} hours={t.travelBack} />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div className="grid gap-2">
                 <Label>Quilometragem total (km)</Label>
                 <Input type="number" step="1" value={editing.km || ""} onChange={e => setEditing({ ...editing, km: Number(e.target.value) })} placeholder="50" />
+              </div>
+              <div className="grid gap-2">
+                <Label>Desconto de horas</Label>
+                <Input type="number" step="0.25" min="0" value={editing.discountHours || ""}
+                  onChange={e => setEditing({ ...editing, discountHours: Number(e.target.value) })}
+                  placeholder="Ex: 1.5 (intervalo sem atendimento)" />
               </div>
               {!isPreventive && (
                 <div className="grid gap-2">
@@ -864,6 +871,7 @@ function emptyDraftSession(): Omit<ServiceSession, "id"> {
     km: 0,
     overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
     activitiesDone: "", observation: "",
+    discountHours: 0,
     position: 1,
   };
 }
@@ -969,7 +977,8 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
   const travelOut = diffHoursLocal(s.travelOutStart, s.travelOutEnd);
   const service = diffHoursLocal(s.serviceStart, s.serviceEnd);
   const travelBack = diffHoursLocal(s.travelBackStart, s.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, s.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
 
   return (
     <div className="rounded-md border bg-muted/30 p-3 grid gap-3">
@@ -1009,7 +1018,7 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
         <TimeRange label="Viagem de volta" startVal={s.travelBackStart} endVal={s.travelBackEnd}
           onStart={v => onChange({ travelBackStart: v })} onEnd={v => onChange({ travelBackEnd: v })} hours={travelBack} />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         <div className="grid gap-1">
           <Label className="text-xs">HE semana</Label>
           <Input type="number" step="0.5" min="0" value={s.overtimeWeekdayHours || ""}
@@ -1019,6 +1028,11 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
           <Label className="text-xs">HE fim de semana</Label>
           <Input type="number" step="0.5" min="0" value={s.overtimeWeekendHours || ""}
             onChange={e => onChange({ overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs">Desconto de horas</Label>
+          <Input type="number" step="0.25" min="0" value={s.discountHours || ""}
+            onChange={e => onChange({ discountHours: Number(e.target.value) })} placeholder="0" />
         </div>
       </div>
       <div className="grid gap-1">
