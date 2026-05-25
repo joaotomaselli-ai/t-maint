@@ -33,7 +33,7 @@ function Dashboard() {
         </div>
         <Link to="/atividades">
           <Button size="lg" className="gap-2">
-            <Plus className="h-4 w-4" /> Nova OS
+            <Plus className="h-4 w-4" /> Nova
           </Button>
         </Link>
       </header>
@@ -58,7 +58,7 @@ function Dashboard() {
               <p className="text-sm mt-1">Cadastre seus clientes e comece a registrar atendimentos.</p>
               <div className="flex justify-center gap-2 mt-4">
                 <Link to="/clientes"><Button variant="outline" size="sm">Cadastrar cliente</Button></Link>
-                <Link to="/atividades"><Button size="sm">Nova OS</Button></Link>
+                <Link to="/atividades"><Button size="sm">Ordem de Serviço</Button></Link>
               </div>
             </div>
           ) : (

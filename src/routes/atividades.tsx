@@ -185,10 +185,10 @@ function Atividades() {
     <div className="space-y-6">
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Nova OS</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Ordem de Serviço</h1>
           <p className="text-muted-foreground mt-1">Registre cada atendimento de manutenção</p>
         </div>
-        <Button onClick={startNew} size="lg" className="gap-2"><Plus className="h-4 w-4" /> Nova OS</Button>
+        <Button onClick={startNew} size="lg" className="gap-2"><Plus className="h-4 w-4" /> Nova</Button>
       </header>
 
       <Card>
@@ -227,7 +227,7 @@ function Atividades() {
         <Card><CardContent className="py-16 text-center text-muted-foreground">
           <Wrench className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p className="font-medium">Nenhuma OS encontrada</p>
-          <p className="text-sm mt-1">Clique em "Nova OS" para começar.</p>
+          <p className="text-sm mt-1">Clique em "Ordem de Serviço" para começar.</p>
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
