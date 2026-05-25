@@ -7,19 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
+import { useClients, useReports, useSettings, useTechnicians, useAllSessions } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import {
   reportTotals, technicianTotals, fmtCurrency, fmtHours,
   listAttachments, uploadAttachment, deleteAttachment,
   listActivityTechnicians, replaceActivityTechnicians,
+  listSessions, createSession, updateSession, deleteSession,
+  reportTotalsWithSessions,
   type Client, type ServiceReport, type ServiceType, type Technician,
   type ActivityAttachment, type ActivityTechnician, type AttachmentKind,
+  type ServiceSession,
 } from "@/lib/api";
-import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X } from "lucide-react";
+import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/atividades")({ component: Atividades });
 
