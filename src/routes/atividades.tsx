@@ -977,7 +977,8 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
   const travelOut = diffHoursLocal(s.travelOutStart, s.travelOutEnd);
   const service = diffHoursLocal(s.serviceStart, s.serviceEnd);
   const travelBack = diffHoursLocal(s.travelBackStart, s.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, s.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
 
   return (
     <div className="rounded-md border bg-muted/30 p-3 grid gap-3">
