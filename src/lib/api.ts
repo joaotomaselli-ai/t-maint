@@ -374,6 +374,7 @@ const fromSession = (r: any): ServiceSession => ({
   overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
   activitiesDone: r.activities_done ?? "",
   observation: r.observation ?? "",
+  discountHours: Number(r.discount_hours ?? 0),
   position: Number(r.position ?? 1),
 });
 
