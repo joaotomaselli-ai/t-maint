@@ -591,6 +591,11 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               <Textarea rows={2} value={editing.futureReplacements || ""}
                 onChange={e => setEditing({ ...editing, futureReplacements: e.target.value })}
                 placeholder="Itens / peças que precisarão ser substituídos no próximo atendimento" />
+              <AttachmentBlocks
+                label="Requisições para troca futura"
+                extras={extras} setExtras={setExtras}
+                kinds={[["future_replacements", "Anexos"]]}
+              />
             </div>
           )}
 
