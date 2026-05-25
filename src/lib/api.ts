@@ -136,6 +136,7 @@ const fromReport = (r: any): ServiceReport => ({
   overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
   overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
   futureReplacements: r.future_replacements ?? "",
+  discountHours: Number(r.discount_hours ?? 0),
   createdAt: r.created_at,
 });
 
