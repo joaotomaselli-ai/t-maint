@@ -502,7 +502,8 @@ export function technicianTotals(r: ServiceReport, technician?: Technician) {
   const travelOut = diffHours(r.travelOutStart, r.travelOutEnd);
   const service = diffHours(r.serviceStart, r.serviceEnd);
   const travelBack = diffHours(r.travelBackStart, r.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, r.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const ovtWk = Math.max(0, r.overtimeWeekdayHours || 0);
   const ovtWe = Math.max(0, r.overtimeWeekendHours || 0);
   const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
@@ -513,7 +514,7 @@ export function technicianTotals(r: ServiceReport, technician?: Technician) {
   const ovtWeRate = technician?.overtimeWeekendRate ?? 0;
   const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
   const kmValue = (r.km || 0) * kmRate;
-  return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { totalHours, regularHours, discount, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 export function fmtCurrency(n: number) {
