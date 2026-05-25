@@ -287,7 +287,8 @@ function Atividades() {
         <div className="space-y-3">
           {filtered.map(r => {
             const c = clientMap.get(r.clientId);
-            const t = reportTotals(r, c);
+            const sess = sessionsByActivity.get(r.id) ?? [];
+            const t = reportTotalsWithSessions(r, sess, c);
             return (
               <Card key={r.id} className="hover:shadow-elegant transition-shadow">
                 <CardContent className="p-5">
@@ -299,6 +300,11 @@ function Atividades() {
                           {r.type === "corretiva" ? "Corretiva" : "Preventiva"}
                         </span>
                         <span className="text-xs text-muted-foreground">{format(new Date(r.date + "T00:00:00"), "dd 'de' MMMM, yyyy", { locale: ptBR })}</span>
+                        {sess.length > 0 && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                            +{sess.length} sessão{sess.length > 1 ? "s" : ""}
+                          </span>
+                        )}
                       </div>
                       <h3 className="font-semibold text-lg mt-2">{c?.name || "Cliente removido"}</h3>
                       <p className="text-sm text-muted-foreground">{r.machine} {r.requester && `· Sol.: ${r.requester}`}</p>
@@ -306,7 +312,7 @@ function Atividades() {
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span>Serviço: <b className="text-foreground">{fmtHours(t.service)}</b></span>
                         <span>Deslocamento: <b className="text-foreground">{fmtHours(t.travelOut + t.travelBack)}</b></span>
-                        <span>KM: <b className="text-foreground">{r.km}</b></span>
+                        <span>KM: <b className="text-foreground">{t.km}</b></span>
                       </div>
                     </div>
                     <div className="flex sm:flex-col items-end gap-2 shrink-0">
