@@ -1,16 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
-import { reportTotals, technicianTotals, fmtCurrency, fmtHours, type Client, type ServiceReport, type ServiceType, type Technician } from "@/lib/api";
-// pdf lib imported dynamically inside the handler to avoid SSR issues
-import { Plus, Pencil, Trash2, FileDown, Wrench, Search } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  reportTotals, technicianTotals, fmtCurrency, fmtHours,
+  listAttachments, uploadAttachment, deleteAttachment,
+  listActivityTechnicians, replaceActivityTechnicians,
+  type Client, type ServiceReport, type ServiceType, type Technician,
+  type ActivityAttachment, type ActivityTechnician, type AttachmentKind,
+} from "@/lib/api";
+import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -29,20 +35,35 @@ const empty = (technician = ""): Editing => ({
   travelBackStart: "", travelBackEnd: "",
   km: 0, observation: "", technician,
   overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
+  futureReplacements: "",
 });
+
+type PdfChoice = {
+  open: boolean;
+  report?: ServiceReport;
+};
 
 function Atividades() {
   const { clients } = useClients();
   const { technicians } = useTechnicians();
   const { reports, addReport, updateReport, deleteReport } = useReports();
   const { settings } = useSettings();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
+  const [editingExtras, setEditingExtras] = useState<{
+    existingAttachments: ActivityAttachment[];
+    pendingAttachments: { kind: AttachmentKind; file: File; previewUrl: string }[];
+    removedAttachmentIds: Set<string>;
+    activityTechnicians: ActivityTechnician[];
+  }>({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
   const [search, setSearch] = useState("");
   const [filterClient, setFilterClient] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
+  const [pdfChoice, setPdfChoice] = useState<PdfChoice>({ open: false });
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
+  const techMap = useMemo(() => new Map(technicians.map(t => [t.id, t])), [technicians]);
 
   const filtered = useMemo(() => {
     return [...reports]
@@ -64,25 +85,76 @@ function Atividades() {
     if (clients.length === 0) { toast.error("Cadastre um cliente primeiro"); return; }
     if (technicians.length === 0) { toast.error("Cadastre um técnico primeiro"); return; }
     setEditing(empty(settings.technicianName));
+    setEditingExtras({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
     setOpen(true);
   };
-  const startEdit = (r: ServiceReport) => { setEditing(r); setOpen(true); };
+
+  const startEdit = async (r: ServiceReport) => {
+    setEditing(r);
+    setEditingExtras({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
+    setOpen(true);
+    if (r.type === "preventiva") {
+      try {
+        const [att, ats] = await Promise.all([listAttachments(r.id), listActivityTechnicians(r.id)]);
+        setEditingExtras(prev => ({ ...prev, existingAttachments: att, activityTechnicians: ats }));
+      } catch (e: any) {
+        toast.error(e?.message ?? "Erro ao carregar anexos");
+      }
+    }
+  };
 
   const save = async () => {
     if (!editing.clientId) { toast.error("Selecione o cliente"); return; }
     if (!editing.machine.trim()) { toast.error("Informe a máquina"); return; }
     if (!editing.requester.trim()) { toast.error("Informe o solicitante"); return; }
-    if (!editing.technician.trim()) { toast.error("Selecione o técnico"); return; }
+
+    if (editing.type === "corretiva") {
+      if (!editing.technician.trim()) { toast.error("Selecione o técnico"); return; }
+    } else {
+      const techs = editingExtras.activityTechnicians.filter(t => t.technicianId);
+      if (techs.length === 0) { toast.error("Adicione ao menos um técnico"); return; }
+      if (techs.length > 4) { toast.error("Máximo de 4 técnicos"); return; }
+    }
+
     try {
+      let activityId = editing.id;
+      // For preventiva, mirror first technician name to legacy column for reports compat
+      const firstTech = editingExtras.activityTechnicians[0];
+      const techName = editing.type === "preventiva"
+        ? (firstTech ? (techMap.get(firstTech.technicianId)?.name ?? "") : "")
+        : editing.technician;
+
       if (editing.id) {
-        await updateReport.mutateAsync(editing as ServiceReport);
+        const updated = await updateReport.mutateAsync({ ...(editing as ServiceReport), technician: techName });
+        activityId = updated.id;
         toast.success("Atividade atualizada");
       } else {
         const nextNum = (Math.max(0, ...reports.map(r => parseInt(r.orderNumber) || 0)) + 1).toString().padStart(4, "0");
         const { id: _i, createdAt: _c, ...payload } = editing;
-        await addReport.mutateAsync({ ...payload, orderNumber: editing.orderNumber || nextNum });
+        const created = await addReport.mutateAsync({ ...payload, technician: techName, orderNumber: editing.orderNumber || nextNum });
+        activityId = created.id;
         toast.success("Atividade registrada");
       }
+
+      if (editing.type === "preventiva" && activityId && user) {
+        // Replace technicians
+        await replaceActivityTechnicians(user.id, activityId,
+          editingExtras.activityTechnicians.filter(t => t.technicianId)
+            .map((t, i) => ({ ...t, position: i + 1 })));
+
+        // Delete removed attachments
+        for (const att of editingExtras.existingAttachments) {
+          if (editingExtras.removedAttachmentIds.has(att.id)) {
+            try { await deleteAttachment(att); } catch (e) { console.error(e); }
+          }
+        }
+        // Upload pending
+        for (const p of editingExtras.pendingAttachments) {
+          try { await uploadAttachment(user.id, activityId, p.kind, p.file); }
+          catch (e) { console.error(e); toast.error("Falha ao enviar um anexo"); }
+        }
+      }
+
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
@@ -99,15 +171,7 @@ function Atividades() {
     }
   };
 
-  const exportPdf = async (r: ServiceReport) => {
-    try {
-      const { exportSingleReport } = await import("@/lib/pdf");
-      exportSingleReport(r, clientMap.get(r.clientId), settings);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
+  const openPdfChoice = (r: ServiceReport) => setPdfChoice({ open: true, report: r });
 
   const totals = useMemo(() => {
     return filtered.reduce((acc, r) => {
@@ -197,7 +261,7 @@ function Atividades() {
                         <div className="text-xs text-muted-foreground">{fmtHours(t.totalHours)} totais</div>
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="outline" size="icon" onClick={() => exportPdf(r)} title="Exportar PDF"><FileDown className="h-4 w-4" /></Button>
+                        <Button variant="outline" size="icon" onClick={() => openPdfChoice(r)} title="Exportar PDF"><FileDown className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => startEdit(r)}><Pencil className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                       </div>
@@ -213,22 +277,169 @@ function Atividades() {
       <ActivityDialog
         open={open} onOpenChange={setOpen}
         editing={editing} setEditing={setEditing}
+        extras={editingExtras} setExtras={setEditingExtras}
         clients={clients} technicians={technicians} onSave={save}
+      />
+
+      <PdfChoiceDialog
+        state={pdfChoice} onClose={() => setPdfChoice({ open: false })}
+        clientMap={clientMap} settings={settings}
       />
     </div>
   );
 }
 
-function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, technicians, onSave }: {
+function PdfChoiceDialog({ state, onClose, clientMap, settings }: {
+  state: PdfChoice;
+  onClose: () => void;
+  clientMap: Map<string, Client>;
+  settings: any;
+}) {
+  if (!state.report) {
+    return <Dialog open={state.open} onOpenChange={onClose}><DialogContent /></Dialog>;
+  }
+  const r = state.report;
+  const client = clientMap.get(r.clientId);
+
+  const exportInformative = async () => {
+    try {
+      const { exportPreventiveInformativeReport } = await import("@/lib/pdf");
+      await exportPreventiveInformativeReport(r, client, settings);
+      onClose();
+    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
+  };
+  const exportOperational = async (includeValues: boolean) => {
+    try {
+      const { exportSingleReport } = await import("@/lib/pdf");
+      exportSingleReport(r, client, settings, { includeValues });
+      onClose();
+    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
+  };
+
+  return (
+    <Dialog open={state.open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Gerar relatório em PDF</DialogTitle>
+          <DialogDescription>OS {r.orderNumber} — {client?.name}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          {r.type === "preventiva" && (
+            <Button onClick={exportInformative} className="w-full justify-start h-auto py-3" variant="outline">
+              <div className="text-left">
+                <div className="font-semibold">Informativo (cliente)</div>
+                <div className="text-xs text-muted-foreground">Layout profissional com fotos antes/depois e requisições futuras — sem valores</div>
+              </div>
+            </Button>
+          )}
+          <Button onClick={() => exportOperational(true)} className="w-full justify-start h-auto py-3" variant="outline">
+            <div className="text-left">
+              <div className="font-semibold">{r.type === "preventiva" ? "Operacional — com valores" : "Completo — com valores"}</div>
+              <div className="text-xs text-muted-foreground">Inclui apuração de valores cobrados do cliente e pagos ao técnico</div>
+            </div>
+          </Button>
+          <Button onClick={() => exportOperational(false)} className="w-full justify-start h-auto py-3" variant="outline">
+            <div className="text-left">
+              <div className="font-semibold">{r.type === "preventiva" ? "Operacional — sem valores" : "Sem valores"}</div>
+              <div className="text-xs text-muted-foreground">Apenas informações técnicas, horas e KM</div>
+            </div>
+          </Button>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type Extras = {
+  existingAttachments: ActivityAttachment[];
+  pendingAttachments: { kind: AttachmentKind; file: File; previewUrl: string }[];
+  removedAttachmentIds: Set<string>;
+  activityTechnicians: ActivityTechnician[];
+};
+
+function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   editing: Editing; setEditing: (e: Editing) => void;
+  extras: Extras; setExtras: React.Dispatch<React.SetStateAction<Extras>>;
   clients: Client[]; technicians: Technician[]; onSave: () => void;
 }) {
   const client = clients.find((c) => c.id === editing.clientId);
-  const technician = technicians.find((tc) => tc.name === editing.technician);
+  const isPreventive = editing.type === "preventiva";
+
+  // Corretive apuração uses single technician + per-report overtime
+  const singleTechnician = technicians.find((tc) => tc.name === editing.technician);
   const t = reportTotals(editing as ServiceReport, client);
-  const tt = technicianTotals(editing as ServiceReport, technician);
-  const profit = t.hoursValue - tt.hoursValue;
+  const ttSingle = technicianTotals(editing as ServiceReport, singleTechnician);
+
+  // Preventive apuração: sum across all attached technicians
+  const preventiveTechTotals = useMemo(() => {
+    if (!isPreventive) return null;
+    return extras.activityTechnicians.reduce((acc, at) => {
+      const tech = technicians.find(t => t.id === at.technicianId);
+      if (!tech) return acc;
+      const reportLike = {
+        ...(editing as ServiceReport),
+        overtimeWeekdayHours: at.overtimeWeekdayHours,
+        overtimeWeekendHours: at.overtimeWeekendHours,
+      } as ServiceReport;
+      const tt = technicianTotals(reportLike, tech);
+      acc.totalHours = tt.totalHours;
+      acc.hoursValue += tt.hoursValue;
+      acc.kmValue += tt.kmValue;
+      acc.total += tt.total;
+      acc.ovtWk += tt.ovtWk;
+      acc.ovtWe += tt.ovtWe;
+      return acc;
+    }, { totalHours: 0, hoursValue: 0, kmValue: 0, total: 0, ovtWk: 0, ovtWe: 0 });
+  }, [isPreventive, extras.activityTechnicians, technicians, editing]);
+
+  const techTotalsForApur = isPreventive ? preventiveTechTotals! : ttSingle;
+  const showApur = client || (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician);
+  const profit = client && techTotalsForApur ? t.hoursValue - techTotalsForApur.hoursValue : 0;
+
+  const addTechnician = () => {
+    if (extras.activityTechnicians.length >= 4) { toast.error("Máximo de 4 técnicos"); return; }
+    setExtras(prev => ({
+      ...prev,
+      activityTechnicians: [...prev.activityTechnicians, {
+        technicianId: "", position: prev.activityTechnicians.length + 1,
+        overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
+      }],
+    }));
+  };
+  const updateAt = (idx: number, patch: Partial<ActivityTechnician>) => {
+    setExtras(prev => ({
+      ...prev,
+      activityTechnicians: prev.activityTechnicians.map((a, i) => i === idx ? { ...a, ...patch } : a),
+    }));
+  };
+  const removeAt = (idx: number) => {
+    setExtras(prev => ({
+      ...prev,
+      activityTechnicians: prev.activityTechnicians.filter((_, i) => i !== idx),
+    }));
+  };
+
+  // When switching to preventive, seed first technician from legacy field
+  useEffect(() => {
+    if (isPreventive && extras.activityTechnicians.length === 0 && !editing.id) {
+      const t = technicians.find(t => t.name === editing.technician);
+      if (t) {
+        setExtras(prev => ({
+          ...prev,
+          activityTechnicians: [{
+            technicianId: t.id, position: 1,
+            overtimeWeekdayHours: editing.overtimeWeekdayHours || 0,
+            overtimeWeekendHours: editing.overtimeWeekendHours || 0,
+          }],
+        }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPreventive]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -280,14 +491,37 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, tech
           </section>
 
           <div className="grid gap-2">
-            <Label>Descrição do serviço solicitado / problema</Label>
-            <Textarea rows={2} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} />
+            <Label>{isPreventive ? "Descrição de Atividades Mecânicas" : "Descrição do serviço solicitado / problema"}</Label>
+            <Textarea rows={isPreventive ? 3 : 2} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} />
+            {isPreventive && (
+              <AttachmentBlocks
+                label="Atividades Mecânicas"
+                extras={extras} setExtras={setExtras}
+                kinds={[["mechanical_before", "Antes"], ["mechanical_after", "Depois"]]}
+              />
+            )}
           </div>
 
           <div className="grid gap-2">
-            <Label>Resumo dos serviços executados</Label>
+            <Label>{isPreventive ? "Descrição das Atividades Elétricas" : "Resumo dos serviços executados"}</Label>
             <Textarea rows={3} value={editing.summary} onChange={e => setEditing({ ...editing, summary: e.target.value })} />
+            {isPreventive && (
+              <AttachmentBlocks
+                label="Atividades Elétricas"
+                extras={extras} setExtras={setExtras}
+                kinds={[["electrical_before", "Antes"], ["electrical_after", "Depois"]]}
+              />
+            )}
           </div>
+
+          {isPreventive && (
+            <div className="grid gap-2">
+              <Label>Requisições para troca futura</Label>
+              <Textarea rows={2} value={editing.futureReplacements || ""}
+                onChange={e => setEditing({ ...editing, futureReplacements: e.target.value })}
+                placeholder="Itens / peças que precisarão ser substituídos no próximo atendimento" />
+            </div>
+          )}
 
           <section className="grid gap-4 rounded-lg border p-4 bg-muted/30">
             <div className="text-sm font-semibold">Horários</div>
@@ -304,36 +538,81 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, tech
                 <Label>Quilometragem total (km)</Label>
                 <Input type="number" step="1" value={editing.km || ""} onChange={e => setEditing({ ...editing, km: Number(e.target.value) })} placeholder="50" />
               </div>
-              <div className="grid gap-2">
-                <Label>Técnico *</Label>
-                <Select value={editing.technician} onValueChange={(v) => setEditing({ ...editing, technician: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {technicians.map((tc) => <SelectItem key={tc.id} value={tc.name}>{tc.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              {!isPreventive && (
+                <div className="grid gap-2">
+                  <Label>Técnico *</Label>
+                  <Select value={editing.technician} onValueChange={(v) => setEditing({ ...editing, technician: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                      {technicians.map((tc) => <SelectItem key={tc.id} value={tc.name}>{tc.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label>Horas especiais durante a semana</Label>
-                <Input type="number" step="0.5" min="0" value={editing.overtimeWeekdayHours || ""}
-                  onChange={e => setEditing({ ...editing, overtimeWeekdayHours: Number(e.target.value) })} placeholder="0" />
+            {!isPreventive && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label>Horas especiais durante a semana</Label>
+                  <Input type="number" step="0.5" min="0" value={editing.overtimeWeekdayHours || ""}
+                    onChange={e => setEditing({ ...editing, overtimeWeekdayHours: Number(e.target.value) })} placeholder="0" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Horas especiais no final de semana</Label>
+                  <Input type="number" step="0.5" min="0" value={editing.overtimeWeekendHours || ""}
+                    onChange={e => setEditing({ ...editing, overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label>Horas especiais no final de semana</Label>
-                <Input type="number" step="0.5" min="0" value={editing.overtimeWeekendHours || ""}
-                  onChange={e => setEditing({ ...editing, overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
-              </div>
-            </div>
+            )}
           </section>
+
+          {isPreventive && (
+            <section className="grid gap-3 rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold">Técnicos da atividade (até 4) *</div>
+                <Button type="button" size="sm" variant="outline" onClick={addTechnician}
+                  disabled={extras.activityTechnicians.length >= 4}>
+                  <Plus className="h-4 w-4 mr-1" /> Adicionar técnico
+                </Button>
+              </div>
+              {extras.activityTechnicians.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum técnico adicionado.</p>
+              )}
+              {extras.activityTechnicians.map((at, idx) => (
+                <div key={idx} className="grid gap-2 sm:grid-cols-[1fr_140px_140px_auto] items-end p-3 rounded bg-muted/40">
+                  <div className="grid gap-1">
+                    <Label className="text-xs">Técnico #{idx + 1}</Label>
+                    <Select value={at.technicianId} onValueChange={v => updateAt(idx, { technicianId: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {technicians.map(tc => <SelectItem key={tc.id} value={tc.id}>{tc.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-xs">HE semana</Label>
+                    <Input type="number" step="0.5" min="0" value={at.overtimeWeekdayHours || ""}
+                      onChange={e => updateAt(idx, { overtimeWeekdayHours: Number(e.target.value) })} placeholder="0" />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-xs">HE fim de semana</Label>
+                    <Input type="number" step="0.5" min="0" value={at.overtimeWeekendHours || ""}
+                      onChange={e => updateAt(idx, { overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeAt(idx)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </section>
+          )}
 
           <div className="grid gap-2">
             <Label>Observação</Label>
             <Textarea rows={2} value={editing.observation || ""} onChange={e => setEditing({ ...editing, observation: e.target.value })} />
           </div>
 
-          {(client || technician) && (
+          {showApur && techTotalsForApur && (
             <Card className="bg-primary/5 border-primary/20">
               <CardHeader className="pb-2"><CardTitle className="text-base">Apuração</CardTitle></CardHeader>
               <CardContent className="space-y-4 text-sm">
@@ -348,23 +627,20 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, tech
                     </div>
                   </div>
                 )}
-                {technician && (
+                {(isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) && (
                   <div className="pt-3 border-t border-primary/20">
-                    <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">A repassar para o técnico</div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div><div className="text-muted-foreground text-xs">Horas totais</div><div className="font-semibold">{fmtHours(tt.totalHours)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{fmtCurrency(tt.hoursValue)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{fmtCurrency(tt.kmValue)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg">{fmtCurrency(tt.total)}</div></div>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+                      A repassar para {isPreventive ? `${extras.activityTechnicians.length} técnico(s)` : "o técnico"}
                     </div>
-                    {(tt.ovtWk > 0 || tt.ovtWe > 0) && (
-                      <div className="text-xs text-muted-foreground mt-2">
-                        Regulares: {fmtHours(tt.regularHours)} · Especiais semana: {fmtHours(tt.ovtWk)} · Especiais fim de semana: {fmtHours(tt.ovtWe)}
-                      </div>
-                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div><div className="text-muted-foreground text-xs">Horas totais</div><div className="font-semibold">{fmtHours(techTotalsForApur.totalHours)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{fmtCurrency(techTotalsForApur.hoursValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{fmtCurrency(techTotalsForApur.kmValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg">{fmtCurrency(techTotalsForApur.total)}</div></div>
+                    </div>
                   </div>
                 )}
-                {client && technician && (
+                {client && techTotalsForApur && (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) && (
                   <div className="pt-3 border-t border-primary/20 flex items-center justify-between">
                     <div className="text-xs font-semibold text-muted-foreground uppercase">Lucro em horas (receber − pagar)</div>
                     <div className={`font-bold text-lg ${profit >= 0 ? "text-success" : "text-destructive"}`}>{fmtCurrency(profit)}</div>
@@ -381,6 +657,106 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, clients, tech
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AttachmentBlocks({ label, extras, setExtras, kinds }: {
+  label: string;
+  extras: Extras;
+  setExtras: React.Dispatch<React.SetStateAction<Extras>>;
+  kinds: [AttachmentKind, string][];
+}) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 mt-2">
+      {kinds.map(([kind, lbl]) => (
+        <AttachmentBlock key={kind} kind={kind} label={`${label} — ${lbl}`} extras={extras} setExtras={setExtras} />
+      ))}
+    </div>
+  );
+}
+
+function AttachmentBlock({ kind, label, extras, setExtras }: {
+  kind: AttachmentKind; label: string;
+  extras: Extras; setExtras: React.Dispatch<React.SetStateAction<Extras>>;
+}) {
+  const existing = extras.existingAttachments.filter(a => a.kind === kind && !extras.removedAttachmentIds.has(a.id));
+  const pending = extras.pendingAttachments.filter(p => p.kind === kind);
+
+  const onFiles = (files: FileList | null) => {
+    if (!files) return;
+    const items = Array.from(files).map(file => ({
+      kind, file, previewUrl: URL.createObjectURL(file),
+    }));
+    setExtras(prev => ({ ...prev, pendingAttachments: [...prev.pendingAttachments, ...items] }));
+  };
+  const removeExisting = (id: string) => {
+    setExtras(prev => {
+      const next = new Set(prev.removedAttachmentIds);
+      next.add(id);
+      return { ...prev, removedAttachmentIds: next };
+    });
+  };
+  const removePending = (idx: number) => {
+    setExtras(prev => {
+      const filtered = [...prev.pendingAttachments];
+      let counter = -1;
+      const out = filtered.filter(p => {
+        if (p.kind !== kind) return true;
+        counter++;
+        return counter !== idx;
+      });
+      return { ...prev, pendingAttachments: out };
+    });
+  };
+
+  return (
+    <div className="rounded-md border bg-background p-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-medium">{label}</span>
+        <label className="cursor-pointer text-xs inline-flex items-center gap-1 text-primary hover:underline">
+          <Upload className="h-3 w-3" /> Anexar
+          <input type="file" accept="image/*" multiple className="hidden"
+            onChange={e => { onFiles(e.target.files); e.target.value = ""; }} />
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {existing.map(a => (
+          <ExistingThumb key={a.id} att={a} onRemove={() => removeExisting(a.id)} />
+        ))}
+        {pending.map((p, i) => (
+          <div key={i} className="relative w-16 h-16 rounded border overflow-hidden bg-muted">
+            <img src={p.previewUrl} alt="" className="w-full h-full object-cover" />
+            <button type="button" onClick={() => removePending(i)}
+              className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+        {existing.length + pending.length === 0 && (
+          <span className="text-xs text-muted-foreground">Nenhum anexo</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ExistingThumb({ att, onRemove }: { att: ActivityAttachment; onRemove: () => void }) {
+  const [url, setUrl] = useState<string>("");
+  useEffect(() => {
+    let mounted = true;
+    import("@/lib/api").then(({ getAttachmentUrl }) => getAttachmentUrl(att.storagePath))
+      .then(u => { if (mounted) setUrl(u); })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, [att.storagePath]);
+  return (
+    <div className="relative w-16 h-16 rounded border overflow-hidden bg-muted">
+      {url && <img src={url} alt="" className="w-full h-full object-cover" />}
+      <button type="button" onClick={onRemove}
+        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+        <X className="h-3 w-3" />
+      </button>
+    </div>
   );
 }
 

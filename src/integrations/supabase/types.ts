@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_attachments: {
+        Row: {
+          activity_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          kind: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_attachments_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "service_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_technicians: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          overtime_weekday_hours: number
+          overtime_weekend_hours: number
+          position: number
+          technician_id: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          overtime_weekday_hours?: number
+          overtime_weekend_hours?: number
+          position: number
+          technician_id: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          overtime_weekday_hours?: number
+          overtime_weekend_hours?: number
+          position?: number
+          technician_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_technicians_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "service_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_technicians_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -98,6 +184,7 @@ export type Database = {
           created_at: string
           date: string
           description: string
+          future_replacements: string
           id: string
           km: number
           machine: string
@@ -122,6 +209,7 @@ export type Database = {
           created_at?: string
           date: string
           description?: string
+          future_replacements?: string
           id?: string
           km?: number
           machine?: string
@@ -146,6 +234,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string
+          future_replacements?: string
           id?: string
           km?: number
           machine?: string
