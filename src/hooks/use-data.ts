@@ -4,7 +4,8 @@ import {
   listReports, createReport, updateReport, deleteReport,
   listTechnicians, createTechnician, updateTechnician, deleteTechnician,
   getProfile, upsertProfile,
-  type Client, type ServiceReport, type Settings, type Technician,
+  listAllSessions,
+  type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
