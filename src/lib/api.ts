@@ -333,6 +333,141 @@ export async function upsertProfile(userId: string, s: Settings): Promise<Settin
   return fromProfile(data);
 }
 
+// ===== Service Sessions (additional work entries per OS) =====
+
+export type ServiceSession = {
+  id: string;
+  activityId: string;
+  technicianId?: string | null;
+  date: string;
+  travelOutStart: string;
+  travelOutEnd: string;
+  serviceStart: string;
+  serviceEnd: string;
+  travelBackStart: string;
+  travelBackEnd: string;
+  km: number;
+  overtimeWeekdayHours: number;
+  overtimeWeekendHours: number;
+  activitiesDone: string;
+  observation?: string;
+  position: number;
+};
+
+const fromSession = (r: any): ServiceSession => ({
+  id: r.id,
+  activityId: r.activity_id,
+  technicianId: r.technician_id ?? null,
+  date: r.date,
+  travelOutStart: r.travel_out_start ?? "",
+  travelOutEnd: r.travel_out_end ?? "",
+  serviceStart: r.service_start ?? "",
+  serviceEnd: r.service_end ?? "",
+  travelBackStart: r.travel_back_start ?? "",
+  travelBackEnd: r.travel_back_end ?? "",
+  km: Number(r.km ?? 0),
+  overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
+  overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
+  activitiesDone: r.activities_done ?? "",
+  observation: r.observation ?? "",
+  position: Number(r.position ?? 1),
+});
+
+const toSessionRow = (s: Omit<ServiceSession, "id">) => ({
+  activity_id: s.activityId,
+  technician_id: s.technicianId || null,
+  date: s.date,
+  travel_out_start: s.travelOutStart ?? "",
+  travel_out_end: s.travelOutEnd ?? "",
+  service_start: s.serviceStart ?? "",
+  service_end: s.serviceEnd ?? "",
+  travel_back_start: s.travelBackStart ?? "",
+  travel_back_end: s.travelBackEnd ?? "",
+  km: s.km ?? 0,
+  overtime_weekday_hours: s.overtimeWeekdayHours ?? 0,
+  overtime_weekend_hours: s.overtimeWeekendHours ?? 0,
+  activities_done: s.activitiesDone ?? "",
+  observation: s.observation || null,
+  position: s.position ?? 1,
+});
+
+export async function listAllSessions(): Promise<ServiceSession[]> {
+  const { data, error } = await supabase.from("service_sessions").select("*").order("date");
+  if (error) throw error;
+  return (data ?? []).map(fromSession);
+}
+export async function listSessions(activityId: string): Promise<ServiceSession[]> {
+  const { data, error } = await supabase.from("service_sessions")
+    .select("*").eq("activity_id", activityId).order("date").order("position");
+  if (error) throw error;
+  return (data ?? []).map(fromSession);
+}
+export async function createSession(s: Omit<ServiceSession, "id">, userId: string): Promise<ServiceSession> {
+  const { data, error } = await supabase.from("service_sessions")
+    .insert({ ...toSessionRow(s), user_id: userId }).select().single();
+  if (error) throw error;
+  return fromSession(data);
+}
+export async function updateSession(s: ServiceSession): Promise<ServiceSession> {
+  const { data, error } = await supabase.from("service_sessions")
+    .update(toSessionRow(s)).eq("id", s.id).select().single();
+  if (error) throw error;
+  return fromSession(data);
+}
+export async function deleteSession(id: string): Promise<void> {
+  const { error } = await supabase.from("service_sessions").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export function sessionClientTotals(s: ServiceSession, client?: Client) {
+  const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
+  const service = diffHours(s.serviceStart, s.serviceEnd);
+  const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
+  const totalHours = travelOut + service + travelBack;
+  const hoursValue = totalHours * (client?.hourlyRate ?? 0);
+  const kmValue = (s.km || 0) * (client?.kmRate ?? 0);
+  return { travelOut, service, travelBack, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
+}
+
+export function sessionTechnicianTotals(s: ServiceSession, technician?: Technician) {
+  const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
+  const service = diffHours(s.serviceStart, s.serviceEnd);
+  const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
+  const totalHours = travelOut + service + travelBack;
+  const ovtWk = Math.max(0, s.overtimeWeekdayHours || 0);
+  const ovtWe = Math.max(0, s.overtimeWeekendHours || 0);
+  const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
+  const regularHours = Math.max(0, totalHours - specialTotal);
+  const hourlyRate = technician?.hourlyRate ?? 0;
+  const kmRate = technician?.kmRate ?? 0;
+  const ovtWkRate = technician?.overtimeWeekdayRate ?? 0;
+  const ovtWeRate = technician?.overtimeWeekendRate ?? 0;
+  const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
+  const kmValue = (s.km || 0) * kmRate;
+  return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
+}
+
+/** Sum the primary report row + all its sessions, from the client billing side */
+export function reportTotalsWithSessions(r: ServiceReport, sessions: ServiceSession[], client?: Client) {
+  const base = reportTotals(r, client);
+  const extras = sessions.filter(s => s.activityId === r.id);
+  let totalHours = base.totalHours;
+  let service = base.service;
+  let travelOut = base.travelOut;
+  let travelBack = base.travelBack;
+  let hoursValue = base.hoursValue;
+  let kmValue = base.kmValue;
+  let km = r.km || 0;
+  for (const s of extras) {
+    const t = sessionClientTotals(s, client);
+    totalHours += t.totalHours; service += t.service;
+    travelOut += t.travelOut; travelBack += t.travelBack;
+    hoursValue += t.hoursValue; kmValue += t.kmValue;
+    km += s.km || 0;
+  }
+  return { travelOut, service, travelBack, totalHours, hoursValue, kmValue, km, total: hoursValue + kmValue };
+}
+
 export function diffHours(start: string, end: string): number {
   if (!start || !end) return 0;
   const [sh, sm] = start.split(":").map(Number);
