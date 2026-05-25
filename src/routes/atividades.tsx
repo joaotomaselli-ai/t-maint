@@ -189,7 +189,11 @@ function Atividades() {
         // Upload pending
         for (const p of editingExtras.pendingAttachments) {
           try { await uploadAttachment(user.id, activityId, p.kind, p.file); }
-          catch (e) { console.error(e); toast.error("Falha ao enviar um anexo"); }
+          catch (e: any) {
+            console.error("Upload attachment failed:", e);
+            const msg = e?.message || e?.error || JSON.stringify(e);
+            toast.error(`Falha ao enviar "${p.file.name}": ${msg}`);
+          }
         }
       }
 
