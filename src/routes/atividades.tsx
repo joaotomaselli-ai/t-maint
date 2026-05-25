@@ -52,7 +52,9 @@ function Atividades() {
   const { technicians } = useTechnicians();
   const { reports, addReport, updateReport, deleteReport } = useReports();
   const { settings } = useSettings();
+  const { sessions: allSessions } = useAllSessions();
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
   const [editingExtras, setEditingExtras] = useState<{
@@ -60,7 +62,14 @@ function Atividades() {
     pendingAttachments: { kind: AttachmentKind; file: File; previewUrl: string }[];
     removedAttachmentIds: Set<string>;
     activityTechnicians: ActivityTechnician[];
-  }>({ existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(), activityTechnicians: [] });
+    sessions: ServiceSession[];                    // existing (loaded)
+    newSessions: Omit<ServiceSession, "id">[];     // to insert
+    editedSessions: Map<string, ServiceSession>;   // id -> updated
+    removedSessionIds: Set<string>;
+  }>({
+    existingAttachments: [], pendingAttachments: [], removedAttachmentIds: new Set(),
+    activityTechnicians: [], sessions: [], newSessions: [], editedSessions: new Map(), removedSessionIds: new Set(),
+  });
   const [search, setSearch] = useState("");
   const [filterClient, setFilterClient] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
@@ -68,6 +77,15 @@ function Atividades() {
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
   const techMap = useMemo(() => new Map(technicians.map(t => [t.id, t])), [technicians]);
+  const sessionsByActivity = useMemo(() => {
+    const m = new Map<string, ServiceSession[]>();
+    for (const s of allSessions) {
+      const arr = m.get(s.activityId) ?? [];
+      arr.push(s);
+      m.set(s.activityId, arr);
+    }
+    return m;
+  }, [allSessions]);
 
   const filtered = useMemo(() => {
     return [...reports]
