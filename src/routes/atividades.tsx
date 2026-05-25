@@ -188,7 +188,7 @@ function Atividades() {
           <h1 className="text-3xl font-bold tracking-tight">Ordem de Serviço</h1>
           <p className="text-muted-foreground mt-1">Registre cada atendimento de manutenção</p>
         </div>
-        <Button onClick={startNew} size="lg" className="gap-2"><Plus className="h-4 w-4" /> Nova</Button>
+        <Button onClick={startNew} size="lg" className="gap-2"><Plus className="h-4 w-4" /> Ordem de Serviço</Button>
       </header>
 
       <Card>
