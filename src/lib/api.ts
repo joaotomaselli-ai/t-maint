@@ -429,10 +429,11 @@ export function sessionClientTotals(s: ServiceSession, client?: Client) {
   const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
   const service = diffHours(s.serviceStart, s.serviceEnd);
   const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
-  const totalHours = travelOut + service + travelBack;
+  const discount = Math.max(0, s.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const hoursValue = totalHours * (client?.hourlyRate ?? 0);
   const kmValue = (s.km || 0) * (client?.kmRate ?? 0);
-  return { travelOut, service, travelBack, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 export function sessionTechnicianTotals(s: ServiceSession, technician?: Technician) {
