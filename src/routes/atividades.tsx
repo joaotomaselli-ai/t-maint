@@ -865,6 +865,7 @@ function emptyDraftSession(): Omit<ServiceSession, "id"> {
     km: 0,
     overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
     activitiesDone: "", observation: "",
+    discountHours: 0,
     position: 1,
   };
 }
