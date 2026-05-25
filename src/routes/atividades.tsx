@@ -395,6 +395,10 @@ type Extras = {
   pendingAttachments: { kind: AttachmentKind; file: File; previewUrl: string }[];
   removedAttachmentIds: Set<string>;
   activityTechnicians: ActivityTechnician[];
+  sessions: ServiceSession[];
+  newSessions: Omit<ServiceSession, "id">[];
+  editedSessions: Map<string, ServiceSession>;
+  removedSessionIds: Set<string>;
 };
 
 function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave }: {
