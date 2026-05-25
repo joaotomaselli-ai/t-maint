@@ -45,6 +45,7 @@ export type ServiceReport = {
   overtimeWeekdayHours: number;
   overtimeWeekendHours: number;
   futureReplacements?: string;
+  discountHours: number;
   createdAt: string;
 };
 
