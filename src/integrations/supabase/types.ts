@@ -184,6 +184,7 @@ export type Database = {
           created_at: string
           date: string
           description: string
+          discount_hours: number
           future_replacements: string
           id: string
           km: number
@@ -209,6 +210,7 @@ export type Database = {
           created_at?: string
           date: string
           description?: string
+          discount_hours?: number
           future_replacements?: string
           id?: string
           km?: number
@@ -234,6 +236,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string
+          discount_hours?: number
           future_replacements?: string
           id?: string
           km?: number
@@ -270,6 +273,7 @@ export type Database = {
           activity_id: string
           created_at: string
           date: string
+          discount_hours: number
           id: string
           km: number
           observation: string | null
@@ -291,6 +295,7 @@ export type Database = {
           activity_id: string
           created_at?: string
           date?: string
+          discount_hours?: number
           id?: string
           km?: number
           observation?: string | null
@@ -312,6 +317,7 @@ export type Database = {
           activity_id?: string
           created_at?: string
           date?: string
+          discount_hours?: number
           id?: string
           km?: number
           observation?: string | null
