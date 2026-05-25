@@ -676,6 +676,15 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
             <Textarea rows={2} value={editing.observation || ""} onChange={e => setEditing({ ...editing, observation: e.target.value })} />
           </div>
 
+          {editing.id ? (
+            <SessionsSection extras={extras} setExtras={setExtras} technicians={technicians} />
+          ) : (
+            <div className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+              Após salvar a OS, você poderá adicionar sessões adicionais de trabalho (mais dias, outros técnicos, novas atividades) dentro desta mesma ordem.
+            </div>
+          )}
+
+
           {showApur && techTotalsForApur && (
             <Card className="bg-primary/5 border-primary/20">
               <CardHeader className="pb-2"><CardTitle className="text-base">Apuração</CardTitle></CardHeader>
