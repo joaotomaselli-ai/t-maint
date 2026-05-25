@@ -44,7 +44,27 @@ export type ServiceReport = {
   technician: string;
   overtimeWeekdayHours: number;
   overtimeWeekendHours: number;
+  futureReplacements?: string;
   createdAt: string;
+};
+
+export type AttachmentKind = "mechanical_before" | "mechanical_after" | "electrical_before" | "electrical_after";
+
+export type ActivityAttachment = {
+  id: string;
+  activityId: string;
+  kind: AttachmentKind;
+  storagePath: string;
+  caption?: string;
+};
+
+export type ActivityTechnician = {
+  id?: string;
+  activityId?: string;
+  technicianId: string;
+  position: number;
+  overtimeWeekdayHours: number;
+  overtimeWeekendHours: number;
 };
 
 export type Settings = {
