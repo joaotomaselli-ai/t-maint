@@ -393,6 +393,7 @@ const toSessionRow = (s: Omit<ServiceSession, "id">) => ({
   overtime_weekend_hours: s.overtimeWeekendHours ?? 0,
   activities_done: s.activitiesDone ?? "",
   observation: s.observation || null,
+  discount_hours: s.discountHours ?? 0,
   position: s.position ?? 1,
 });
 
