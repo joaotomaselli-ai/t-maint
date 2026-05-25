@@ -231,13 +231,72 @@ export function exportSingleReport(
     });
   }
 
-  if (r.observation) {
+  if (sessions.length > 0) {
     y = (doc as any).lastAutoTable.finalY + 6;
+    const techByName = new Map(technicians.map(t => [t.id, t.name]));
+    const totalsRow = reportTotalsWithSessions(r, sessions, client);
+    autoTable(doc, {
+      startY: y,
+      head: [["Data", "Técnico", "Ida", "Serviço", "Volta", "KM", "HE Sem.", "HE F.S."]],
+      body: [
+        [
+          format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy"),
+          r.technician || "—",
+          `${r.travelOutStart}→${r.travelOutEnd}`,
+          `${r.serviceStart}→${r.serviceEnd}`,
+          `${r.travelBackStart}→${r.travelBackEnd}`,
+          `${r.km}`,
+          fmtHours(r.overtimeWeekdayHours || 0),
+          fmtHours(r.overtimeWeekendHours || 0),
+        ],
+        ...sessions.map(s => [
+          format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy"),
+          (s.technicianId && techByName.get(s.technicianId)) || "—",
+          `${s.travelOutStart}→${s.travelOutEnd}`,
+          `${s.serviceStart}→${s.serviceEnd}`,
+          `${s.travelBackStart}→${s.travelBackEnd}`,
+          `${s.km}`,
+          fmtHours(s.overtimeWeekdayHours || 0),
+          fmtHours(s.overtimeWeekendHours || 0),
+        ]),
+      ],
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [40, 60, 110], textColor: 255 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 4;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text(`Totais — Horas: ${fmtHours(totalsRow.totalHours)} · KM: ${totalsRow.km}${includeValues ? ` · A cobrar: ${fmtCurrency(totalsRow.total)}` : ""}`, 14, y);
+    doc.setFont("helvetica", "normal");
+
+    // Activities log per session
+    const activitiesBlock = sessions.filter(s => s.activitiesDone?.trim());
+    if (activitiesBlock.length > 0) {
+      y += 6;
+      doc.setFont("helvetica", "bold");
+      doc.text("Histórico de atividades por sessão", 14, y);
+      doc.setFont("helvetica", "normal");
+      y += 5;
+      for (const s of activitiesBlock) {
+        const head = `${format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy")} — ${(s.technicianId && techByName.get(s.technicianId)) || "—"}`;
+        doc.setFont("helvetica", "bold");
+        doc.text(head, 14, y); y += 4;
+        doc.setFont("helvetica", "normal");
+        const lines = doc.splitTextToSize(s.activitiesDone, pageW - 28);
+        doc.text(lines, 14, y); y += lines.length * 4 + 2;
+      }
+    }
+  }
+
+  if (r.observation) {
+    y = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 6 : y + 6;
     doc.setFont("helvetica", "bold");
     doc.text("Observação", 14, y);
     doc.setFont("helvetica", "normal");
     doc.text(doc.splitTextToSize(r.observation, pageW - 28), 14, y + 5);
   }
+
 
   const pageH = doc.internal.pageSize.getHeight();
   doc.setDrawColor(180);
