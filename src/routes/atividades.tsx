@@ -192,6 +192,22 @@ function Atividades() {
         }
       }
 
+      // Persist sessions (add / update / remove)
+      if (activityId && user) {
+        try {
+          for (const id of editingExtras.removedSessionIds) {
+            try { await deleteSession(id); } catch (e) { console.error(e); }
+          }
+          for (const [, sess] of editingExtras.editedSessions) {
+            try { await updateSession(sess); } catch (e) { console.error(e); }
+          }
+          for (const sess of editingExtras.newSessions) {
+            try { await createSession({ ...sess, activityId }, user.id); } catch (e) { console.error(e); }
+          }
+          qc.invalidateQueries({ queryKey: ["sessions", user.id] });
+        } catch (e) { console.error(e); }
+      }
+
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
