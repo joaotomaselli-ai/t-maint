@@ -851,9 +851,20 @@ function ExistingThumb({ att, onRemove }: { att: ActivityAttachment; onRemove: (
       .catch(() => {});
     return () => { mounted = false; };
   }, [att.storagePath]);
+  const ext = att.storagePath.split(".").pop()?.toLowerCase() || "";
+  const isImage = ["jpg","jpeg","png","gif","webp","bmp","heic","heif","svg"].includes(ext);
   return (
-    <div className="relative w-16 h-16 rounded border overflow-hidden bg-muted">
-      {url && <img src={url} alt="" className="w-full h-full object-cover" />}
+    <div className="relative w-16 h-16 rounded border overflow-hidden bg-muted flex items-center justify-center">
+      {isImage && url ? (
+        <a href={url} target="_blank" rel="noreferrer" className="w-full h-full block">
+          <img src={url} alt="" className="w-full h-full object-cover" />
+        </a>
+      ) : (
+        <a href={url || "#"} target="_blank" rel="noreferrer"
+          className="text-[9px] text-center px-1 break-all line-clamp-3 underline">
+          {ext.toUpperCase() || "FILE"}
+        </a>
+      )}
       <button type="button" onClick={onRemove}
         className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
         <X className="h-3 w-3" />
