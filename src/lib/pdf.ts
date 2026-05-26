@@ -414,27 +414,26 @@ export async function exportPreventiveInformativeReport(
     doc.text(label, 14, y);
     y += 4;
     doc.setTextColor(20);
-    const cols = 3;
-    const gap = 4;
-    const cellW = (pageW - 28 - gap * (cols - 1)) / cols;
-    const cellH = cellW * 0.7;
-    let col = 0;
+    // One image per row, full content width, height scaled by aspect ratio.
+    // Caps each image at a max height so very tall photos don't take an entire page.
+    const contentW = pageW - 28;
+    const maxImgH = (pageH - 40) * 0.6; // up to 60% of usable page height
+    const gap = 6;
     for (const a of items) {
       try {
         const url = await getAttachmentUrl(a.storagePath);
         const img = await fetchImageAsDataUrl(url);
-        if (!img) continue;
-        if (col === 0) ensureSpace(cellH + 4);
-        const x = 14 + col * (cellW + gap);
+        if (!img || !img.w || !img.h) continue;
         const ratio = img.w / img.h;
-        let drawW = cellW, drawH = cellW / ratio;
-        if (drawH > cellH) { drawH = cellH; drawW = cellH * ratio; }
-        doc.addImage(img.dataUrl, "JPEG", x + (cellW - drawW) / 2, y + (cellH - drawH) / 2, drawW, drawH);
-        col++;
-        if (col >= cols) { col = 0; y += cellH + gap; }
+        let drawW = contentW;
+        let drawH = drawW / ratio;
+        if (drawH > maxImgH) { drawH = maxImgH; drawW = drawH * ratio; }
+        ensureSpace(drawH + gap);
+        const x = 14 + (contentW - drawW) / 2;
+        doc.addImage(img.dataUrl, "JPEG", x, y, drawW, drawH, undefined, "FAST");
+        y += drawH + gap;
       } catch (e) { console.error(e); }
     }
-    if (col !== 0) y += cellH + gap;
   };
 
   await section("Atividades Mecânicas", r.description || "", "mechanical_before", "mechanical_after");
