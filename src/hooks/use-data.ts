@@ -5,7 +5,10 @@ import {
   listTechnicians, createTechnician, updateTechnician, deleteTechnician,
   getProfile, upsertProfile,
   listAllSessions,
+  listClientPayments, upsertClientPayment, deleteClientPayment,
+  listTechnicianPayments, upsertTechnicianPayment, deleteTechnicianPayment,
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
+  type ClientPayment, type TechnicianPayment,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
