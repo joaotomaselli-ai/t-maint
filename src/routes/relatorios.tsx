@@ -78,7 +78,7 @@ function ClientReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportClientReportDocx } = await import("@/lib/docx-reports");
-      await exportClientReportDocx(client, filtered, settings, { from, to });
+      await exportClientReportDocx(client, filtered, settings, { from, to }, sessions);
       toast.success("Documento Word gerado");
     } catch (e) {
       console.error(e);
