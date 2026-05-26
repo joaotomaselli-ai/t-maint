@@ -33,6 +33,11 @@ function Tecnicos() {
 
   const save = async () => {
     if (!editing.name.trim()) { toast.error("Informe o nome do técnico"); return; }
+    if (!editing.hourlyRate || editing.hourlyRate <= 0) { toast.error("Informe o valor por hora"); return; }
+    if (!editing.kmRate || editing.kmRate <= 0) { toast.error("Informe o valor por km"); return; }
+    if (!editing.overtimeWeekdayRate || editing.overtimeWeekdayRate <= 0) { toast.error("Informe a hora extra de semana"); return; }
+    if (!editing.overtimeWeekendRate || editing.overtimeWeekendRate <= 0) { toast.error("Informe a hora extra de fim de semana"); return; }
+    if (editing.hasFixedHours && (!editing.monthlyFixedHours || editing.monthlyFixedHours <= 0)) { toast.error("Informe as horas fixas por mês"); return; }
     const payload: Omit<Technician, "id"> = {
       name: editing.name.trim(),
       hourlyRate: Number(editing.hourlyRate) || 0,
