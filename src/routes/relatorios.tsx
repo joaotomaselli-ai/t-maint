@@ -72,6 +72,20 @@ function ClientReport() {
     }
   };
 
+  const generateWord = async () => {
+    if (!client) { toast.error("Selecione um cliente"); return; }
+    if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
+    try {
+      const { exportClientReportDocx } = await import("@/lib/docx-reports");
+      await exportClientReportDocx(client, filtered, settings, { from, to });
+      toast.success("Documento Word gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar Word");
+    }
+  };
+
+
 
   return (
     <div className="space-y-6">
