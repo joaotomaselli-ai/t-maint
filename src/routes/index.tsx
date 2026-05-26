@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useClients, useReports } from "@/hooks/use-data";
-import { reportTotals, fmtCurrency, fmtHours } from "@/lib/api";
+import { reportTotals, fmtHours } from "@/lib/api";
+import { useMoney } from "@/hooks/use-money-visibility";
 import { Wrench, Users, Clock, DollarSign, Plus, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -12,9 +13,20 @@ export const Route = createFileRoute("/")({ component: Dashboard });
 function Dashboard() {
   const { clients } = useClients();
   const { reports } = useReports();
+  const money = useMoney();
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const monthLabel = format(now, "MMMM 'de' yyyy", { locale: ptBR });
 
   const clientMap = new Map(clients.map(c => [c.id, c]));
-  const stats = reports.reduce((acc, r) => {
+  const monthReports = reports.filter(r => {
+    const d = new Date(r.date + "T00:00:00");
+    return d >= monthStart && d < monthEnd;
+  });
+
+  const stats = monthReports.reduce((acc, r) => {
     const t = reportTotals(r, clientMap.get(r.clientId));
     acc.hours += t.totalHours;
     acc.value += t.total;
@@ -22,14 +34,14 @@ function Dashboard() {
     return acc;
   }, { hours: 0, value: 0, km: 0 });
 
-  const recent = [...reports].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
+  const recent = [...monthReports].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
 
   return (
     <div className="space-y-8">
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Painel</h1>
-          <p className="text-muted-foreground mt-1">Visão geral das suas OS de manutenção</p>
+          <p className="text-muted-foreground mt-1 capitalize">Resumo de {monthLabel}</p>
         </div>
         <Link to="/atividades">
           <Button size="lg" className="gap-2">
@@ -39,22 +51,22 @@ function Dashboard() {
       </header>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Wrench} label="Atendimentos" value={String(reports.length)} accent="primary" />
+        <StatCard icon={Wrench} label="Atendimentos no mês" value={String(monthReports.length)} accent="primary" />
         <StatCard icon={Users} label="Clientes" value={String(clients.length)} accent="accent" />
-        <StatCard icon={Clock} label="Horas totais" value={fmtHours(stats.hours)} accent="warning" />
-        <StatCard icon={DollarSign} label="Faturamento" value={fmtCurrency(stats.value)} accent="success" />
+        <StatCard icon={Clock} label="Horas no mês" value={fmtHours(stats.hours)} accent="warning" />
+        <StatCard icon={DollarSign} label="Faturamento do mês" value={money(stats.value)} accent="success" />
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> OS recentes</CardTitle>
+          <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> OS recentes do mês</CardTitle>
           <Link to="/atividades"><Button variant="ghost" size="sm">Ver todas</Button></Link>
         </CardHeader>
         <CardContent>
           {recent.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Wrench className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">Nenhuma OS registrada ainda</p>
+              <p className="font-medium">Nenhuma OS registrada neste mês</p>
               <p className="text-sm mt-1">Cadastre seus clientes e comece a registrar atendimentos.</p>
               <div className="flex justify-center gap-2 mt-4">
                 <Link to="/clientes"><Button variant="outline" size="sm">Cadastrar cliente</Button></Link>
@@ -80,7 +92,7 @@ function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{fmtCurrency(t.total)}</div>
+                      <div className="font-semibold">{money(t.total)}</div>
                       <div className="text-xs text-muted-foreground">{fmtHours(t.totalHours)} · {r.km}km</div>
                     </div>
                   </div>
