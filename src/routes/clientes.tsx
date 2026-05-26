@@ -25,6 +25,8 @@ function Clientes() {
 
   const save = async () => {
     if (!editing.name.trim()) { toast.error("Informe o nome do cliente"); return; }
+    if (!editing.hourlyRate || editing.hourlyRate <= 0) { toast.error("Informe o valor por hora"); return; }
+    if (!editing.kmRate || editing.kmRate <= 0) { toast.error("Informe o valor por km"); return; }
     try {
       if (editing.id) {
         await updateClient.mutateAsync(editing as Client);
