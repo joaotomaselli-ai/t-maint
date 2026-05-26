@@ -103,9 +103,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={toggleMoneyHidden} className="text-sidebar-foreground" title={moneyHidden ? "Mostrar valores" : "Ocultar valores"}>
+              {moneyHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <nav className="flex overflow-x-auto px-2 pb-2 gap-1">
           {nav.map(({ to, label, icon: Icon }) => {
