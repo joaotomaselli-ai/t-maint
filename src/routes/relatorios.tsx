@@ -72,6 +72,20 @@ function ClientReport() {
     }
   };
 
+  const generateWord = async () => {
+    if (!client) { toast.error("Selecione um cliente"); return; }
+    if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
+    try {
+      const { exportClientReportDocx } = await import("@/lib/docx-reports");
+      await exportClientReportDocx(client, filtered, settings, { from, to });
+      toast.success("Documento Word gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar Word");
+    }
+  };
+
+
 
   return (
     <div className="space-y-6">
@@ -90,9 +104,12 @@ function ClientReport() {
           </div>
           <div className="grid gap-2"><Label>De</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
           <div className="grid gap-2"><Label>Até</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
-          <div className="flex items-end">
-            <Button onClick={generate} className="gap-2 w-full sm:w-auto" size="lg" disabled={!clientId || filtered.length === 0}>
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
+            <Button onClick={generate} className="gap-2" size="lg" disabled={!clientId || filtered.length === 0}>
               <FileDown className="h-4 w-4" /> Gerar PDF
+            </Button>
+            <Button onClick={generateWord} variant="outline" className="gap-2" size="lg" disabled={!clientId || filtered.length === 0}>
+              <FileDown className="h-4 w-4" /> Gerar Word
             </Button>
           </div>
         </CardContent>
@@ -206,6 +223,19 @@ function TechnicianReport() {
     }
   };
 
+  const generateWord = async () => {
+    if (!technician) { toast.error("Selecione um técnico"); return; }
+    if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
+    try {
+      const { exportTechnicianReportDocx } = await import("@/lib/docx-reports");
+      await exportTechnicianReportDocx(technician, filtered, clientsById, settings, { from, to }, filterClient);
+      toast.success("Documento Word gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar Word");
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -234,9 +264,12 @@ function TechnicianReport() {
           </div>
           <div className="grid gap-2"><Label>De</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
           <div className="grid gap-2"><Label>Até</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
-          <div className="flex items-end">
-            <Button onClick={generate} className="gap-2 w-full lg:w-auto" size="lg" disabled={!technicianId || filtered.length === 0}>
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch lg:items-end">
+            <Button onClick={generate} className="gap-2" size="lg" disabled={!technicianId || filtered.length === 0}>
               <FileDown className="h-4 w-4" /> Gerar PDF
+            </Button>
+            <Button onClick={generateWord} variant="outline" className="gap-2" size="lg" disabled={!technicianId || filtered.length === 0}>
+              <FileDown className="h-4 w-4" /> Gerar Word
             </Button>
           </div>
         </CardContent>

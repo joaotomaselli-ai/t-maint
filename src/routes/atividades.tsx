@@ -378,6 +378,13 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivi
       onClose();
     } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
   };
+  const exportInformativeWord = async () => {
+    try {
+      const { exportPreventiveInformativeReportDocx } = await import("@/lib/docx-reports");
+      await exportPreventiveInformativeReportDocx(r, client, settings);
+      onClose();
+    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar Word"); }
+  };
   const exportOperational = async (includeValues: boolean) => {
     try {
       const { exportSingleReport } = await import("@/lib/pdf");
@@ -385,36 +392,49 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivi
       onClose();
     } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
   };
+  const exportOperationalWord = async (includeValues: boolean) => {
+    try {
+      const { exportSingleReportDocx } = await import("@/lib/docx-reports");
+      await exportSingleReportDocx(r, client, settings, { includeValues, sessions, technicians });
+      onClose();
+    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar Word"); }
+  };
 
 
   return (
     <Dialog open={state.open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Gerar relatório em PDF</DialogTitle>
+          <DialogTitle>Gerar relatório</DialogTitle>
           <DialogDescription>OS {r.orderNumber} — {client?.name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-2">
           {r.type === "preventiva" && (
-            <Button onClick={exportInformative} className="w-full justify-start h-auto py-3" variant="outline">
-              <div className="text-left">
-                <div className="font-semibold">Informativo (cliente)</div>
-                <div className="text-xs text-muted-foreground">Layout profissional com fotos antes/depois e requisições futuras — sem valores</div>
+            <div className="rounded-md border p-3 space-y-2">
+              <div className="font-semibold text-sm">Informativo (cliente)</div>
+              <div className="text-xs text-muted-foreground">Layout profissional com fotos antes/depois e requisições futuras — sem valores</div>
+              <div className="flex gap-2">
+                <Button onClick={exportInformative} size="sm" variant="outline" className="flex-1">PDF</Button>
+                <Button onClick={exportInformativeWord} size="sm" variant="outline" className="flex-1">Word</Button>
               </div>
-            </Button>
+            </div>
           )}
-          <Button onClick={() => exportOperational(true)} className="w-full justify-start h-auto py-3" variant="outline">
-            <div className="text-left">
-              <div className="font-semibold">{r.type === "preventiva" ? "Operacional — com valores" : "Completo — com valores"}</div>
-              <div className="text-xs text-muted-foreground">Inclui apuração de valores cobrados do cliente e pagos ao técnico</div>
+          <div className="rounded-md border p-3 space-y-2">
+            <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — com valores" : "Completo — com valores"}</div>
+            <div className="text-xs text-muted-foreground">Inclui apuração de valores cobrados do cliente e pagos ao técnico</div>
+            <div className="flex gap-2">
+              <Button onClick={() => exportOperational(true)} size="sm" variant="outline" className="flex-1">PDF</Button>
+              <Button onClick={() => exportOperationalWord(true)} size="sm" variant="outline" className="flex-1">Word</Button>
             </div>
-          </Button>
-          <Button onClick={() => exportOperational(false)} className="w-full justify-start h-auto py-3" variant="outline">
-            <div className="text-left">
-              <div className="font-semibold">{r.type === "preventiva" ? "Operacional — sem valores" : "Sem valores"}</div>
-              <div className="text-xs text-muted-foreground">Apenas informações técnicas, horas e KM</div>
+          </div>
+          <div className="rounded-md border p-3 space-y-2">
+            <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — sem valores" : "Sem valores"}</div>
+            <div className="text-xs text-muted-foreground">Apenas informações técnicas, horas e KM</div>
+            <div className="flex gap-2">
+              <Button onClick={() => exportOperational(false)} size="sm" variant="outline" className="flex-1">PDF</Button>
+              <Button onClick={() => exportOperationalWord(false)} size="sm" variant="outline" className="flex-1">Word</Button>
             </div>
-          </Button>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
