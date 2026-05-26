@@ -5,7 +5,7 @@ import {
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
 import type { Client, ServiceReport, Settings, ServiceSession, Technician } from "./api";
-import { reportTotals, technicianTotals, fmtCurrency, fmtHours, reportTotalsWithSessions } from "./api";
+import { reportTotals, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours, reportTotalsWithSessions } from "./api";
 
 const HEADER_FILL = "283C6E";
 const ALT_FILL = "F5F7FA";
