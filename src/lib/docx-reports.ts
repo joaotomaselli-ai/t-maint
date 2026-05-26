@@ -17,7 +17,7 @@ const cellBorders = { top: cellBorder, bottom: cellBorder, left: cellBorder, rig
 function txt(s: string, opts: { bold?: boolean; color?: string; size?: number } = {}) {
   return new TextRun({ text: s, bold: opts.bold, color: opts.color, size: opts.size, font: "Arial" });
 }
-function p(text: string | TextRun[], opts: { bold?: boolean; align?: AlignmentType; heading?: HeadingLevel; spacingAfter?: number } = {}) {
+function p(text: string | TextRun[], opts: { bold?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType]; heading?: (typeof HeadingLevel)[keyof typeof HeadingLevel]; spacingAfter?: number } = {}) {
   const children = typeof text === "string" ? [txt(text, { bold: opts.bold })] : text;
   return new Paragraph({
     children,
