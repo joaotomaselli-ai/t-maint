@@ -152,9 +152,10 @@ export async function exportTechnicianReportDocx(
   settings: Settings,
   period?: { from?: string; to?: string },
   filterClient?: Client,
+  sessions: ServiceSession[] = [],
 ) {
   const rows = reports.map(r => {
-    const t = technicianTotals(r, technician as any);
+    const t = technicianPayForReport(r, sessions, technician as any);
     return [
       r.orderNumber || "—",
       fmtDate(r.date),
@@ -162,14 +163,14 @@ export async function exportTechnicianReportDocx(
       fmtHours(t.totalHours),
       fmtHours(t.ovtWk),
       fmtHours(t.ovtWe),
-      `${r.km} km`,
+      `${t.km} km`,
       fmtCurrency(t.total),
     ];
   });
   const totals = reports.reduce((acc, r) => {
-    const t = technicianTotals(r, technician as any);
+    const t = technicianPayForReport(r, sessions, technician as any);
     acc.hours += t.totalHours; acc.ovtWk += t.ovtWk; acc.ovtWe += t.ovtWe;
-    acc.km += r.km || 0; acc.hoursValue += t.hoursValue; acc.kmValue += t.kmValue; acc.total += t.total;
+    acc.km += t.km; acc.hoursValue += t.hoursValue; acc.kmValue += t.kmValue; acc.total += t.total;
     return acc;
   }, { hours: 0, ovtWk: 0, ovtWe: 0, km: 0, hoursValue: 0, kmValue: 0, total: 0 });
 
