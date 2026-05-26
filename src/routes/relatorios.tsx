@@ -223,6 +223,19 @@ function TechnicianReport() {
     }
   };
 
+  const generateWord = async () => {
+    if (!technician) { toast.error("Selecione um técnico"); return; }
+    if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
+    try {
+      const { exportTechnicianReportDocx } = await import("@/lib/docx-reports");
+      await exportTechnicianReportDocx(technician, filtered, clientsById, settings, { from, to }, filterClient);
+      toast.success("Documento Word gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar Word");
+    }
+  };
+
 
   return (
     <div className="space-y-6">
