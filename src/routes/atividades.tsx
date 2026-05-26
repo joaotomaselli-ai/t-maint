@@ -54,6 +54,10 @@ function Atividades() {
   const { reports, addReport, updateReport, deleteReport } = useReports();
   const { settings } = useSettings();
   const { sessions: allSessions } = useAllSessions();
+  const { payments: clientPays } = useClientPayments();
+  const { payments: techPays } = useTechnicianPayments();
+  const paidByClient = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
+  const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
