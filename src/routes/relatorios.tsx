@@ -144,7 +144,7 @@ function ClientReport() {
                     </thead>
                     <tbody className="divide-y">
                       {filtered.map(r => {
-                        const t = reportTotals(r, client);
+                        const t = reportTotalsWithSessions(r, sessions, client);
                         return (
                           <tr key={r.id}>
                             <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
@@ -152,7 +152,7 @@ function ClientReport() {
                             <td className="p-2">{r.machine}</td>
                             <td className="p-2 capitalize">{r.type}</td>
                             <td className="p-2 text-right">{fmtHours(t.totalHours)}</td>
-                            <td className="p-2 text-right">{r.km}</td>
+                            <td className="p-2 text-right">{t.km}</td>
                             <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
                           </tr>
                         );
