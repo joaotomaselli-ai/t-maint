@@ -42,12 +42,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-        <div className="px-4 py-4 border-b border-sidebar-border flex items-center gap-3">
-          <img src={logoTmaint} alt="T-Maint" className="h-10 w-10 object-contain shrink-0" />
-          <div className="flex flex-col leading-tight min-w-0">
+        <div className="px-3 py-4 border-b border-sidebar-border flex items-center gap-2">
+          <img src={logoTmaint} alt="T-Maint" className="h-9 w-9 object-contain shrink-0" />
+          <div className="flex flex-col leading-tight min-w-0 flex-1">
             <span className="text-base font-semibold tracking-tight text-sidebar-foreground">T-Maint</span>
-            <span className="text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/60 truncate">
-              Gestão Inteligente de Manutenção
+            <span className="text-[9px] uppercase tracking-[0.08em] text-sidebar-foreground/60 leading-snug break-words">
+              Gestão Inteligente<br />de Manutenção
             </span>
           </div>
         </div>
@@ -82,11 +82,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* mobile top bar */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
         <div className="flex items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <img src={logoTmaint} alt="T-Maint" className="h-8 w-8 object-contain shrink-0" />
-            <div className="flex flex-col leading-tight min-w-0">
+            <div className="flex flex-col leading-tight min-w-0 flex-1">
               <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">T-Maint</span>
-              <span className="text-[9px] uppercase tracking-[0.1em] text-sidebar-foreground/60 truncate">
+              <span className="text-[9px] uppercase tracking-[0.08em] text-sidebar-foreground/60 leading-snug">
                 Gestão Inteligente de Manutenção
               </span>
             </div>
