@@ -444,15 +444,54 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
   const client = clients.find((c) => c.id === editing.clientId);
   const isPreventive = editing.type === "preventiva";
 
+  // Effective sessions = existing (minus removed, with edits applied) + new
+  const effectiveSessions = useMemo<ServiceSession[]>(() => {
+    const out: ServiceSession[] = [];
+    for (const s of extras.sessions) {
+      if (extras.removedSessionIds.has(s.id)) continue;
+      out.push(extras.editedSessions.get(s.id) ?? s);
+    }
+    for (let i = 0; i < extras.newSessions.length; i++) {
+      out.push({ ...(extras.newSessions[i] as any), id: `__new_${i}` } as ServiceSession);
+    }
+    return out;
+  }, [extras.sessions, extras.editedSessions, extras.removedSessionIds, extras.newSessions]);
+
   // Corretive apuração uses single technician + per-report overtime
   const singleTechnician = technicians.find((tc) => tc.name === editing.technician);
-  const t = reportTotals(editing as ServiceReport, client);
-  const ttSingle = technicianTotals(editing as ServiceReport, singleTechnician);
+  const t = reportTotalsWithSessions(editing as ServiceReport, effectiveSessions, client);
+  const ttSingleBase = technicianTotals(editing as ServiceReport, singleTechnician);
 
-  // Preventive apuração: sum across all attached technicians
+  // Sum session contributions per their assigned technician
+  const sessionsTechTotal = useMemo(() => {
+    return effectiveSessions.reduce((acc, s) => {
+      const tech = technicians.find(tc => tc.id === s.technicianId);
+      if (!tech) return acc;
+      const tt = sessionTechnicianTotals(s, tech);
+      acc.totalHours += tt.totalHours;
+      acc.hoursValue += tt.hoursValue;
+      acc.kmValue += tt.kmValue;
+      acc.total += tt.total;
+      acc.ovtWk += tt.ovtWk;
+      acc.ovtWe += tt.ovtWe;
+      return acc;
+    }, { totalHours: 0, hoursValue: 0, kmValue: 0, total: 0, ovtWk: 0, ovtWe: 0 });
+  }, [effectiveSessions, technicians]);
+
+  const ttSingle = {
+    ...ttSingleBase,
+    totalHours: ttSingleBase.totalHours + sessionsTechTotal.totalHours,
+    hoursValue: ttSingleBase.hoursValue + sessionsTechTotal.hoursValue,
+    kmValue: ttSingleBase.kmValue + sessionsTechTotal.kmValue,
+    total: ttSingleBase.total + sessionsTechTotal.total,
+    ovtWk: ttSingleBase.ovtWk + sessionsTechTotal.ovtWk,
+    ovtWe: ttSingleBase.ovtWe + sessionsTechTotal.ovtWe,
+  };
+
+  // Preventive apuração: sum across all attached technicians + sessions
   const preventiveTechTotals = useMemo(() => {
     if (!isPreventive) return null;
-    return extras.activityTechnicians.reduce((acc, at) => {
+    const base = extras.activityTechnicians.reduce((acc, at) => {
       const tech = technicians.find(t => t.id === at.technicianId);
       if (!tech) return acc;
       const reportLike = {
@@ -461,7 +500,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
         overtimeWeekendHours: at.overtimeWeekendHours,
       } as ServiceReport;
       const tt = technicianTotals(reportLike, tech);
-      acc.totalHours = tt.totalHours;
+      acc.totalHours += tt.totalHours;
       acc.hoursValue += tt.hoursValue;
       acc.kmValue += tt.kmValue;
       acc.total += tt.total;
@@ -469,10 +508,17 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
       acc.ovtWe += tt.ovtWe;
       return acc;
     }, { totalHours: 0, hoursValue: 0, kmValue: 0, total: 0, ovtWk: 0, ovtWe: 0 });
-  }, [isPreventive, extras.activityTechnicians, technicians, editing]);
+    base.totalHours += sessionsTechTotal.totalHours;
+    base.hoursValue += sessionsTechTotal.hoursValue;
+    base.kmValue += sessionsTechTotal.kmValue;
+    base.total += sessionsTechTotal.total;
+    base.ovtWk += sessionsTechTotal.ovtWk;
+    base.ovtWe += sessionsTechTotal.ovtWe;
+    return base;
+  }, [isPreventive, extras.activityTechnicians, technicians, editing, sessionsTechTotal]);
 
   const techTotalsForApur = isPreventive ? preventiveTechTotals! : ttSingle;
-  const showApur = client || (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician);
+  const showApur = client || (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) || effectiveSessions.length > 0;
   const profit = client && techTotalsForApur ? t.hoursValue - techTotalsForApur.hoursValue : 0;
 
   const addTechnician = () => {
