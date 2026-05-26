@@ -225,7 +225,7 @@ function TechnicianReport() {
         const extras = sessions.filter(s => s.activityId === r.id && s.technicianId === technician.id);
         let totalHours = 0, regularHours = 0, ovtWk = 0, ovtWe = 0, hoursValue = 0, kmValue = 0, km = 0;
         for (const s of extras) {
-          const { sessionTechnicianTotals } = require("@/lib/api");
+          // sessionTechnicianTotals imported above
           const t = sessionTechnicianTotals(s, technician);
           totalHours += t.totalHours; regularHours += t.regularHours;
           ovtWk += t.ovtWk; ovtWe += t.ovtWe;
