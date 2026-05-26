@@ -158,8 +158,10 @@ function Atividades() {
 
   const save = async () => {
     if (!editing.clientId) { toast.error("Selecione o cliente"); return; }
+    if (!editing.date) { toast.error("Informe a data"); return; }
     if (!editing.machine.trim()) { toast.error("Informe a máquina"); return; }
     if (!editing.requester.trim()) { toast.error("Informe o solicitante"); return; }
+    if (!editing.type) { toast.error("Selecione o tipo"); return; }
 
     if (editing.type === "corretiva") {
       if (!editing.technician.trim()) { toast.error("Selecione o técnico"); return; }
@@ -167,6 +169,19 @@ function Atividades() {
       const techs = editingExtras.activityTechnicians.filter(t => t.technicianId);
       if (techs.length === 0) { toast.error("Adicione ao menos um técnico"); return; }
       if (techs.length > 4) { toast.error("Máximo de 4 técnicos"); return; }
+    }
+
+    // Validate additional work sessions: date + technician are required
+    const allSessions = [
+      ...editingExtras.sessions
+        .filter(s => !editingExtras.removedSessionIds.has(s.id))
+        .map(s => editingExtras.editedSessions.get(s.id) ?? s),
+      ...editingExtras.newSessions,
+    ];
+    for (let i = 0; i < allSessions.length; i++) {
+      const s = allSessions[i];
+      if (!s.date) { toast.error(`Seção adicional #${i + 1}: informe a data`); return; }
+      if (!s.technicianId) { toast.error(`Seção adicional #${i + 1}: selecione o técnico`); return; }
     }
 
     try {
