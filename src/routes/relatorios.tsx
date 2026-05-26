@@ -132,7 +132,7 @@ function ClientReport() {
                   <Stat label="Atendimentos" value={String(filtered.length)} />
                   <Stat label="Horas totais" value={fmtHours(totals.hours)} />
                   <Stat label="Quilometragem" value={`${totals.km} km`} />
-                  <Stat label="Total" value={fmtCurrency(totals.total)} highlight />
+                  <Stat label="Total" value={money(totals.total)} highlight />
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -158,7 +158,7 @@ function ClientReport() {
                             <td className="p-2 capitalize">{r.type}</td>
                             <td className="p-2 text-right">{fmtHours(t.totalHours)}</td>
                             <td className="p-2 text-right">{t.km}</td>
-                            <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
+                            <td className="p-2 text-right font-semibold">{money(t.total)}</td>
                           </tr>
                         );
                       })}
@@ -168,7 +168,7 @@ function ClientReport() {
                         <td colSpan={4} className="p-2">TOTAL</td>
                         <td className="p-2 text-right">{fmtHours(totals.hours)}</td>
                         <td className="p-2 text-right">{totals.km}</td>
-                        <td className="p-2 text-right text-primary">{fmtCurrency(totals.total)}</td>
+                        <td className="p-2 text-right text-primary">{money(totals.total)}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -325,7 +325,7 @@ function TechnicianReport() {
                   <Stat label="HE semana" value={fmtHours(totals.ovtWk)} />
                   <Stat label="HE fim de semana" value={fmtHours(totals.ovtWe)} />
                   <Stat label="Total de horas" value={fmtHours(totals.hours)} />
-                  <Stat label="A pagar" value={fmtCurrency(totals.total)} highlight />
+                  <Stat label="A pagar" value={money(totals.total)} highlight />
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -358,7 +358,7 @@ function TechnicianReport() {
                             <td className="p-2 text-right">{fmtHours(t.ovtWe)}</td>
                             <td className="p-2 text-right font-medium">{fmtHours(t.totalHours)}</td>
                             <td className="p-2 text-right">{("km" in t ? t.km : (r.km || 0))}</td>
-                            <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
+                            <td className="p-2 text-right font-semibold">{money(t.total)}</td>
                           </tr>
                         );
                       })}
@@ -371,7 +371,7 @@ function TechnicianReport() {
                         <td className="p-2 text-right">{fmtHours(totals.ovtWe)}</td>
                         <td className="p-2 text-right">{fmtHours(totals.hours)}</td>
                         <td className="p-2 text-right">{totals.km}</td>
-                        <td className="p-2 text-right text-primary">{fmtCurrency(totals.total)}</td>
+                        <td className="p-2 text-right text-primary">{money(totals.total)}</td>
                       </tr>
                     </tfoot>
                   </table>

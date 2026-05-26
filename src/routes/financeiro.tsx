@@ -133,9 +133,9 @@ function ClientFinance() {
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <Stat label="Atendimentos" value={String(filtered.length)} />
-        <Stat label="Total" value={fmtCurrency(totals.total)} />
-        <Stat label="Recebido" value={fmtCurrency(totals.paid)} tone="success" />
-        <Stat label="Pendente" value={fmtCurrency(totals.pending)} tone="warning" />
+        <Stat label="Total" value={money(totals.total)} />
+        <Stat label="Recebido" value={money(totals.paid)} tone="success" />
+        <Stat label="Pendente" value={money(totals.pending)} tone="warning" />
       </div>
 
       <Card>
@@ -175,7 +175,7 @@ function ClientFinance() {
                       <td className="p-2">{r.machine}</td>
                       <td className="p-2 text-right">{fmtHours(t.totalHours)}</td>
                       <td className="p-2 text-right">{t.km}</td>
-                      <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
+                      <td className="p-2 text-right font-semibold">{money(t.total)}</td>
                       <td className="p-2 text-center">
                         <Checkbox
                           checked={paid}
@@ -321,9 +321,9 @@ function TechnicianFinance() {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Stat label="Atendimentos" value={String(filtered.length)} />
-            <Stat label="Total a pagar" value={fmtCurrency(totals.total)} />
-            <Stat label="Pago" value={fmtCurrency(totals.paid)} tone="success" />
-            <Stat label="Pendente" value={fmtCurrency(totals.pending)} tone="warning" />
+            <Stat label="Total a pagar" value={money(totals.total)} />
+            <Stat label="Pago" value={money(totals.paid)} tone="success" />
+            <Stat label="Pendente" value={money(totals.pending)} tone="warning" />
           </div>
           <Card>
             <CardContent className="p-0">
@@ -363,7 +363,7 @@ function TechnicianFinance() {
                           <td className="p-2 text-right">{fmtHours(t.ovtWk)}</td>
                           <td className="p-2 text-right">{fmtHours(t.ovtWe)}</td>
                           <td className="p-2 text-right">{t.km}</td>
-                          <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
+                          <td className="p-2 text-right font-semibold">{money(t.total)}</td>
                           <td className="p-2 text-center">
                             <Checkbox
                               checked={paid}

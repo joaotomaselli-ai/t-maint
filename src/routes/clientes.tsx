@@ -134,11 +134,11 @@ function Clientes() {
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <div className="bg-muted rounded-md p-2">
                     <div className="text-xs text-muted-foreground">Hora</div>
-                    <div className="font-semibold">{fmtCurrency(c.hourlyRate)}</div>
+                    <div className="font-semibold">{money(c.hourlyRate)}</div>
                   </div>
                   <div className="bg-muted rounded-md p-2">
                     <div className="text-xs text-muted-foreground">Km</div>
-                    <div className="font-semibold">{fmtCurrency(c.kmRate)}</div>
+                    <div className="font-semibold">{money(c.kmRate)}</div>
                   </div>
                 </div>
                 {c.address && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{c.address}</p>}
