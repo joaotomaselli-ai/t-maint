@@ -1,7 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2, HardHat, DollarSign } from "lucide-react";
-import logoTmaint from "@/assets/logo-tmaint.png";
+import logoTmaint from "@/assets/logo-tmaint-icon.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -42,8 +42,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-        <div className="px-4 py-5 border-b border-sidebar-border flex flex-col items-center gap-2 bg-white">
-          <img src={logoTmaint} alt="T-Maint — Gestão Inteligente de Manutenção" className="h-24 w-auto object-contain" />
+        <div className="px-4 py-4 border-b border-sidebar-border flex items-center gap-3">
+          <img src={logoTmaint} alt="T-Maint" className="h-10 w-10 object-contain shrink-0" />
+          <div className="flex flex-col leading-tight min-w-0">
+            <span className="text-base font-semibold tracking-tight text-sidebar-foreground">T-Maint</span>
+            <span className="text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/60 truncate">
+              Gestão Inteligente de Manutenção
+            </span>
+          </div>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {nav.map(({ to, label, icon: Icon }) => {
@@ -75,9 +81,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* mobile top bar */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
-        <div className="flex items-center justify-between px-4 py-2 bg-white">
-          <img src={logoTmaint} alt="T-Maint" className="h-10 w-auto object-contain" />
-          <Button variant="ghost" size="icon" onClick={signOut} className="text-foreground">
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src={logoTmaint} alt="T-Maint" className="h-8 w-8 object-contain shrink-0" />
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">T-Maint</span>
+              <span className="text-[9px] uppercase tracking-[0.1em] text-sidebar-foreground/60 truncate">
+                Gestão Inteligente de Manutenção
+              </span>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
