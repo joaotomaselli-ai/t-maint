@@ -45,7 +45,7 @@ export function exportClientReport(
 
   // Table
   const rows = reports.map(r => {
-    const t = reportTotals(r, client);
+    const t = reportTotalsWithSessions(r, sessions, client);
     return [
       r.orderNumber || "—",
       format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy"),
@@ -53,18 +53,18 @@ export function exportClientReport(
       r.type === "corretiva" ? "Corretiva" : "Preventiva",
       fmtHours(t.service),
       fmtHours(t.travelOut + t.travelBack),
-      `${r.km} km`,
+      `${t.km} km`,
       fmtCurrency(t.total),
     ];
   });
 
   const totalGeral = reports.reduce((acc, r) => {
-    const t = reportTotals(r, client);
+    const t = reportTotalsWithSessions(r, sessions, client);
     return {
       hours: acc.hours + t.totalHours,
       service: acc.service + t.service,
       travel: acc.travel + t.travelOut + t.travelBack,
-      km: acc.km + (r.km || 0),
+      km: acc.km + t.km,
       hoursValue: acc.hoursValue + t.hoursValue,
       kmValue: acc.kmValue + t.kmValue,
       total: acc.total + t.total,
