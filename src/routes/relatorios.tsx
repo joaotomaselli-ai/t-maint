@@ -190,10 +190,12 @@ function TechnicianReport() {
   const { reports } = useReports();
   const { settings } = useSettings();
   const { sessions } = useAllSessions();
+  const { payments: techPays } = useTechnicianPayments();
   const [technicianId, setTechnicianId] = useState<string>("");
   const [clientId, setClientId] = useState<string>(ALL_CLIENTS);
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
+  const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
 
   const technician = technicians.find(t => t.id === technicianId);
   const clientsById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
