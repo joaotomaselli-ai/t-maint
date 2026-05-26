@@ -347,7 +347,10 @@ function TechnicianReport() {
                         const regular = Math.max(0, t.totalHours - t.ovtWk - t.ovtWe);
                         return (
                           <tr key={r.id}>
-                            <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
+                            <td className="p-2 font-mono text-xs">
+                              {r.orderNumber}
+                              {technician && paidTechSet.has(`${r.id}::${technician.id}`) && <span className="ml-1 text-success" title="Pago ao técnico">●</span>}
+                            </td>
                             <td className="p-2">{r.date.split("-").reverse().join("/")}</td>
                             <td className="p-2">{clientsById[r.clientId]?.name ?? "—"}</td>
                             <td className="p-2 text-right">{fmtHours(regular)}</td>
