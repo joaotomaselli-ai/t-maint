@@ -149,7 +149,10 @@ function ClientReport() {
                         const t = reportTotalsWithSessions(r, sessions, client);
                         return (
                           <tr key={r.id}>
-                            <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
+                            <td className="p-2 font-mono text-xs">
+                              {r.orderNumber}
+                              {paidSet.has(r.id) && <span className="ml-1 text-success" title="Recebido">●</span>}
+                            </td>
                             <td className="p-2">{r.date.split("-").reverse().join("/")}</td>
                             <td className="p-2">{r.machine}</td>
                             <td className="p-2 capitalize">{r.type}</td>
