@@ -373,6 +373,16 @@ function Atividades() {
                             +{sess.length} sessão{sess.length > 1 ? "s" : ""}
                           </span>
                         )}
+                        {paidByClient.has(r.id) && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/10 text-success font-medium" title="Recebido do cliente">● Recebido</span>
+                        )}
+                        {(() => {
+                          const tech = technicians.find(tt => tt.name.trim().toLowerCase() === (r.technician || "").trim().toLowerCase());
+                          if (tech && paidTechSet.has(`${r.id}::${tech.id}`)) {
+                            return <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium" title="Técnico pago">● Téc. pago</span>;
+                          }
+                          return null;
+                        })()}
                       </div>
                       <h3 className="font-semibold text-lg mt-2">{c?.name || "Cliente removido"}</h3>
                       <p className="text-sm text-muted-foreground">{r.machine} {r.requester && `· Sol.: ${r.requester}`}</p>
