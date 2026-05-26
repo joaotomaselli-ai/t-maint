@@ -213,27 +213,10 @@ function TechnicianReport() {
   }, [reports, technician, clientId, from, to, sessions]);
 
   const totalsByReport = useMemo(() => {
-    const map = new Map<string, ReturnType<typeof technicianTotalsWithSessions>>();
+    const map = new Map<string, ReturnType<typeof technicianPayForReport>>();
     if (!technician) return map;
     for (const r of filtered) {
-      const primaryMatches = (r.technician || "").trim().toLowerCase() === technician.name.trim().toLowerCase();
-      // If primary report's technician name doesn't match, ignore the base row (it belongs to someone else)
-      if (primaryMatches) {
-        map.set(r.id, technicianTotalsWithSessions(r, sessions, technician));
-      } else {
-        // Only sum sessions for this technician
-        const extras = sessions.filter(s => s.activityId === r.id && s.technicianId === technician.id);
-        let totalHours = 0, regularHours = 0, ovtWk = 0, ovtWe = 0, hoursValue = 0, kmValue = 0, km = 0;
-        for (const s of extras) {
-          // sessionTechnicianTotals imported above
-          const t = sessionTechnicianTotals(s, technician);
-          totalHours += t.totalHours; regularHours += t.regularHours;
-          ovtWk += t.ovtWk; ovtWe += t.ovtWe;
-          hoursValue += t.hoursValue; kmValue += t.kmValue;
-          km += s.km || 0;
-        }
-        map.set(r.id, { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, km, total: hoursValue + kmValue });
-      }
+      map.set(r.id, technicianPayForReport(r, sessions, technician));
     }
     return map;
   }, [filtered, sessions, technician]);
