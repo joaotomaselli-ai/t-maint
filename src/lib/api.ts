@@ -553,6 +553,35 @@ export function technicianTotalsWithSessions(
   return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, km, total: hoursValue + kmValue };
 }
 
+/** Pay-per-report for a technician: includes base row only if primary technician matches, plus any sessions assigned to them. */
+export function technicianPayForReport(
+  r: ServiceReport,
+  sessions: ServiceSession[],
+  technician?: Technician,
+) {
+  if (!technician) {
+    return { totalHours: 0, regularHours: 0, ovtWk: 0, ovtWe: 0, hoursValue: 0, kmValue: 0, km: 0, total: 0 };
+  }
+  const primaryMatches = (r.technician || "").trim().toLowerCase() === technician.name.trim().toLowerCase();
+  let totalHours = 0, regularHours = 0, ovtWk = 0, ovtWe = 0, hoursValue = 0, kmValue = 0, km = 0;
+  if (primaryMatches) {
+    const base = technicianTotals(r, technician);
+    totalHours += base.totalHours; regularHours += base.regularHours;
+    ovtWk += base.ovtWk; ovtWe += base.ovtWe;
+    hoursValue += base.hoursValue; kmValue += base.kmValue;
+    km += r.km || 0;
+  }
+  const extras = sessions.filter(s => s.activityId === r.id && s.technicianId === technician.id);
+  for (const s of extras) {
+    const t = sessionTechnicianTotals(s, technician);
+    totalHours += t.totalHours; regularHours += t.regularHours;
+    ovtWk += t.ovtWk; ovtWe += t.ovtWe;
+    hoursValue += t.hoursValue; kmValue += t.kmValue;
+    km += s.km || 0;
+  }
+  return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, km, total: hoursValue + kmValue };
+}
+
 export function fmtCurrency(n: number) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
