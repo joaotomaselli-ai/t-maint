@@ -334,7 +334,7 @@ function Atividades() {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(r => {
+          {paginated.map(r => {
             const c = clientMap.get(r.clientId);
             const sess = sessionsByActivity.get(r.id) ?? [];
             const t = reportTotalsWithSessions(r, sess, c);
@@ -380,6 +380,18 @@ function Atividades() {
               </Card>
             );
           })}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              <div className="text-xs text-muted-foreground">
+                Mostrando {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} de {filtered.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Anterior</Button>
+                <span className="text-sm">Página {currentPage} de {totalPages}</span>
+                <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Próxima</Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
