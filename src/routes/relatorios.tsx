@@ -351,7 +351,7 @@ function TechnicianReport() {
                     </thead>
                     <tbody className="divide-y">
                       {filtered.map(r => {
-                        const t = technicianTotals(r, technician);
+                        const t = totalsByReport.get(r.id) ?? technicianTotals(r, technician);
                         return (
                           <tr key={r.id}>
                             <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
@@ -360,7 +360,7 @@ function TechnicianReport() {
                             <td className="p-2 text-right">{fmtHours(t.totalHours)}</td>
                             <td className="p-2 text-right">{fmtHours(t.ovtWk)}</td>
                             <td className="p-2 text-right">{fmtHours(t.ovtWe)}</td>
-                            <td className="p-2 text-right">{r.km}</td>
+                            <td className="p-2 text-right">{("km" in t ? t.km : (r.km || 0))}</td>
                             <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
                           </tr>
                         );
