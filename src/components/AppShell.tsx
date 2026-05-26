@@ -81,9 +81,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* mobile top bar */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
-        <div className="flex items-center justify-between px-4 py-2 bg-white">
-          <img src={logoTmaint} alt="T-Maint" className="h-10 w-auto object-contain" />
-          <Button variant="ghost" size="icon" onClick={signOut} className="text-foreground">
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src={logoTmaint} alt="T-Maint" className="h-8 w-8 object-contain shrink-0" />
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">T-Maint</span>
+              <span className="text-[9px] uppercase tracking-[0.1em] text-sidebar-foreground/60 truncate">
+                Gestão Inteligente de Manutenção
+              </span>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
