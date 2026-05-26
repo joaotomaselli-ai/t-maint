@@ -9,7 +9,8 @@ export function exportClientReport(
   client: Client,
   reports: ServiceReport[],
   settings: Settings,
-  period?: { from?: string; to?: string }
+  period?: { from?: string; to?: string },
+  sessions: ServiceSession[] = [],
 ) {
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
