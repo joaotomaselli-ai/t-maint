@@ -237,7 +237,7 @@ function TechnicianReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportTechnicianReport } = await import("@/lib/pdf");
-      exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient);
+      exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient, sessions);
       toast.success("Relatório gerado");
     } catch (e) {
       console.error(e);
