@@ -312,11 +312,12 @@ function TechnicianReport() {
               <p className="text-center py-8 text-muted-foreground">Nenhuma atividade encontrada para este técnico.</p>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
                   <Stat label="Atendimentos" value={String(filtered.length)} />
-                  <Stat label="Horas totais" value={fmtHours(totals.hours)} />
+                  <Stat label="Horas normais" value={fmtHours(Math.max(0, totals.hours - totals.ovtWk - totals.ovtWe))} />
                   <Stat label="HE semana" value={fmtHours(totals.ovtWk)} />
                   <Stat label="HE fim de semana" value={fmtHours(totals.ovtWe)} />
+                  <Stat label="Total de horas" value={fmtHours(totals.hours)} />
                   <Stat label="A pagar" value={fmtCurrency(totals.total)} highlight />
                 </div>
                 <div className="overflow-x-auto">
@@ -325,9 +326,10 @@ function TechnicianReport() {
                       <tr>
                         <th className="p-2">OS</th><th className="p-2">Data</th>
                         <th className="p-2">Cliente</th>
-                        <th className="p-2 text-right">Horas</th>
+                        <th className="p-2 text-right">H. Normais</th>
                         <th className="p-2 text-right">HE Sem.</th>
                         <th className="p-2 text-right">HE F.S.</th>
+                        <th className="p-2 text-right">Total H.</th>
                         <th className="p-2 text-right">KM</th>
                         <th className="p-2 text-right">A pagar</th>
                       </tr>
@@ -335,14 +337,16 @@ function TechnicianReport() {
                     <tbody className="divide-y">
                       {filtered.map(r => {
                         const t = totalsByReport.get(r.id) ?? technicianTotals(r, technician);
+                        const regular = Math.max(0, t.totalHours - t.ovtWk - t.ovtWe);
                         return (
                           <tr key={r.id}>
                             <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
                             <td className="p-2">{r.date.split("-").reverse().join("/")}</td>
                             <td className="p-2">{clientsById[r.clientId]?.name ?? "—"}</td>
-                            <td className="p-2 text-right">{fmtHours(t.totalHours)}</td>
+                            <td className="p-2 text-right">{fmtHours(regular)}</td>
                             <td className="p-2 text-right">{fmtHours(t.ovtWk)}</td>
                             <td className="p-2 text-right">{fmtHours(t.ovtWe)}</td>
+                            <td className="p-2 text-right font-medium">{fmtHours(t.totalHours)}</td>
                             <td className="p-2 text-right">{("km" in t ? t.km : (r.km || 0))}</td>
                             <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
                           </tr>
@@ -352,9 +356,10 @@ function TechnicianReport() {
                     <tfoot className="bg-muted font-semibold">
                       <tr>
                         <td colSpan={3} className="p-2">TOTAL</td>
-                        <td className="p-2 text-right">{fmtHours(totals.hours)}</td>
+                        <td className="p-2 text-right">{fmtHours(Math.max(0, totals.hours - totals.ovtWk - totals.ovtWe))}</td>
                         <td className="p-2 text-right">{fmtHours(totals.ovtWk)}</td>
                         <td className="p-2 text-right">{fmtHours(totals.ovtWe)}</td>
+                        <td className="p-2 text-right">{fmtHours(totals.hours)}</td>
                         <td className="p-2 text-right">{totals.km}</td>
                         <td className="p-2 text-right text-primary">{fmtCurrency(totals.total)}</td>
                       </tr>
