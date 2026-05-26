@@ -65,7 +65,7 @@ function ClientReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportClientReport } = await import("@/lib/pdf");
-      exportClientReport(client, filtered, settings, { from, to });
+      exportClientReport(client, filtered, settings, { from, to }, sessions);
       toast.success("Relatório gerado");
     } catch (e) {
       console.error(e);
