@@ -81,10 +81,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
         <nav className="flex overflow-x-auto px-2 pb-2 gap-1">
           {nav.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
