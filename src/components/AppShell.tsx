@@ -21,6 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { location } = useRouterState();
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const moneyHidden = useMoneyHidden();
 
   const isPublic = location.pathname === "/login";
 
