@@ -38,6 +38,7 @@ function ClientReport() {
   const { clients } = useClients();
   const { reports } = useReports();
   const { settings } = useSettings();
+  const { sessions } = useAllSessions();
   const [clientId, setClientId] = useState<string>("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
@@ -54,10 +55,10 @@ function ClientReport() {
   }, [reports, clientId, from, to]);
 
   const totals = useMemo(() => filtered.reduce((acc, r) => {
-    const t = reportTotals(r, client);
-    acc.hours += t.totalHours; acc.km += r.km || 0; acc.total += t.total;
+    const t = reportTotalsWithSessions(r, sessions, client);
+    acc.hours += t.totalHours; acc.km += t.km; acc.total += t.total;
     return acc;
-  }, { hours: 0, km: 0, total: 0 }), [filtered, client]);
+  }, { hours: 0, km: 0, total: 0 }), [filtered, client, sessions]);
 
   const generate = async () => {
     if (!client) { toast.error("Selecione um cliente"); return; }
