@@ -96,6 +96,8 @@ function Atividades() {
     return [...reports]
       .filter(r => filterClient === "all" || r.clientId === filterClient)
       .filter(r => filterType === "all" || r.type === filterType)
+      .filter(r => !dateFrom || r.date >= dateFrom)
+      .filter(r => !dateTo || r.date <= dateTo)
       .filter(r => {
         if (!search) return true;
         const s = search.toLowerCase();
@@ -106,7 +108,16 @@ function Atividades() {
           (c?.name.toLowerCase().includes(s) ?? false);
       })
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  }, [reports, filterClient, filterType, search, clientMap]);
+  }, [reports, filterClient, filterType, dateFrom, dateTo, search, clientMap]);
+
+  useEffect(() => { setPage(1); }, [search, filterClient, filterType, dateFrom, dateTo, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize],
+  );
 
   const emptyExtras = () => ({
     existingAttachments: [] as ActivityAttachment[],
