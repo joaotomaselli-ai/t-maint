@@ -264,9 +264,12 @@ function TechnicianReport() {
           </div>
           <div className="grid gap-2"><Label>De</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
           <div className="grid gap-2"><Label>Até</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
-          <div className="flex items-end">
-            <Button onClick={generate} className="gap-2 w-full lg:w-auto" size="lg" disabled={!technicianId || filtered.length === 0}>
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch lg:items-end">
+            <Button onClick={generate} className="gap-2" size="lg" disabled={!technicianId || filtered.length === 0}>
               <FileDown className="h-4 w-4" /> Gerar PDF
+            </Button>
+            <Button onClick={generateWord} variant="outline" className="gap-2" size="lg" disabled={!technicianId || filtered.length === 0}>
+              <FileDown className="h-4 w-4" /> Gerar Word
             </Button>
           </div>
         </CardContent>
