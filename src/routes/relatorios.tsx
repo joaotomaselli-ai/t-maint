@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { reportTotalsWithSessions, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours } from "@/lib/api";
+import { useMoney } from "@/hooks/use-money-visibility";
 // PDF lib is imported dynamically inside click handlers to avoid SSR issues
 import { FileDown, FileText, HardHat, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ function Relatorios() {
 }
 
 function ClientReport() {
+  const money = useMoney();
   const { clients } = useClients();
   const { reports } = useReports();
   const { settings } = useSettings();
@@ -185,6 +187,7 @@ function ClientReport() {
 const ALL_CLIENTS = "__all__";
 
 function TechnicianReport() {
+  const money = useMoney();
   const { clients } = useClients();
   const { technicians } = useTechnicians();
   const { reports } = useReports();

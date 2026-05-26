@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useTechnicians } from "@/hooks/use-data";
 import { fmtCurrency, type Technician } from "@/lib/api";
+import { useMoney } from "@/hooks/use-money-visibility";
 import { Plus, Pencil, Trash2, HardHat } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +22,7 @@ const empty = (): Editing => ({
 });
 
 function Tecnicos() {
+  const money = useMoney();
   const { technicians, addTechnician, updateTechnician, deleteTechnician, isLoading } = useTechnicians();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());

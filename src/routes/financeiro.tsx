@@ -14,6 +14,7 @@ import {
 import {
   reportTotalsWithSessions, technicianPayForReport, fmtCurrency, fmtHours,
 } from "@/lib/api";
+import { useMoney } from "@/hooks/use-money-visibility";
 import { Users, HardHat, CheckCircle2, Circle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,6 +43,7 @@ function Financeiro() {
 const ALL = "__all__";
 
 function ClientFinance() {
+  const money = useMoney();
   const { clients } = useClients();
   const { reports } = useReports();
   const { sessions } = useAllSessions();
@@ -196,6 +198,7 @@ function ClientFinance() {
 }
 
 function TechnicianFinance() {
+  const money = useMoney();
   const { clients } = useClients();
   const { technicians } = useTechnicians();
   const { reports } = useReports();

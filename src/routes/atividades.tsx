@@ -19,6 +19,7 @@ import {
   type ActivityAttachment, type ActivityTechnician, type AttachmentKind,
   type ServiceSession,
 } from "@/lib/api";
+import { useMoney } from "@/hooks/use-money-visibility";
 import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -49,6 +50,7 @@ type PdfChoice = {
 };
 
 function Atividades() {
+  const money = useMoney();
   const { clients } = useClients();
   const { technicians } = useTechnicians();
   const { reports, addReport, updateReport, deleteReport } = useReports();
@@ -546,6 +548,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
   extras: Extras; setExtras: React.Dispatch<React.SetStateAction<Extras>>;
   clients: Client[]; technicians: Technician[]; onSave: () => void;
 }) {
+  const money = useMoney();
   const client = clients.find((c) => c.id === editing.clientId);
   const isPreventive = editing.type === "preventiva";
 
