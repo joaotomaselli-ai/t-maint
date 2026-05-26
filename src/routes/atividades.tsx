@@ -266,26 +266,55 @@ function Atividades() {
       </header>
 
       <Card>
-        <CardContent className="p-4 grid gap-3 sm:grid-cols-[1fr_200px_180px]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, cliente..." className="pl-9" />
+        <CardContent className="p-4 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-[1fr_200px_180px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, cliente..." className="pl-9" />
+            </div>
+            <Select value={filterClient} onValueChange={setFilterClient}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os clientes</SelectItem>
+                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                <SelectItem value="corretiva">Corretiva</SelectItem>
+                <SelectItem value="preventiva">Preventiva</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={filterClient} onValueChange={setFilterClient}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os clientes</SelectItem>
-              {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              <SelectItem value="corretiva">Corretiva</SelectItem>
-              <SelectItem value="preventiva">Preventiva</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_180px] sm:items-end">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Período — de</Label>
+              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Período — até</Label>
+              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            </div>
+            <Button
+              type="button" variant="ghost" size="sm"
+              onClick={() => { setDateFrom(""); setDateTo(""); }}
+              disabled={!dateFrom && !dateTo}
+            >Limpar período</Button>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Ordens por página</Label>
+              <Select value={String(pageSize)} onValueChange={v => setPageSize(Math.min(100, Math.max(1, parseInt(v) || 20)))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
