@@ -79,9 +79,10 @@ export async function exportClientReportDocx(
   reports: ServiceReport[],
   settings: Settings,
   period?: { from?: string; to?: string },
+  sessions: ServiceSession[] = [],
 ) {
   const rows = reports.map(r => {
-    const t = reportTotals(r, client);
+    const t = reportTotalsWithSessions(r, sessions, client);
     return [
       r.orderNumber || "—",
       fmtDate(r.date),
@@ -89,15 +90,15 @@ export async function exportClientReportDocx(
       r.type === "corretiva" ? "Corretiva" : "Preventiva",
       fmtHours(t.service),
       fmtHours(t.travelOut + t.travelBack),
-      `${r.km} km`,
+      `${t.km} km`,
       fmtCurrency(t.total),
     ];
   });
   const totals = reports.reduce((acc, r) => {
-    const t = reportTotals(r, client);
+    const t = reportTotalsWithSessions(r, sessions, client);
     return {
       hours: acc.hours + t.totalHours, service: acc.service + t.service,
-      travel: acc.travel + t.travelOut + t.travelBack, km: acc.km + (r.km || 0),
+      travel: acc.travel + t.travelOut + t.travelBack, km: acc.km + t.km,
       hoursValue: acc.hoursValue + t.hoursValue, kmValue: acc.kmValue + t.kmValue,
       total: acc.total + t.total,
     };
