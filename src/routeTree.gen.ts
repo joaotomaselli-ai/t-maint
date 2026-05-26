@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TecnicosRouteImport } from './routes/tecnicos'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as AtividadesRouteImport } from './routes/atividades'
@@ -30,6 +31,11 @@ const RelatoriosRoute = RelatoriosRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceiroRoute = FinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/atividades': typeof AtividadesRoute
   '/clientes': typeof ClientesRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/relatorios': typeof RelatoriosRoute
   '/tecnicos': typeof TecnicosRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/atividades': typeof AtividadesRoute
   '/clientes': typeof ClientesRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/relatorios': typeof RelatoriosRoute
   '/tecnicos': typeof TecnicosRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/atividades': typeof AtividadesRoute
   '/clientes': typeof ClientesRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/relatorios': typeof RelatoriosRoute
   '/tecnicos': typeof TecnicosRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/atividades'
     | '/clientes'
     | '/configuracoes'
+    | '/financeiro'
     | '/login'
     | '/relatorios'
     | '/tecnicos'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/atividades'
     | '/clientes'
     | '/configuracoes'
+    | '/financeiro'
     | '/login'
     | '/relatorios'
     | '/tecnicos'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/atividades'
     | '/clientes'
     | '/configuracoes'
+    | '/financeiro'
     | '/login'
     | '/relatorios'
     | '/tecnicos'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   AtividadesRoute: typeof AtividadesRoute
   ClientesRoute: typeof ClientesRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  FinanceiroRoute: typeof FinanceiroRoute
   LoginRoute: typeof LoginRoute
   RelatoriosRoute: typeof RelatoriosRoute
   TecnicosRoute: typeof TecnicosRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/financeiro': {
+      id: '/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof FinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracoes': {
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   AtividadesRoute: AtividadesRoute,
   ClientesRoute: ClientesRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  FinanceiroRoute: FinanceiroRoute,
   LoginRoute: LoginRoute,
   RelatoriosRoute: RelatoriosRoute,
   TecnicosRoute: TecnicosRoute,
