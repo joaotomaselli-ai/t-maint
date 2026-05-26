@@ -74,6 +74,10 @@ function Atividades() {
   const [search, setSearch] = useState("");
   const [filterClient, setFilterClient] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [page, setPage] = useState<number>(1);
   const [pdfChoice, setPdfChoice] = useState<PdfChoice>({ open: false });
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
@@ -92,6 +96,8 @@ function Atividades() {
     return [...reports]
       .filter(r => filterClient === "all" || r.clientId === filterClient)
       .filter(r => filterType === "all" || r.type === filterType)
+      .filter(r => !dateFrom || r.date >= dateFrom)
+      .filter(r => !dateTo || r.date <= dateTo)
       .filter(r => {
         if (!search) return true;
         const s = search.toLowerCase();
@@ -102,7 +108,16 @@ function Atividades() {
           (c?.name.toLowerCase().includes(s) ?? false);
       })
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  }, [reports, filterClient, filterType, search, clientMap]);
+  }, [reports, filterClient, filterType, dateFrom, dateTo, search, clientMap]);
+
+  useEffect(() => { setPage(1); }, [search, filterClient, filterType, dateFrom, dateTo, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize],
+  );
 
   const emptyExtras = () => ({
     existingAttachments: [] as ActivityAttachment[],
@@ -251,26 +266,55 @@ function Atividades() {
       </header>
 
       <Card>
-        <CardContent className="p-4 grid gap-3 sm:grid-cols-[1fr_200px_180px]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, cliente..." className="pl-9" />
+        <CardContent className="p-4 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-[1fr_200px_180px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, cliente..." className="pl-9" />
+            </div>
+            <Select value={filterClient} onValueChange={setFilterClient}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os clientes</SelectItem>
+                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                <SelectItem value="corretiva">Corretiva</SelectItem>
+                <SelectItem value="preventiva">Preventiva</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={filterClient} onValueChange={setFilterClient}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os clientes</SelectItem>
-              {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              <SelectItem value="corretiva">Corretiva</SelectItem>
-              <SelectItem value="preventiva">Preventiva</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_180px] sm:items-end">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Período — de</Label>
+              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Período — até</Label>
+              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            </div>
+            <Button
+              type="button" variant="ghost" size="sm"
+              onClick={() => { setDateFrom(""); setDateTo(""); }}
+              disabled={!dateFrom && !dateTo}
+            >Limpar período</Button>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Ordens por página</Label>
+              <Select value={String(pageSize)} onValueChange={v => setPageSize(Math.min(100, Math.max(1, parseInt(v) || 20)))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -290,7 +334,7 @@ function Atividades() {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(r => {
+          {paginated.map(r => {
             const c = clientMap.get(r.clientId);
             const sess = sessionsByActivity.get(r.id) ?? [];
             const t = reportTotalsWithSessions(r, sess, c);
@@ -336,6 +380,18 @@ function Atividades() {
               </Card>
             );
           })}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              <div className="text-xs text-muted-foreground">
+                Mostrando {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} de {filtered.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Anterior</Button>
+                <span className="text-sm">Página {currentPage} de {totalPages}</span>
+                <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Próxima</Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
