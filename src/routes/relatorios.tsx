@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
-import { reportTotals, technicianTotals, fmtCurrency, fmtHours } from "@/lib/api";
+import { useClients, useReports, useSettings, useTechnicians, useAllSessions } from "@/hooks/use-data";
+import { reportTotals, reportTotalsWithSessions, technicianTotals, technicianTotalsWithSessions, fmtCurrency, fmtHours } from "@/lib/api";
 // PDF lib is imported dynamically inside click handlers to avoid SSR issues
 import { FileDown, FileText, HardHat, Users } from "lucide-react";
 import { toast } from "sonner";
