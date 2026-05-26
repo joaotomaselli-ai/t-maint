@@ -74,6 +74,10 @@ function Atividades() {
   const [search, setSearch] = useState("");
   const [filterClient, setFilterClient] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [page, setPage] = useState<number>(1);
   const [pdfChoice, setPdfChoice] = useState<PdfChoice>({ open: false });
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
