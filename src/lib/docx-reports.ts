@@ -35,7 +35,7 @@ function headerCell(text: string, width?: number) {
     children: [new Paragraph({ children: [txt(text, { bold: true, color: "FFFFFF" })] })],
   });
 }
-function bodyCell(text: string, opts: { width?: number; bold?: boolean; fill?: string; align?: AlignmentType } = {}) {
+function bodyCell(text: string, opts: { width?: number; bold?: boolean; fill?: string; align?: (typeof AlignmentType)[keyof typeof AlignmentType] } = {}) {
   return new TableCell({
     borders: cellBorders,
     width: opts.width ? { size: opts.width, type: WidthType.DXA } : undefined,
