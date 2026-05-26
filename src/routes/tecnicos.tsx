@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useTechnicians } from "@/hooks/use-data";
 import { fmtCurrency, type Technician } from "@/lib/api";
+import { useMoney } from "@/hooks/use-money-visibility";
 import { Plus, Pencil, Trash2, HardHat } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +22,7 @@ const empty = (): Editing => ({
 });
 
 function Tecnicos() {
+  const money = useMoney();
   const { technicians, addTechnician, updateTechnician, deleteTechnician, isLoading } = useTechnicians();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
@@ -167,19 +169,19 @@ function Tecnicos() {
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <div className="bg-muted rounded-md p-2">
                     <div className="text-xs text-muted-foreground">Hora</div>
-                    <div className="font-semibold">{fmtCurrency(t.hourlyRate)}</div>
+                    <div className="font-semibold">{money(t.hourlyRate)}</div>
                   </div>
                   <div className="bg-muted rounded-md p-2">
                     <div className="text-xs text-muted-foreground">Km</div>
-                    <div className="font-semibold">{fmtCurrency(t.kmRate)}</div>
+                    <div className="font-semibold">{money(t.kmRate)}</div>
                   </div>
                   <div className="bg-muted rounded-md p-2">
                     <div className="text-xs text-muted-foreground">Hora extra semana</div>
-                    <div className="font-semibold">{fmtCurrency(t.overtimeWeekdayRate)}</div>
+                    <div className="font-semibold">{money(t.overtimeWeekdayRate)}</div>
                   </div>
                   <div className="bg-muted rounded-md p-2">
                     <div className="text-xs text-muted-foreground">Hora extra FDS</div>
-                    <div className="font-semibold">{fmtCurrency(t.overtimeWeekendRate)}</div>
+                    <div className="font-semibold">{money(t.overtimeWeekendRate)}</div>
                   </div>
                 </div>
               </CardContent>

@@ -19,6 +19,7 @@ import {
   type ActivityAttachment, type ActivityTechnician, type AttachmentKind,
   type ServiceSession,
 } from "@/lib/api";
+import { useMoney } from "@/hooks/use-money-visibility";
 import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -49,6 +50,7 @@ type PdfChoice = {
 };
 
 function Atividades() {
+  const money = useMoney();
   const { clients } = useClients();
   const { technicians } = useTechnicians();
   const { reports, addReport, updateReport, deleteReport } = useReports();
@@ -341,7 +343,7 @@ function Atividades() {
         <div className="grid grid-cols-3 gap-3 text-sm">
           <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Atendimentos filtrados</div><div className="text-xl font-bold mt-1">{filtered.length}</div></CardContent></Card>
           <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Horas totais</div><div className="text-xl font-bold mt-1">{fmtHours(totals.hours)}</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Valor total</div><div className="text-xl font-bold mt-1 text-primary">{fmtCurrency(totals.value)}</div></CardContent></Card>
+          <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Valor total</div><div className="text-xl font-bold mt-1 text-primary">{money(totals.value)}</div></CardContent></Card>
         </div>
       )}
 
@@ -395,7 +397,7 @@ function Atividades() {
                     </div>
                     <div className="flex sm:flex-col items-end gap-2 shrink-0">
                       <div className="text-right">
-                        <div className="text-xl font-bold text-primary">{fmtCurrency(t.total)}</div>
+                        <div className="text-xl font-bold text-primary">{money(t.total)}</div>
                         <div className="text-xs text-muted-foreground">{fmtHours(t.totalHours)} totais</div>
                       </div>
                       <div className="flex gap-1">
@@ -546,6 +548,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
   extras: Extras; setExtras: React.Dispatch<React.SetStateAction<Extras>>;
   clients: Client[]; technicians: Technician[]; onSave: () => void;
 }) {
+  const money = useMoney();
   const client = clients.find((c) => c.id === editing.clientId);
   const isPreventive = editing.type === "preventiva";
 
@@ -867,9 +870,9 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                     <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">A receber do cliente</div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div><div className="text-muted-foreground text-xs">Horas totais</div><div className="font-semibold">{fmtHours(t.totalHours)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{fmtCurrency(t.hoursValue)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{fmtCurrency(t.kmValue)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg text-primary">{fmtCurrency(t.total)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{money(t.hoursValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{money(t.kmValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg text-primary">{money(t.total)}</div></div>
                     </div>
                   </div>
                 )}
@@ -880,16 +883,16 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div><div className="text-muted-foreground text-xs">Horas totais</div><div className="font-semibold">{fmtHours(techTotalsForApur.totalHours)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{fmtCurrency(techTotalsForApur.hoursValue)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{fmtCurrency(techTotalsForApur.kmValue)}</div></div>
-                      <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg">{fmtCurrency(techTotalsForApur.total)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor horas</div><div className="font-semibold">{money(techTotalsForApur.hoursValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">Valor km</div><div className="font-semibold">{money(techTotalsForApur.kmValue)}</div></div>
+                      <div><div className="text-muted-foreground text-xs">TOTAL</div><div className="font-bold text-lg">{money(techTotalsForApur.total)}</div></div>
                     </div>
                   </div>
                 )}
                 {client && techTotalsForApur && (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) && (
                   <div className="pt-3 border-t border-primary/20 flex items-center justify-between">
                     <div className="text-xs font-semibold text-muted-foreground uppercase">Lucro em horas (receber − pagar)</div>
-                    <div className={`font-bold text-lg ${profit >= 0 ? "text-success" : "text-destructive"}`}>{fmtCurrency(profit)}</div>
+                    <div className={`font-bold text-lg ${profit >= 0 ? "text-success" : "text-destructive"}`}>{money(profit)}</div>
                   </div>
                 )}
               </CardContent>

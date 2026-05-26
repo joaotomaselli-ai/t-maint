@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useClients } from "@/hooks/use-data";
 import { fmtCurrency, type Client } from "@/lib/api";
+import { useMoney } from "@/hooks/use-money-visibility";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ type Editing = Omit<Client, "id"> & { id?: string };
 const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, cnpj: "", phone: "", address: "" });
 
 function Clientes() {
+  const money = useMoney();
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
@@ -134,11 +136,11 @@ function Clientes() {
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <div className="bg-muted rounded-md p-2">
                     <div className="text-xs text-muted-foreground">Hora</div>
-                    <div className="font-semibold">{fmtCurrency(c.hourlyRate)}</div>
+                    <div className="font-semibold">{money(c.hourlyRate)}</div>
                   </div>
                   <div className="bg-muted rounded-md p-2">
                     <div className="text-xs text-muted-foreground">Km</div>
-                    <div className="font-semibold">{fmtCurrency(c.kmRate)}</div>
+                    <div className="font-semibold">{money(c.kmRate)}</div>
                   </div>
                 </div>
                 {c.address && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{c.address}</p>}

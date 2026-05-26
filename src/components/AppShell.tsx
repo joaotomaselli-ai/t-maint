@@ -1,10 +1,11 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2, HardHat, DollarSign } from "lucide-react";
+import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff } from "lucide-react";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { useMoneyHidden, toggleMoneyHidden } from "@/hooks/use-money-visibility";
 
 const nav = [
   { to: "/", label: "Painel", icon: LayoutDashboard },
@@ -20,6 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { location } = useRouterState();
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const moneyHidden = useMoneyHidden();
 
   const isPublic = location.pathname === "/login";
 
@@ -73,6 +75,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="p-3 border-t border-sidebar-border space-y-2">
           <div className="px-2 text-xs text-sidebar-foreground/60 truncate">{user.email}</div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleMoneyHidden}
+            className="w-full justify-start gap-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            title={moneyHidden ? "Mostrar valores" : "Ocultar valores"}
+          >
+            {moneyHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {moneyHidden ? "Mostrar valores" : "Ocultar valores"}
+          </Button>
           <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start gap-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
             <LogOut className="h-4 w-4" /> Sair
           </Button>
@@ -91,9 +103,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={toggleMoneyHidden} className="text-sidebar-foreground" title={moneyHidden ? "Mostrar valores" : "Ocultar valores"}>
+              {moneyHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <nav className="flex overflow-x-auto px-2 pb-2 gap-1">
           {nav.map(({ to, label, icon: Icon }) => {
