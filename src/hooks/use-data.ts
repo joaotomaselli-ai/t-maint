@@ -5,7 +5,10 @@ import {
   listTechnicians, createTechnician, updateTechnician, deleteTechnician,
   getProfile, upsertProfile,
   listAllSessions,
+  listClientPayments, upsertClientPayment, deleteClientPayment,
+  listTechnicianPayments, upsertTechnicianPayment, deleteTechnicianPayment,
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
+  type ClientPayment, type TechnicianPayment,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -118,4 +121,53 @@ export function useAllSessions() {
     enabled: !!user,
   });
   return { sessions: (q.data ?? []) as ServiceSession[], isLoading: q.isLoading };
+}
+
+export function useClientPayments() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["client_payments", user?.id],
+    queryFn: listClientPayments,
+    enabled: !!user,
+  });
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["client_payments", user?.id] });
+  return {
+    payments: (q.data ?? []) as ClientPayment[],
+    isLoading: q.isLoading,
+    markPaid: useMutation({
+      mutationFn: (v: { activityId: string; amount: number; note?: string }) =>
+        upsertClientPayment(user!.id, v.activityId, v.amount, v.note),
+      onSuccess: invalidate,
+    }),
+    unmarkPaid: useMutation({
+      mutationFn: (activityId: string) => deleteClientPayment(activityId),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+export function useTechnicianPayments() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["technician_payments", user?.id],
+    queryFn: listTechnicianPayments,
+    enabled: !!user,
+  });
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["technician_payments", user?.id] });
+  return {
+    payments: (q.data ?? []) as TechnicianPayment[],
+    isLoading: q.isLoading,
+    markPaid: useMutation({
+      mutationFn: (v: { activityId: string; technicianId: string; amount: number; note?: string }) =>
+        upsertTechnicianPayment(user!.id, v.activityId, v.technicianId, v.amount, v.note),
+      onSuccess: invalidate,
+    }),
+    unmarkPaid: useMutation({
+      mutationFn: (v: { activityId: string; technicianId: string }) =>
+        deleteTechnicianPayment(v.activityId, v.technicianId),
+      onSuccess: invalidate,
+    }),
+  };
 }

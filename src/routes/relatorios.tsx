@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useClients, useReports, useSettings, useTechnicians, useAllSessions } from "@/hooks/use-data";
+import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { reportTotalsWithSessions, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours } from "@/lib/api";
 // PDF lib is imported dynamically inside click handlers to avoid SSR issues
 import { FileDown, FileText, HardHat, Users } from "lucide-react";
@@ -39,6 +39,8 @@ function ClientReport() {
   const { reports } = useReports();
   const { settings } = useSettings();
   const { sessions } = useAllSessions();
+  const { payments: clientPays } = useClientPayments();
+  const paidSet = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
   const [clientId, setClientId] = useState<string>("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
@@ -147,7 +149,10 @@ function ClientReport() {
                         const t = reportTotalsWithSessions(r, sessions, client);
                         return (
                           <tr key={r.id}>
-                            <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
+                            <td className="p-2 font-mono text-xs">
+                              {r.orderNumber}
+                              {paidSet.has(r.id) && <span className="ml-1 text-success" title="Recebido">●</span>}
+                            </td>
                             <td className="p-2">{r.date.split("-").reverse().join("/")}</td>
                             <td className="p-2">{r.machine}</td>
                             <td className="p-2 capitalize">{r.type}</td>
@@ -185,10 +190,12 @@ function TechnicianReport() {
   const { reports } = useReports();
   const { settings } = useSettings();
   const { sessions } = useAllSessions();
+  const { payments: techPays } = useTechnicianPayments();
   const [technicianId, setTechnicianId] = useState<string>("");
   const [clientId, setClientId] = useState<string>(ALL_CLIENTS);
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
+  const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
 
   const technician = technicians.find(t => t.id === technicianId);
   const clientsById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
@@ -340,7 +347,10 @@ function TechnicianReport() {
                         const regular = Math.max(0, t.totalHours - t.ovtWk - t.ovtWe);
                         return (
                           <tr key={r.id}>
-                            <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
+                            <td className="p-2 font-mono text-xs">
+                              {r.orderNumber}
+                              {technician && paidTechSet.has(`${r.id}::${technician.id}`) && <span className="ml-1 text-success" title="Pago ao técnico">●</span>}
+                            </td>
                             <td className="p-2">{r.date.split("-").reverse().join("/")}</td>
                             <td className="p-2">{clientsById[r.clientId]?.name ?? "—"}</td>
                             <td className="p-2 text-right">{fmtHours(regular)}</td>

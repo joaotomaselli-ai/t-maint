@@ -431,6 +431,75 @@ export async function deleteSession(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ===== Payments =====
+export type ClientPayment = {
+  id: string;
+  activityId: string;
+  amount: number;
+  paidAt: string;
+  note?: string;
+};
+export type TechnicianPayment = {
+  id: string;
+  activityId: string;
+  technicianId: string;
+  amount: number;
+  paidAt: string;
+  note?: string;
+};
+
+const fromClientPay = (r: any): ClientPayment => ({
+  id: r.id, activityId: r.activity_id,
+  amount: Number(r.amount ?? 0), paidAt: r.paid_at, note: r.note ?? "",
+});
+const fromTechPay = (r: any): TechnicianPayment => ({
+  id: r.id, activityId: r.activity_id, technicianId: r.technician_id,
+  amount: Number(r.amount ?? 0), paidAt: r.paid_at, note: r.note ?? "",
+});
+
+export async function listClientPayments(): Promise<ClientPayment[]> {
+  const { data, error } = await supabase.from("client_payments").select("*");
+  if (error) throw error;
+  return (data ?? []).map(fromClientPay);
+}
+export async function upsertClientPayment(
+  userId: string, activityId: string, amount: number, note?: string
+): Promise<ClientPayment> {
+  const { data, error } = await supabase.from("client_payments")
+    .upsert(
+      { user_id: userId, activity_id: activityId, amount, note: note || null, paid_at: new Date().toISOString() },
+      { onConflict: "user_id,activity_id" }
+    ).select().single();
+  if (error) throw error;
+  return fromClientPay(data);
+}
+export async function deleteClientPayment(activityId: string): Promise<void> {
+  const { error } = await supabase.from("client_payments").delete().eq("activity_id", activityId);
+  if (error) throw error;
+}
+
+export async function listTechnicianPayments(): Promise<TechnicianPayment[]> {
+  const { data, error } = await supabase.from("technician_payments").select("*");
+  if (error) throw error;
+  return (data ?? []).map(fromTechPay);
+}
+export async function upsertTechnicianPayment(
+  userId: string, activityId: string, technicianId: string, amount: number, note?: string
+): Promise<TechnicianPayment> {
+  const { data, error } = await supabase.from("technician_payments")
+    .upsert(
+      { user_id: userId, activity_id: activityId, technician_id: technicianId, amount, note: note || null, paid_at: new Date().toISOString() },
+      { onConflict: "user_id,activity_id,technician_id" }
+    ).select().single();
+  if (error) throw error;
+  return fromTechPay(data);
+}
+export async function deleteTechnicianPayment(activityId: string, technicianId: string): Promise<void> {
+  const { error } = await supabase.from("technician_payments").delete()
+    .eq("activity_id", activityId).eq("technician_id", technicianId);
+  if (error) throw error;
+}
+
 export function sessionClientTotals(s: ServiceSession, client?: Client) {
   const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
   const service = diffHours(s.serviceStart, s.serviceEnd);

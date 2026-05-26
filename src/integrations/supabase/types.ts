@@ -100,6 +100,36 @@ export type Database = {
           },
         ]
       }
+      client_payments: {
+        Row: {
+          activity_id: string
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          paid_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          paid_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          paid_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           address: string | null
@@ -343,6 +373,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      technician_payments: {
+        Row: {
+          activity_id: string
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          paid_at: string
+          technician_id: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          paid_at?: string
+          technician_id: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          paid_at?: string
+          technician_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       technicians: {
         Row: {
