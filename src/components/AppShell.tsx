@@ -75,11 +75,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* mobile top bar */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Cog className="h-5 w-5" />
-            <span className="font-bold">T-Maint</span>
-          </div>
+        <div className="flex items-center justify-between px-4 py-2 bg-white">
+          <img src={logoTmaint} alt="T-Maint" className="h-10 w-auto object-contain" />
+          <Button variant="ghost" size="icon" onClick={signOut} className="text-foreground">
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
           <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
             <LogOut className="h-4 w-4" />
           </Button>
