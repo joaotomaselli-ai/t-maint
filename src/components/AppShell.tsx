@@ -1,6 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2, HardHat, DollarSign } from "lucide-react";
+import logoTmaint from "@/assets/logo-tmaint.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -41,14 +42,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-        <div className="px-6 py-6 border-b border-sidebar-border flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-sidebar-primary text-sidebar-primary-foreground grid place-items-center">
-            <Cog className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="font-bold text-base leading-tight">T-Maint</div>
-            <div className="text-xs text-sidebar-foreground/60">Gestão de Manutenção</div>
-          </div>
+        <div className="px-4 py-5 border-b border-sidebar-border flex flex-col items-center gap-2 bg-white">
+          <img src={logoTmaint} alt="T-Maint — Gestão Inteligente de Manutenção" className="h-24 w-auto object-contain" />
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {nav.map(({ to, label, icon: Icon }) => {
@@ -80,12 +75,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* mobile top bar */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Cog className="h-5 w-5" />
-            <span className="font-bold">T-Maint</span>
-          </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
+        <div className="flex items-center justify-between px-4 py-2 bg-white">
+          <img src={logoTmaint} alt="T-Maint" className="h-10 w-auto object-contain" />
+          <Button variant="ghost" size="icon" onClick={signOut} className="text-foreground">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
