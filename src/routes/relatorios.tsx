@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useClients, useReports, useSettings, useTechnicians } from "@/hooks/use-data";
-import { reportTotals, technicianTotals, fmtCurrency, fmtHours } from "@/lib/api";
+import { useClients, useReports, useSettings, useTechnicians, useAllSessions } from "@/hooks/use-data";
+import { reportTotalsWithSessions, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours } from "@/lib/api";
 // PDF lib is imported dynamically inside click handlers to avoid SSR issues
 import { FileDown, FileText, HardHat, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ function ClientReport() {
   const { clients } = useClients();
   const { reports } = useReports();
   const { settings } = useSettings();
+  const { sessions } = useAllSessions();
   const [clientId, setClientId] = useState<string>("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
@@ -54,17 +55,17 @@ function ClientReport() {
   }, [reports, clientId, from, to]);
 
   const totals = useMemo(() => filtered.reduce((acc, r) => {
-    const t = reportTotals(r, client);
-    acc.hours += t.totalHours; acc.km += r.km || 0; acc.total += t.total;
+    const t = reportTotalsWithSessions(r, sessions, client);
+    acc.hours += t.totalHours; acc.km += t.km; acc.total += t.total;
     return acc;
-  }, { hours: 0, km: 0, total: 0 }), [filtered, client]);
+  }, { hours: 0, km: 0, total: 0 }), [filtered, client, sessions]);
 
   const generate = async () => {
     if (!client) { toast.error("Selecione um cliente"); return; }
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportClientReport } = await import("@/lib/pdf");
-      exportClientReport(client, filtered, settings, { from, to });
+      exportClientReport(client, filtered, settings, { from, to }, sessions);
       toast.success("Relatório gerado");
     } catch (e) {
       console.error(e);
@@ -77,7 +78,7 @@ function ClientReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportClientReportDocx } = await import("@/lib/docx-reports");
-      await exportClientReportDocx(client, filtered, settings, { from, to });
+      await exportClientReportDocx(client, filtered, settings, { from, to }, sessions);
       toast.success("Documento Word gerado");
     } catch (e) {
       console.error(e);
@@ -143,7 +144,7 @@ function ClientReport() {
                     </thead>
                     <tbody className="divide-y">
                       {filtered.map(r => {
-                        const t = reportTotals(r, client);
+                        const t = reportTotalsWithSessions(r, sessions, client);
                         return (
                           <tr key={r.id}>
                             <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
@@ -151,7 +152,7 @@ function ClientReport() {
                             <td className="p-2">{r.machine}</td>
                             <td className="p-2 capitalize">{r.type}</td>
                             <td className="p-2 text-right">{fmtHours(t.totalHours)}</td>
-                            <td className="p-2 text-right">{r.km}</td>
+                            <td className="p-2 text-right">{t.km}</td>
                             <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
                           </tr>
                         );
@@ -183,6 +184,7 @@ function TechnicianReport() {
   const { technicians } = useTechnicians();
   const { reports } = useReports();
   const { settings } = useSettings();
+  const { sessions } = useAllSessions();
   const [technicianId, setTechnicianId] = useState<string>("");
   const [clientId, setClientId] = useState<string>(ALL_CLIENTS);
   const [from, setFrom] = useState<string>("");
@@ -192,30 +194,50 @@ function TechnicianReport() {
   const clientsById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
   const filterClient = clientId !== ALL_CLIENTS ? clients.find(c => c.id === clientId) : undefined;
 
-  // Match by technician name (reports store technician as text)
+  // Match by technician name on the primary report OR by technicianId on any session of the report
   const filtered = useMemo(() => {
     if (!technician) return [];
+    const name = technician.name.trim().toLowerCase();
+    const activityIdsWithSession = new Set(
+      sessions.filter(s => s.technicianId === technician.id).map(s => s.activityId),
+    );
     return reports
-      .filter(r => (r.technician || "").trim().toLowerCase() === technician.name.trim().toLowerCase())
+      .filter(r =>
+        (r.technician || "").trim().toLowerCase() === name ||
+        activityIdsWithSession.has(r.id),
+      )
       .filter(r => clientId === ALL_CLIENTS || r.clientId === clientId)
       .filter(r => !from || r.date >= from)
       .filter(r => !to || r.date <= to)
       .sort((a, b) => a.date.localeCompare(b.date));
-  }, [reports, technician, clientId, from, to]);
+  }, [reports, technician, clientId, from, to, sessions]);
 
-  const totals = useMemo(() => filtered.reduce((acc, r) => {
-    const t = technicianTotals(r, technician);
-    acc.hours += t.totalHours; acc.ovtWk += t.ovtWk; acc.ovtWe += t.ovtWe;
-    acc.km += r.km || 0; acc.total += t.total;
-    return acc;
-  }, { hours: 0, ovtWk: 0, ovtWe: 0, km: 0, total: 0 }), [filtered, technician]);
+  const totalsByReport = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof technicianPayForReport>>();
+    if (!technician) return map;
+    for (const r of filtered) {
+      map.set(r.id, technicianPayForReport(r, sessions, technician));
+    }
+    return map;
+  }, [filtered, sessions, technician]);
+
+  const totals = useMemo(() => {
+    let hours = 0, ovtWk = 0, ovtWe = 0, km = 0, total = 0;
+    for (const r of filtered) {
+      const t = totalsByReport.get(r.id);
+      if (!t) continue;
+      hours += t.totalHours; ovtWk += t.ovtWk; ovtWe += t.ovtWe;
+      km += t.km; total += t.total;
+    }
+    return { hours, ovtWk, ovtWe, km, total };
+  }, [filtered, totalsByReport]);
 
   const generate = async () => {
     if (!technician) { toast.error("Selecione um técnico"); return; }
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportTechnicianReport } = await import("@/lib/pdf");
-      exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient);
+      exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient, sessions);
       toast.success("Relatório gerado");
     } catch (e) {
       console.error(e);
@@ -228,7 +250,7 @@ function TechnicianReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportTechnicianReportDocx } = await import("@/lib/docx-reports");
-      await exportTechnicianReportDocx(technician, filtered, clientsById, settings, { from, to }, filterClient);
+      await exportTechnicianReportDocx(technician, filtered, clientsById, settings, { from, to }, filterClient, sessions);
       toast.success("Documento Word gerado");
     } catch (e) {
       console.error(e);
@@ -312,7 +334,7 @@ function TechnicianReport() {
                     </thead>
                     <tbody className="divide-y">
                       {filtered.map(r => {
-                        const t = technicianTotals(r, technician);
+                        const t = totalsByReport.get(r.id) ?? technicianTotals(r, technician);
                         return (
                           <tr key={r.id}>
                             <td className="p-2 font-mono text-xs">{r.orderNumber}</td>
@@ -321,7 +343,7 @@ function TechnicianReport() {
                             <td className="p-2 text-right">{fmtHours(t.totalHours)}</td>
                             <td className="p-2 text-right">{fmtHours(t.ovtWk)}</td>
                             <td className="p-2 text-right">{fmtHours(t.ovtWe)}</td>
-                            <td className="p-2 text-right">{r.km}</td>
+                            <td className="p-2 text-right">{("km" in t ? t.km : (r.km || 0))}</td>
                             <td className="p-2 text-right font-semibold">{fmtCurrency(t.total)}</td>
                           </tr>
                         );

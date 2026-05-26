@@ -3,13 +3,14 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Client, ServiceReport, Settings, ServiceSession, Technician } from "./api";
-import { reportTotals, technicianTotals, fmtCurrency, fmtHours, reportTotalsWithSessions } from "./api";
+import { reportTotals, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours, reportTotalsWithSessions } from "./api";
 
 export function exportClientReport(
   client: Client,
   reports: ServiceReport[],
   settings: Settings,
-  period?: { from?: string; to?: string }
+  period?: { from?: string; to?: string },
+  sessions: ServiceSession[] = [],
 ) {
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
@@ -44,7 +45,7 @@ export function exportClientReport(
 
   // Table
   const rows = reports.map(r => {
-    const t = reportTotals(r, client);
+    const t = reportTotalsWithSessions(r, sessions, client);
     return [
       r.orderNumber || "—",
       format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy"),
@@ -52,18 +53,18 @@ export function exportClientReport(
       r.type === "corretiva" ? "Corretiva" : "Preventiva",
       fmtHours(t.service),
       fmtHours(t.travelOut + t.travelBack),
-      `${r.km} km`,
+      `${t.km} km`,
       fmtCurrency(t.total),
     ];
   });
 
   const totalGeral = reports.reduce((acc, r) => {
-    const t = reportTotals(r, client);
+    const t = reportTotalsWithSessions(r, sessions, client);
     return {
       hours: acc.hours + t.totalHours,
       service: acc.service + t.service,
       travel: acc.travel + t.travelOut + t.travelBack,
-      km: acc.km + (r.km || 0),
+      km: acc.km + t.km,
       hoursValue: acc.hoursValue + t.hoursValue,
       kmValue: acc.kmValue + t.kmValue,
       total: acc.total + t.total,
@@ -499,8 +500,8 @@ export function exportTechnicianReport(
   settings: Settings,
   period?: { from?: string; to?: string },
   filterClient?: Client,
+  sessions: ServiceSession[] = [],
 ) {
-  // technicianTotals imported at top
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
 
@@ -535,7 +536,7 @@ export function exportTechnicianReport(
   }
 
   const rows = reports.map(r => {
-    const t = technicianTotals(r, technician as any);
+    const t = technicianPayForReport(r, sessions, technician as any);
     return [
       r.orderNumber || "—",
       format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy"),
@@ -543,15 +544,15 @@ export function exportTechnicianReport(
       fmtHours(t.totalHours),
       fmtHours(t.ovtWk),
       fmtHours(t.ovtWe),
-      `${r.km} km`,
+      `${t.km} km`,
       fmtCurrency(t.total),
     ];
   });
 
   const totals = reports.reduce((acc, r) => {
-    const t = technicianTotals(r, technician as any);
+    const t = technicianPayForReport(r, sessions, technician as any);
     acc.hours += t.totalHours; acc.ovtWk += t.ovtWk; acc.ovtWe += t.ovtWe;
-    acc.km += r.km || 0; acc.hoursValue += t.hoursValue; acc.kmValue += t.kmValue; acc.total += t.total;
+    acc.km += t.km; acc.hoursValue += t.hoursValue; acc.kmValue += t.kmValue; acc.total += t.total;
     return acc;
   }, { hours: 0, ovtWk: 0, ovtWe: 0, km: 0, hoursValue: 0, kmValue: 0, total: 0 });
 
