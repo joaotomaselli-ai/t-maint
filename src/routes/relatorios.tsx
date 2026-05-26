@@ -39,6 +39,8 @@ function ClientReport() {
   const { reports } = useReports();
   const { settings } = useSettings();
   const { sessions } = useAllSessions();
+  const { payments: clientPays } = useClientPayments();
+  const paidSet = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
   const [clientId, setClientId] = useState<string>("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
