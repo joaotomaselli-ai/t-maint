@@ -523,6 +523,36 @@ export function technicianTotals(r: ServiceReport, technician?: Technician) {
   return { totalHours, regularHours, discount, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
+/** Sum the primary report row + all sessions belonging to a specific technician. */
+export function technicianTotalsWithSessions(
+  r: ServiceReport,
+  sessions: ServiceSession[],
+  technician?: Technician,
+) {
+  const base = technicianTotals(r, technician);
+  let totalHours = base.totalHours;
+  let regularHours = base.regularHours;
+  let ovtWk = base.ovtWk;
+  let ovtWe = base.ovtWe;
+  let hoursValue = base.hoursValue;
+  let kmValue = base.kmValue;
+  let km = r.km || 0;
+  const extras = sessions.filter(
+    (s) => s.activityId === r.id && technician && s.technicianId === technician.id,
+  );
+  for (const s of extras) {
+    const t = sessionTechnicianTotals(s, technician);
+    totalHours += t.totalHours;
+    regularHours += t.regularHours;
+    ovtWk += t.ovtWk;
+    ovtWe += t.ovtWe;
+    hoursValue += t.hoursValue;
+    kmValue += t.kmValue;
+    km += s.km || 0;
+  }
+  return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, km, total: hoursValue + kmValue };
+}
+
 export function fmtCurrency(n: number) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
