@@ -314,19 +314,28 @@ async function fetchImageAsDataUrl(url: string): Promise<{ dataUrl: string; w: n
   try {
     const res = await fetch(url);
     const blob = await res.blob();
-    const dataUrl: string = await new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(r.result as string);
-      r.onerror = reject;
-      r.readAsDataURL(blob);
-    });
-    const dims = await new Promise<{ w: number; h: number }>((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
-      img.onerror = () => resolve({ w: 1, h: 1 });
-      img.src = dataUrl;
-    });
-    return { dataUrl, w: dims.w, h: dims.h };
+
+    // Use createImageBitmap with imageOrientation 'from-image' so EXIF rotation
+    // from phone cameras is applied automatically. Then re-encode via canvas
+    // so the resulting JPEG has the pixels already rotated (jsPDF ignores EXIF).
+    let bitmap: ImageBitmap | null = null;
+    try {
+      bitmap = await createImageBitmap(blob, { imageOrientation: "from-image" } as any);
+    } catch {
+      bitmap = await createImageBitmap(blob);
+    }
+
+    const w = bitmap.width;
+    const h = bitmap.height;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) { bitmap.close?.(); return null; }
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close?.();
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    return { dataUrl, w, h };
   } catch { return null; }
 }
 
