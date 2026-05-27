@@ -1,13 +1,14 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff } from "lucide-react";
+import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff, Shield } from "lucide-react";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useMoneyHidden, toggleMoneyHidden } from "@/hooks/use-money-visibility";
+import { useAccess } from "@/hooks/use-access";
 
-const nav = [
+const baseNav = [
   { to: "/", label: "Painel", icon: LayoutDashboard },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/tecnicos", label: "Técnicos", icon: HardHat },
@@ -22,6 +23,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const moneyHidden = useMoneyHidden();
+  const { isMaster } = useAccess();
+  const nav = isMaster ? [{ to: "/master", label: "Master", icon: Shield }, ...baseNav] : baseNav;
+
+
 
   const isPublic = location.pathname === "/login";
 
