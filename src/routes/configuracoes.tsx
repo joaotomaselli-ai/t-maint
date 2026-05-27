@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettings } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
+import { useAccess } from "@/hooks/use-access";
+import { UsersManager } from "@/components/UsersManager";
 import { toast } from "sonner";
 import { LogOut } from "lucide-react";
 
@@ -15,6 +18,8 @@ export const Route = createFileRoute("/configuracoes")({ component: Configuracoe
 function Configuracoes() {
   const { settings, saveSettings } = useSettings();
   const { user, signOut } = useAuth();
+  const { isAdmin, isMaster, companyId } = useAccess();
+  const canManageUsers = isAdmin || isMaster;
   const [form, setForm] = useState(settings);
   useEffect(() => setForm(settings), [settings]);
 
