@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettings } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
+import { useAccess } from "@/hooks/use-access";
+import { UsersManager } from "@/components/UsersManager";
 import { toast } from "sonner";
 import { LogOut } from "lucide-react";
 
@@ -15,6 +18,8 @@ export const Route = createFileRoute("/configuracoes")({ component: Configuracoe
 function Configuracoes() {
   const { settings, saveSettings } = useSettings();
   const { user, signOut } = useAuth();
+  const { isAdmin, isMaster, companyId } = useAccess();
+  const canManageUsers = isAdmin || isMaster;
   const [form, setForm] = useState(settings);
   useEffect(() => setForm(settings), [settings]);
 
@@ -28,55 +33,74 @@ function Configuracoes() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-3xl">
       <header>
         <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
-        <p className="text-muted-foreground mt-1">Dados que aparecem no cabeçalho dos relatórios</p>
+        <p className="text-muted-foreground mt-1">Dados da empresa e gestão de usuários</p>
       </header>
 
-      <Card>
-        <CardHeader><CardTitle>Dados da empresa / técnico</CardTitle></CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label>Nome da empresa</Label>
-            <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Ex: T-Maint" />
-          </div>
-          <div className="grid gap-2">
-            <Label>E-mail</Label>
-            <Input type="email" value={form.email || ""} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="contato@empresa.com" />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label>CNPJ</Label>
-              <Input value={form.cnpj || ""} onChange={e => setForm({ ...form, cnpj: e.target.value })} />
-            </div>
-            <div className="grid gap-2">
-              <Label>Telefone</Label>
-              <Input value={form.phone || ""} onChange={e => setForm({ ...form, phone: e.target.value })} />
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <Label>Endereço</Label>
-            <Textarea rows={2} value={form.address || ""} onChange={e => setForm({ ...form, address: e.target.value })} />
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={save} size="lg" disabled={saveSettings.isPending}>Salvar configurações</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="empresa">
+        <TabsList>
+          <TabsTrigger value="empresa">Empresa</TabsTrigger>
+          {canManageUsers && <TabsTrigger value="usuarios">Usuários</TabsTrigger>}
+          <TabsTrigger value="conta">Conta</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader><CardTitle>Conta</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <div className="text-sm">
-            <div className="text-muted-foreground">Conectado como</div>
-            <div className="font-medium">{user?.email}</div>
-          </div>
-          <Button variant="outline" onClick={signOut} className="gap-2">
-            <LogOut className="h-4 w-4" /> Sair
-          </Button>
-        </CardContent>
-      </Card>
+        <TabsContent value="empresa" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle>Dados da empresa / técnico</CardTitle></CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="grid gap-2">
+                <Label>Nome da empresa</Label>
+                <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Ex: T-Maint" />
+              </div>
+              <div className="grid gap-2">
+                <Label>E-mail</Label>
+                <Input type="email" value={form.email || ""} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="contato@empresa.com" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label>CNPJ</Label>
+                  <Input value={form.cnpj || ""} onChange={e => setForm({ ...form, cnpj: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Telefone</Label>
+                  <Input value={form.phone || ""} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Endereço</Label>
+                <Textarea rows={2} value={form.address || ""} onChange={e => setForm({ ...form, address: e.target.value })} />
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={save} size="lg" disabled={saveSettings.isPending}>Salvar configurações</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {canManageUsers && (
+          <TabsContent value="usuarios" className="mt-4">
+            <UsersManager companyId={companyId ?? undefined} />
+          </TabsContent>
+        )}
+
+        <TabsContent value="conta" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle>Conta</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-sm">
+                <div className="text-muted-foreground">Conectado como</div>
+                <div className="font-medium">{user?.email}</div>
+              </div>
+              <Button variant="outline" onClick={signOut} className="gap-2">
+                <LogOut className="h-4 w-4" /> Sair
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+
