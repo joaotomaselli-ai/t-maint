@@ -28,7 +28,7 @@ export type Database = {
         Insert: {
           activity_id: string
           caption?: string | null
-          company_id: string
+          company_id?: string
           created_at?: string
           id?: string
           kind: string
@@ -69,7 +69,7 @@ export type Database = {
         }
         Insert: {
           activity_id: string
-          company_id: string
+          company_id?: string
           created_at?: string
           id?: string
           overtime_weekday_hours?: number
@@ -155,7 +155,7 @@ export type Database = {
         Insert: {
           activity_id: string
           amount?: number
-          company_id: string
+          company_id?: string
           created_at?: string
           id?: string
           note?: string | null
@@ -191,7 +191,7 @@ export type Database = {
         Insert: {
           address?: string | null
           cnpj?: string | null
-          company_id: string
+          company_id?: string
           contact?: string | null
           created_at?: string
           hourly_rate?: number
@@ -309,7 +309,7 @@ export type Database = {
         }
         Insert: {
           client_id: string
-          company_id: string
+          company_id?: string
           created_at?: string
           date: string
           description?: string
@@ -398,7 +398,7 @@ export type Database = {
         Insert: {
           activities_done?: string
           activity_id: string
-          company_id: string
+          company_id?: string
           created_at?: string
           date?: string
           discount_hours?: number
@@ -466,7 +466,7 @@ export type Database = {
         Insert: {
           activity_id: string
           amount?: number
-          company_id: string
+          company_id?: string
           created_at?: string
           id?: string
           note?: string | null
@@ -502,7 +502,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          company_id: string
+          company_id?: string
           created_at?: string
           hourly_rate?: number
           id?: string
