@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TecnicosRouteImport } from './routes/tecnicos'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
+import { Route as MasterRouteImport } from './routes/master'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
@@ -26,6 +27,11 @@ const TecnicosRoute = TecnicosRouteImport.update({
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterRoute = MasterRouteImport.update({
+  id: '/master',
+  path: '/master',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
+  '/master': typeof MasterRoute
   '/relatorios': typeof RelatoriosRoute
   '/tecnicos': typeof TecnicosRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
+  '/master': typeof MasterRoute
   '/relatorios': typeof RelatoriosRoute
   '/tecnicos': typeof TecnicosRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
+  '/master': typeof MasterRoute
   '/relatorios': typeof RelatoriosRoute
   '/tecnicos': typeof TecnicosRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/login'
+    | '/master'
     | '/relatorios'
     | '/tecnicos'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/login'
+    | '/master'
     | '/relatorios'
     | '/tecnicos'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/login'
+    | '/master'
     | '/relatorios'
     | '/tecnicos'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   FinanceiroRoute: typeof FinanceiroRoute
   LoginRoute: typeof LoginRoute
+  MasterRoute: typeof MasterRoute
   RelatoriosRoute: typeof RelatoriosRoute
   TecnicosRoute: typeof TecnicosRoute
 }
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/relatorios'
       preLoaderRoute: typeof RelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master': {
+      id: '/master'
+      path: '/master'
+      fullPath: '/master'
+      preLoaderRoute: typeof MasterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -202,19 +222,10 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   FinanceiroRoute: FinanceiroRoute,
   LoginRoute: LoginRoute,
+  MasterRoute: MasterRoute,
   RelatoriosRoute: RelatoriosRoute,
   TecnicosRoute: TecnicosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

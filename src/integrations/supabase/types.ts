@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           activity_id: string
           caption: string | null
+          company_id: string
           created_at: string
           id: string
           kind: string
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           activity_id: string
           caption?: string | null
+          company_id?: string
           created_at?: string
           id?: string
           kind: string
@@ -36,6 +38,7 @@ export type Database = {
         Update: {
           activity_id?: string
           caption?: string | null
+          company_id?: string
           created_at?: string
           id?: string
           kind?: string
@@ -55,6 +58,7 @@ export type Database = {
       activity_technicians: {
         Row: {
           activity_id: string
+          company_id: string
           created_at: string
           id: string
           overtime_weekday_hours: number
@@ -65,6 +69,7 @@ export type Database = {
         }
         Insert: {
           activity_id: string
+          company_id?: string
           created_at?: string
           id?: string
           overtime_weekday_hours?: number
@@ -75,6 +80,7 @@ export type Database = {
         }
         Update: {
           activity_id?: string
+          company_id?: string
           created_at?: string
           id?: string
           overtime_weekday_hours?: number
@@ -100,10 +106,46 @@ export type Database = {
           },
         ]
       }
+      allowed_emails: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allowed_emails_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_payments: {
         Row: {
           activity_id: string
           amount: number
+          company_id: string
           created_at: string
           id: string
           note: string | null
@@ -113,6 +155,7 @@ export type Database = {
         Insert: {
           activity_id: string
           amount?: number
+          company_id?: string
           created_at?: string
           id?: string
           note?: string | null
@@ -122,6 +165,7 @@ export type Database = {
         Update: {
           activity_id?: string
           amount?: number
+          company_id?: string
           created_at?: string
           id?: string
           note?: string | null
@@ -134,6 +178,7 @@ export type Database = {
         Row: {
           address: string | null
           cnpj: string | null
+          company_id: string
           contact: string | null
           created_at: string
           hourly_rate: number
@@ -146,6 +191,7 @@ export type Database = {
         Insert: {
           address?: string | null
           cnpj?: string | null
+          company_id?: string
           contact?: string | null
           created_at?: string
           hourly_rate?: number
@@ -158,6 +204,7 @@ export type Database = {
         Update: {
           address?: string | null
           cnpj?: string | null
+          company_id?: string
           contact?: string | null
           created_at?: string
           hourly_rate?: number
@@ -169,10 +216,32 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
           cnpj: string | null
+          company_id: string | null
           company_name: string
           created_at: string
           email: string | null
@@ -185,6 +254,7 @@ export type Database = {
         Insert: {
           address?: string | null
           cnpj?: string | null
+          company_id?: string | null
           company_name?: string
           created_at?: string
           email?: string | null
@@ -197,6 +267,7 @@ export type Database = {
         Update: {
           address?: string | null
           cnpj?: string | null
+          company_id?: string | null
           company_name?: string
           created_at?: string
           email?: string | null
@@ -211,6 +282,7 @@ export type Database = {
       service_reports: {
         Row: {
           client_id: string
+          company_id: string
           created_at: string
           date: string
           description: string
@@ -237,6 +309,7 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          company_id?: string
           created_at?: string
           date: string
           description?: string
@@ -263,6 +336,7 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          company_id?: string
           created_at?: string
           date?: string
           description?: string
@@ -301,6 +375,7 @@ export type Database = {
         Row: {
           activities_done: string
           activity_id: string
+          company_id: string
           created_at: string
           date: string
           discount_hours: number
@@ -323,6 +398,7 @@ export type Database = {
         Insert: {
           activities_done?: string
           activity_id: string
+          company_id?: string
           created_at?: string
           date?: string
           discount_hours?: number
@@ -345,6 +421,7 @@ export type Database = {
         Update: {
           activities_done?: string
           activity_id?: string
+          company_id?: string
           created_at?: string
           date?: string
           discount_hours?: number
@@ -378,6 +455,7 @@ export type Database = {
         Row: {
           activity_id: string
           amount: number
+          company_id: string
           created_at: string
           id: string
           note: string | null
@@ -388,6 +466,7 @@ export type Database = {
         Insert: {
           activity_id: string
           amount?: number
+          company_id?: string
           created_at?: string
           id?: string
           note?: string | null
@@ -398,6 +477,7 @@ export type Database = {
         Update: {
           activity_id?: string
           amount?: number
+          company_id?: string
           created_at?: string
           id?: string
           note?: string | null
@@ -409,6 +489,7 @@ export type Database = {
       }
       technicians: {
         Row: {
+          company_id: string
           created_at: string
           hourly_rate: number
           id: string
@@ -421,6 +502,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string
           created_at?: string
           hourly_rate?: number
           id?: string
@@ -433,6 +515,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string
           created_at?: string
           hourly_rate?: number
           id?: string
@@ -446,15 +529,58 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_company_id: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_master: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "master" | "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -581,6 +707,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["master", "admin", "user"],
+    },
   },
 } as const
