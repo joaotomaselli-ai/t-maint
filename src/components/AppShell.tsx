@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, Cog, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff } from "lucide-react";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,13 +8,15 @@ import { Button } from "@/components/ui/button";
 import { useMoneyHidden, toggleMoneyHidden } from "@/hooks/use-money-visibility";
 import { useAccess } from "@/hooks/use-access";
 
-const baseNav = [
+type NavItem = { to: string; label: string; icon: any; feature?: string };
+
+const ALL_NAV: NavItem[] = [
   { to: "/", label: "Painel", icon: LayoutDashboard },
-  { to: "/clientes", label: "Clientes", icon: Users },
-  { to: "/tecnicos", label: "Técnicos", icon: HardHat },
-  { to: "/atividades", label: "Ordem de Serviço", icon: Wrench },
-  { to: "/relatorios", label: "Relatórios", icon: FileText },
-  { to: "/financeiro", label: "Financeiro", icon: DollarSign },
+  { to: "/clientes", label: "Clientes", icon: Users, feature: "clientes" },
+  { to: "/tecnicos", label: "Técnicos", icon: HardHat, feature: "tecnicos" },
+  { to: "/atividades", label: "Ordem de Serviço", icon: Wrench, feature: "atividades" },
+  { to: "/relatorios", label: "Relatórios", icon: FileText, feature: "relatorios" },
+  { to: "/financeiro", label: "Financeiro", icon: DollarSign, feature: "financeiro" },
   { to: "/configuracoes", label: "Configurações", icon: SettingsIcon },
 ];
 
@@ -23,8 +25,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const moneyHidden = useMoneyHidden();
-  const { isMaster } = useAccess();
-  const nav = isMaster ? [{ to: "/master", label: "Master", icon: Shield }, ...baseNav] : baseNav;
+  const { isMaster, isAdmin, allowedFeatures } = useAccess();
+
+  const nav: NavItem[] = ALL_NAV.filter((item) => {
+    if (!item.feature) return true;
+    // Master: hide operational tabs (clientes, técnicos, atividades, relatórios)
+    if (isMaster) return item.feature === "financeiro";
+    if (isAdmin) return true;
+    if (allowedFeatures === null) return true;
+    return allowedFeatures.includes(item.feature);
+  });
 
 
 

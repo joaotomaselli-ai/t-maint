@@ -4,13 +4,24 @@ import { Button } from "@/components/ui/button";
 import { useClients, useReports } from "@/hooks/use-data";
 import { reportTotals, fmtHours } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
-import { Wrench, Users, Clock, DollarSign, Plus, TrendingUp } from "lucide-react";
+import { useAccess } from "@/hooks/use-access";
+import { MasterPanel } from "@/components/MasterPanel";
+import { Wrench, Users, Clock, DollarSign, Plus, TrendingUp, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/")({ component: Dashboard });
 
 function Dashboard() {
+  const { isLoading, isMaster } = useAccess();
+  if (isLoading) {
+    return <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  }
+  if (isMaster) return <MasterPanel />;
+  return <CompanyDashboard />;
+}
+
+function CompanyDashboard() {
   const { clients } = useClients();
   const { reports } = useReports();
   const money = useMoney();
