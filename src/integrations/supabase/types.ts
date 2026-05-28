@@ -531,6 +531,7 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          allowed_features: string[] | null
           company_id: string | null
           created_at: string
           id: string
@@ -539,6 +540,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          allowed_features?: string[] | null
           company_id?: string | null
           created_at?: string
           id?: string
@@ -547,6 +549,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          allowed_features?: string[] | null
           company_id?: string | null
           created_at?: string
           id?: string
