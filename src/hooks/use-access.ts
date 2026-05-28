@@ -19,5 +19,6 @@ export function useAccess() {
     isAdmin: q.data?.isAdmin ?? false,
     companyId: q.data?.companyId ?? null,
     companyName: q.data?.companyName ?? null,
+    allowedFeatures: q.data?.allowedFeatures ?? null,
   };
 }
