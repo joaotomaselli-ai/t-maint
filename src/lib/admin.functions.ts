@@ -56,7 +56,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
     const { userId } = context;
     const { data, error } = await supabaseAdmin
       .from("user_roles")
-      .select("role, company_id, username")
+      .select("role, company_id, username, allowed_features")
       .eq("user_id", userId);
     if (error) throw new Error(error.message);
     const roles = (data ?? []).map((r) => r.role);
@@ -66,6 +66,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
       data?.find((r) => r.role === "admin" && r.company_id)?.company_id ??
       data?.find((r) => r.company_id)?.company_id ??
       null;
+    const allowedFeatures = (data?.[0]?.allowed_features as string[] | null) ?? null;
     let companyName: string | null = null;
     if (companyId) {
       const { data: c } = await supabaseAdmin
@@ -82,6 +83,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
       role: isMaster ? "master" : isAdmin ? "admin" : roles[0] ?? "user",
       companyId,
       companyName,
+      allowedFeatures,
     };
   });
 
