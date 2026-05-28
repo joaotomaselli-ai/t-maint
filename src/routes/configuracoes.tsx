@@ -19,7 +19,7 @@ function Configuracoes() {
   const { settings, saveSettings } = useSettings();
   const { user, signOut } = useAuth();
   const { isAdmin, isMaster, companyId } = useAccess();
-  const canManageUsers = isAdmin || isMaster;
+  const canManageUsers = isAdmin && !isMaster;
   const [form, setForm] = useState(settings);
   useEffect(() => setForm(settings), [settings]);
 
