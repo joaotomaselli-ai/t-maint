@@ -246,6 +246,7 @@ export const createSubUser = createServerFn({ method: "POST" })
         password: z.string().min(6).max(128),
         role: z.enum(["admin", "user"]).default("user"),
         companyId: z.string().uuid().optional(),
+        allowedFeatures: z.array(z.string()).nullable().optional(),
       })
       .parse(d),
   )
@@ -280,7 +281,12 @@ export const createSubUser = createServerFn({ method: "POST" })
 
     const { error: re } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: newUserId, role: data.role, company_id: targetCompany });
+      .insert({
+        user_id: newUserId,
+        role: data.role,
+        company_id: targetCompany,
+        allowed_features: data.allowedFeatures ?? null,
+      });
     if (re && !re.message.includes("duplicate")) throw new Error(re.message);
 
     await supabaseAdmin.from("allowed_emails").upsert({
@@ -291,6 +297,70 @@ export const createSubUser = createServerFn({ method: "POST" })
     }, { onConflict: "email" });
 
     return { userId: newUserId };
+  });
+
+// ----------------------------------------------------------------------
+// ADMIN / MASTER: update a sub-user (email, password, role, features)
+// ----------------------------------------------------------------------
+export const updateSubUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        targetUserId: z.string().uuid(),
+        companyId: z.string().uuid().optional(),
+        email: z.string().trim().email().optional(),
+        password: z.string().min(6).max(128).optional(),
+        role: z.enum(["admin", "user"]).optional(),
+        allowedFeatures: z.array(z.string()).nullable().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role, company_id")
+      .eq("user_id", userId);
+    const isMaster = roles?.some((r) => r.role === "master");
+    const adminEntry = roles?.find((r) => r.role === "admin");
+    if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
+
+    // discover the company of the target if not provided
+    let targetCompany = data.companyId ?? null;
+    if (!targetCompany) {
+      const { data: tr } = await supabaseAdmin
+        .from("user_roles")
+        .select("company_id")
+        .eq("user_id", data.targetUserId)
+        .maybeSingle();
+      targetCompany = tr?.company_id ?? adminEntry?.company_id ?? null;
+    }
+    if (!isMaster && targetCompany !== adminEntry?.company_id) {
+      throw new Error("Sem permissão para editar este usuário.");
+    }
+    if (!targetCompany) throw new Error("Empresa não definida.");
+
+    if (data.email || data.password) {
+      const upd: any = {};
+      if (data.email) upd.email = data.email.toLowerCase();
+      if (data.password) upd.password = data.password;
+      const { error: ue } = await supabaseAdmin.auth.admin.updateUserById(data.targetUserId, upd);
+      if (ue) throw new Error(ue.message);
+    }
+
+    const patch: any = {};
+    if (data.role) patch.role = data.role;
+    if (data.allowedFeatures !== undefined) patch.allowed_features = data.allowedFeatures;
+    if (Object.keys(patch).length > 0) {
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .update(patch)
+        .eq("user_id", data.targetUserId)
+        .eq("company_id", targetCompany);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
   });
 
 // ----------------------------------------------------------------------
@@ -313,7 +383,7 @@ export const listCompanyUsers = createServerFn({ method: "POST" })
 
     const { data: members, error } = await supabaseAdmin
       .from("user_roles")
-      .select("id, user_id, role")
+      .select("id, user_id, role, allowed_features, created_at")
       .eq("company_id", targetCompany);
     if (error) throw new Error(error.message);
 
@@ -325,9 +395,66 @@ export const listCompanyUsers = createServerFn({ method: "POST" })
         userId: m.user_id,
         role: m.role,
         email: u.user?.email ?? "",
+        lastSignInAt: u.user?.last_sign_in_at ?? null,
+        createdAt: m.created_at,
+        allowedFeatures: (m.allowed_features as string[] | null) ?? null,
       });
     }
     return { users: out };
+  });
+
+// ----------------------------------------------------------------------
+// MASTER: list ALL users across all companies (grouped)
+// ----------------------------------------------------------------------
+export const listAllUsersGrouped = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    const { data: master } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("role", "master")
+      .maybeSingle();
+    if (!master) throw new Error("Apenas o master pode listar todos os usuários.");
+
+    const { data: companies } = await supabaseAdmin
+      .from("companies")
+      .select("id, name, owner_user_id, created_at")
+      .order("created_at", { ascending: false });
+
+    const { data: allRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("id, user_id, role, company_id, allowed_features, created_at");
+
+    const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const userMap = new Map(list.data?.users.map((u) => [u.id, u]) ?? []);
+
+    const groups = (companies ?? []).map((c) => {
+      const members = (allRoles ?? [])
+        .filter((r) => r.company_id === c.id)
+        .map((r) => {
+          const u = userMap.get(r.user_id);
+          return {
+            id: r.id,
+            userId: r.user_id,
+            role: r.role,
+            email: u?.email ?? "",
+            lastSignInAt: u?.last_sign_in_at ?? null,
+            createdAt: r.created_at,
+            allowedFeatures: (r.allowed_features as string[] | null) ?? null,
+          };
+        });
+      const owner = userMap.get(c.owner_user_id);
+      return {
+        id: c.id,
+        name: c.name,
+        ownerEmail: owner?.email ?? "",
+        createdAt: c.created_at,
+        members,
+      };
+    });
+    return { groups };
   });
 
 // ----------------------------------------------------------------------
