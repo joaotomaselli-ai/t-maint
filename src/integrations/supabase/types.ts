@@ -187,6 +187,9 @@ export type Database = {
           name: string
           phone: string | null
           user_id: string
+          has_preventive_contract: boolean
+          preventive_contract_value: number | null
+          preventive_contract_file: string | null
         }
         Insert: {
           address?: string | null
@@ -200,6 +203,9 @@ export type Database = {
           name: string
           phone?: string | null
           user_id: string
+          has_preventive_contract?: boolean
+          preventive_contract_value?: number | null
+          preventive_contract_file?: string | null
         }
         Update: {
           address?: string | null
@@ -213,8 +219,46 @@ export type Database = {
           name?: string
           phone?: string | null
           user_id?: string
+          has_preventive_contract?: boolean
+          preventive_contract_value?: number | null
+          preventive_contract_file?: string | null
         }
         Relationships: []
+      }
+      admin_payments: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          id: string
+          paid_at: string
+          reference_month: string
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          paid_at?: string
+          reference_month: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          paid_at?: string
+          reference_month?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       companies: {
         Row: {
@@ -222,18 +266,21 @@ export type Database = {
           id: string
           name: string
           owner_user_id: string
+          subscription_fee: number | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
           owner_user_id: string
+          subscription_fee?: number | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
           owner_user_id?: string
+          subscription_fee?: number | null
         }
         Relationships: []
       }
@@ -575,14 +622,6 @@ export type Database = {
       current_company_id: { Args: never; Returns: string }
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      has_role_in_company: {
-        Args: {
-          _company_id: string
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }

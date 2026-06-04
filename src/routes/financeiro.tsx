@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getMyAccess, listCompanies, listAdminPayments, registerAdminPayment } from "@/lib/admin.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,10 +20,18 @@ import {
 import { useMoney } from "@/hooks/use-money-visibility";
 import { Users, HardHat, CheckCircle2, Circle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/financeiro")({ component: Financeiro });
 
 function Financeiro() {
+  const accessFn = useServerFn(getMyAccess);
+  const { data: access } = useQuery({ queryKey: ["my-access"], queryFn: () => accessFn() });
+
+  if (access?.isMaster) {
+    return <MasterFinanceiro />;
+  }
+
   return (
     <div className="space-y-6">
       <header>
@@ -36,6 +47,108 @@ function Financeiro() {
         <TabsContent value="clientes"><ClientFinance /></TabsContent>
         <TabsContent value="tecnicos"><TechnicianFinance /></TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function MasterFinanceiro() {
+  const qc = useQueryClient();
+  const listCoFn = useServerFn(listCompanies);
+  const listPayFn = useServerFn(listAdminPayments);
+  const regPayFn = useServerFn(registerAdminPayment);
+
+  const { data: companiesData } = useQuery({ queryKey: ["master-companies"], queryFn: () => listCoFn() });
+  const { data: paymentsData } = useQuery({ queryKey: ["master-payments"], queryFn: () => listPayFn() });
+
+  const [payModal, setPayModal] = useState<{ companyId: string; amount: number; month: string } | null>(null);
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["master-companies"] });
+    qc.invalidateQueries({ queryKey: ["master-payments"] });
+  };
+
+  const regPay = useMutation({
+    mutationFn: () => regPayFn({ data: { companyId: payModal!.companyId, amount: payModal!.amount, referenceMonth: payModal!.month } }),
+    onSuccess: () => { toast.success("Pagamento registrado!"); setPayModal(null); invalidate(); },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
+  const companies = companiesData?.companies ?? [];
+  const payments = paymentsData?.payments ?? [];
+
+  const paymentsByCompany = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const p of payments) {
+      if (!map.has(p.company_id)) map.set(p.company_id, []);
+      map.get(p.company_id)!.push(p);
+    }
+    return map;
+  }, [payments]);
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight">Financeiro Master</h1>
+        <p className="text-muted-foreground mt-1">Gestão de assinaturas dos administradores</p>
+      </header>
+
+      <div className="grid gap-4">
+        {companies.map(c => {
+          const pays = paymentsByCompany.get(c.id) ?? [];
+          return (
+            <Card key={c.id}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-lg">{c.name}</CardTitle>
+                <div className="text-sm text-muted-foreground">Assinatura: R$ {c.subscriptionFee?.toFixed(2) ?? "0.00"}</div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Pagamentos registrados ({pays.length})</span>
+                    <Button size="sm" onClick={() => setPayModal({ companyId: c.id, amount: c.subscriptionFee ?? 0, month: new Date().toISOString().slice(0, 7) })}>
+                      <DollarSign className="w-4 h-4 mr-1" /> Registrar Pagamento
+                    </Button>
+                  </div>
+                  {pays.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+                      {pays.map(p => (
+                        <div key={p.id} className="text-xs p-2 bg-muted rounded-md flex flex-col gap-1 border">
+                          <span className="font-semibold text-muted-foreground">{p.reference_month}</span>
+                          <span className="font-bold text-success">R$ {p.amount.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md border border-dashed text-center">Nenhum pagamento registrado.</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Dialog open={!!payModal} onOpenChange={(o) => { if (!o) setPayModal(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Registrar Pagamento</DialogTitle></DialogHeader>
+          {payModal && (
+            <div className="grid gap-4">
+              <div className="grid gap-1">
+                <Label>Mês de Referência (YYYY-MM)</Label>
+                <Input type="month" value={payModal.month} onChange={(e) => setPayModal({ ...payModal, month: e.target.value })} />
+              </div>
+              <div className="grid gap-1">
+                <Label>Valor Pago (R$)</Label>
+                <Input type="number" step="0.01" value={payModal.amount || ""} onChange={(e) => setPayModal({ ...payModal, amount: parseFloat(e.target.value) })} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPayModal(null)}>Cancelar</Button>
+            <Button onClick={() => regPay.mutate()} disabled={regPay.isPending || !payModal?.month}>Confirmar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

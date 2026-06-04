@@ -7,6 +7,7 @@ import {
   listAllUsersGrouped,
   updateSubUser,
   removeCompanyUser,
+  createSubUser,
 } from "@/lib/admin.functions";
 import { ALL_FEATURES, type FeatureKey } from "@/lib/features";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,24 +37,32 @@ export function MasterPanel() {
   const deleteCoFn = useServerFn(deleteCompany);
   const updateFn = useServerFn(updateSubUser);
   const removeFn = useServerFn(removeCompanyUser);
+  const createSubUserFn = useServerFn(createSubUser);
 
   const groups = useQuery({ queryKey: ["all-users-grouped"], queryFn: () => listFn() });
 
-  const [newCo, setNewCo] = useState({ name: "", adminEmail: "", adminPassword: "" });
+  const [newCo, setNewCo] = useState<{ name: string; adminEmail: string; adminPassword: string; subscriptionFee?: number }>({ name: "", adminEmail: "", adminPassword: "", subscriptionFee: 0 });
   const [editing, setEditing] = useState<EditTarget | null>(null);
+  const [newSubUser, setNewSubUser] = useState<{ companyId: string; email: string; password: string; features: FeatureKey[] } | null>(null);
   const [editPwd, setEditPwd] = useState("");
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["all-users-grouped"] });
 
   const createCo = useMutation({
     mutationFn: () => createCoFn({ data: newCo }),
-    onSuccess: () => { toast.success("Empresa criada"); setNewCo({ name: "", adminEmail: "", adminPassword: "" }); invalidate(); },
+    onSuccess: () => { toast.success("Administrador criado"); setNewCo({ name: "", adminEmail: "", adminPassword: "", subscriptionFee: 0 }); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
   const deleteCo = useMutation({
     mutationFn: (companyId: string) => deleteCoFn({ data: { companyId } }),
-    onSuccess: () => { toast.success("Empresa excluída"); invalidate(); },
+    onSuccess: () => { toast.success("Administrador excluído"); invalidate(); },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
+  const addUser = useMutation({
+    mutationFn: () => createSubUserFn({ data: { email: newSubUser!.email, password: newSubUser!.password, role: "user", companyId: newSubUser!.companyId, allowedFeatures: newSubUser!.features } }),
+    onSuccess: () => { toast.success("Usuário criado"); setNewSubUser(null); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
@@ -90,24 +99,28 @@ export function MasterPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" /> Criar nova empresa</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" /> Criar novo Administrador</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-4">
           <div className="grid gap-1">
-            <Label>Nome da empresa</Label>
+            <Label>Nome da Empresa (Workspace)</Label>
             <Input value={newCo.name} onChange={(e) => setNewCo({ ...newCo, name: e.target.value })} />
           </div>
-          <div className="grid gap-1 sm:col-span-2">
+          <div className="grid gap-1 sm:col-span-1">
+            <Label>Valor da Assinatura (R$)</Label>
+            <Input type="number" step="0.01" value={newCo.subscriptionFee || ""} onChange={(e) => setNewCo({ ...newCo, subscriptionFee: parseFloat(e.target.value) })} />
+          </div>
+          <div className="grid gap-1 sm:col-span-1">
             <Label>E-mail do administrador</Label>
             <Input type="email" value={newCo.adminEmail} onChange={(e) => setNewCo({ ...newCo, adminEmail: e.target.value })} />
           </div>
-          <div className="grid gap-1">
+          <div className="grid gap-1 sm:col-span-1">
             <Label>Senha</Label>
             <Input type="password" value={newCo.adminPassword} onChange={(e) => setNewCo({ ...newCo, adminPassword: e.target.value })} />
           </div>
           <div className="sm:col-span-4 flex justify-end">
             <Button onClick={() => createCo.mutate()} disabled={!newCo.name || !newCo.adminEmail || !newCo.adminPassword || createCo.isPending}>
-              Criar empresa
+              Criar Administrador
             </Button>
           </div>
         </CardContent>
@@ -115,12 +128,12 @@ export function MasterPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" /> Empresas e usuários</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" /> Administradores do Sistema e Usuários</CardTitle>
         </CardHeader>
         <CardContent>
           {groups.isLoading && <div className="text-sm text-muted-foreground">Carregando...</div>}
           {!groups.isLoading && !groups.data?.groups?.length && (
-            <div className="text-sm text-muted-foreground">Nenhuma empresa cadastrada.</div>
+            <div className="text-sm text-muted-foreground">Nenhum administrador cadastrado.</div>
           )}
           <Accordion type="multiple" className="w-full">
             {groups.data?.groups?.map((g) => (
@@ -130,7 +143,7 @@ export function MasterPanel() {
                     <div className="text-left">
                       <div className="font-semibold">{g.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        Admin: {g.ownerEmail} · {g.members.length} usuários · Criada em {format(new Date(g.createdAt), "dd/MM/yyyy")}
+                        Admin: {g.ownerEmail} · {g.members.length} usuários · Assinatura: R$ {g.subscriptionFee?.toFixed(2) ?? "0.00"}
                       </div>
                     </div>
                   </div>
@@ -168,16 +181,23 @@ export function MasterPanel() {
                         </div>
                       </div>
                     ))}
-                    <div className="flex justify-end pt-2">
+                    <div className="flex justify-between pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setNewSubUser({ companyId: g.id, email: "", password: "", features: ALL_FEATURES.map(f => f.key) })}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Adicionar usuário
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         className="text-destructive"
                         onClick={() => {
-                          if (confirm(`Excluir empresa "${g.name}" e TODOS os seus dados?`)) deleteCo.mutate(g.id);
+                          if (confirm(`Excluir o workspace "${g.name}" e TODOS os seus dados?`)) deleteCo.mutate(g.id);
                         }}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" /> Excluir empresa
+                        <Trash2 className="h-4 w-4 mr-1" /> Excluir administrador
                       </Button>
                     </div>
                   </div>
@@ -238,6 +258,45 @@ export function MasterPanel() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setEditing(null); setEditPwd(""); }}>Cancelar</Button>
             <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!newSubUser} onOpenChange={(o) => { if (!o) setNewSubUser(null); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle>Adicionar usuário</DialogTitle></DialogHeader>
+          {newSubUser && (
+            <div className="grid gap-4">
+              <div className="grid gap-1">
+                <Label>E-mail</Label>
+                <Input type="email" value={newSubUser.email} onChange={(e) => setNewSubUser({ ...newSubUser, email: e.target.value })} />
+              </div>
+              <div className="grid gap-1">
+                <Label>Senha</Label>
+                <Input type="password" value={newSubUser.password} onChange={(e) => setNewSubUser({ ...newSubUser, password: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label>Funções disponíveis</Label>
+                <div className="flex flex-wrap gap-3">
+                  {ALL_FEATURES.map((f) => (
+                    <label key={f.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={newSubUser.features.includes(f.key)}
+                        onCheckedChange={() => setNewSubUser({
+                          ...newSubUser,
+                          features: toggleFeature(newSubUser.features, f.key),
+                        })}
+                      />
+                      {f.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setNewSubUser(null)}>Cancelar</Button>
+            <Button onClick={() => addUser.mutate()} disabled={addUser.isPending || !newSubUser?.email || !newSubUser?.password}>Criar usuário</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
