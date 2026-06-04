@@ -1,27 +1,53 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // ----------------------------------------------------------------------
-// PUBLIC: resolve username -> email (used by login form)
+// PUBLIC: sign in using either username or email + password.
+// Resolves username -> email server-side WITHOUT leaking the email,
+// then performs the password sign-in and returns the session tokens.
 // ----------------------------------------------------------------------
-export const resolveUsernameToEmail = createServerFn({ method: "POST" })
+export const signInWithUsernameOrEmail = createServerFn({ method: "POST" })
   .inputValidator((d) =>
-    z.object({ username: z.string().trim().min(1).max(64) }).parse(d),
+    z
+      .object({
+        identifier: z.string().trim().min(1).max(255),
+        password: z.string().min(1).max(128),
+      })
+      .parse(d),
   )
   .handler(async ({ data }) => {
-    const { data: role, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id")
-      .eq("username", data.username)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!role) return { email: null as string | null };
-    const { data: u, error: uerr } = await supabaseAdmin.auth.admin.getUserById(role.user_id);
-    if (uerr) throw new Error(uerr.message);
-    return { email: u.user?.email ?? null };
+    let email = data.identifier;
+    if (!email.includes("@")) {
+      const { data: role, error } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id")
+        .eq("username", email)
+        .maybeSingle();
+      if (error) throw new Error("Falha ao autenticar.");
+      if (!role) throw new Error("Credenciais inválidas.");
+      const { data: u, error: uerr } = await supabaseAdmin.auth.admin.getUserById(role.user_id);
+      if (uerr || !u.user?.email) throw new Error("Credenciais inválidas.");
+      email = u.user.email;
+    }
+    const SUPABASE_URL = process.env.SUPABASE_URL!;
+    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const client = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: signIn, error: signErr } = await client.auth.signInWithPassword({
+      email: email.toLowerCase(),
+      password: data.password,
+    });
+    if (signErr || !signIn.session) throw new Error("Credenciais inválidas.");
+    return {
+      accessToken: signIn.session.access_token,
+      refreshToken: signIn.session.refresh_token,
+    };
   });
+
 
 // ----------------------------------------------------------------------
 // PUBLIC: check if an email is allowed to log in
@@ -53,13 +79,25 @@ export const isEmailAllowed = createServerFn({ method: "POST" })
 export const getMyAccess = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { userId } = context;
+    const { userId, claims } = context;
     const { data, error } = await supabaseAdmin
       .from("user_roles")
       .select("role, company_id, username, allowed_features")
       .eq("user_id", userId);
     if (error) throw new Error(error.message);
     const roles = (data ?? []).map((r) => r.role);
+    // Server-side allowlist enforcement: any signed-in user without a role
+    // must have an entry in allowed_emails, otherwise access is denied.
+    if (roles.length === 0) {
+      const email = (claims as any)?.email as string | undefined;
+      if (!email) throw new Error("Acesso não autorizado.");
+      const { data: allowed } = await supabaseAdmin
+        .from("allowed_emails")
+        .select("id")
+        .eq("email", email.toLowerCase())
+        .maybeSingle();
+      if (!allowed) throw new Error("Acesso não autorizado.");
+    }
     const isMaster = roles.includes("master");
     const isAdmin = roles.includes("admin");
     const companyId =
@@ -99,7 +137,7 @@ export const createCompany = createServerFn({ method: "POST" })
         adminEmail: z.string().trim().email(),
         adminPassword: z.string().min(6).max(128),
         adminName: z.string().trim().max(120).optional(),
-        subscriptionFee: z.number().optional(),
+        subscriptionFee: z.number().min(0).optional(),
       })
       .parse(d),
   )
@@ -193,7 +231,7 @@ export const listCompanies = createServerFn({ method: "GET" })
         ownerEmail: owner.user?.email ?? "",
         usersCount: usersCount ?? 0,
         createdAt: c.created_at,
-        subscriptionFee: c.subscription_fee ?? 0,
+        subscriptionFee: c.subscription_fee,
       });
     }
     return { companies: result };
@@ -422,7 +460,7 @@ export const listAllUsersGrouped = createServerFn({ method: "GET" })
 
     const { data: companies } = await supabaseAdmin
       .from("companies")
-      .select("id, name, owner_user_id, created_at, subscription_fee")
+      .select("id, name, owner_user_id, created_at")
       .order("created_at", { ascending: false });
 
     const { data: allRoles } = await supabaseAdmin
@@ -453,7 +491,6 @@ export const listAllUsersGrouped = createServerFn({ method: "GET" })
         name: c.name,
         ownerEmail: owner?.email ?? "",
         createdAt: c.created_at,
-        subscriptionFee: c.subscription_fee ?? 0,
         members,
       };
     });
@@ -601,9 +638,9 @@ export const revokeAuthorizedEmail = createServerFn({ method: "POST" })
     const adminEntry = roles?.find((r) => r.role === "admin");
     if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
 
-    const filter = supabaseAdmin.from("allowed_emails").delete().eq("id", data.id);
+    let filter = supabaseAdmin.from("allowed_emails").delete().eq("id", data.id);
     if (!isMaster && adminEntry?.company_id) {
-      filter.eq("company_id", adminEntry.company_id);
+      filter = filter.eq("company_id", adminEntry.company_id);
     }
     const { error } = await filter;
     if (error) throw new Error(error.message);
@@ -611,16 +648,18 @@ export const revokeAuthorizedEmail = createServerFn({ method: "POST" })
   });
 
 // ----------------------------------------------------------------------
-// MASTER: registrar pagamento de assinatura do admin
+// MASTER: register admin payment
 // ----------------------------------------------------------------------
 export const registerAdminPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({
-      companyId: z.string().uuid(),
-      amount: z.number().min(0),
-      referenceMonth: z.string(), // e.g., "2026-06"
-    }).parse(d),
+    z
+      .object({
+        companyId: z.string().uuid(),
+        amount: z.number().min(0),
+        referenceMonth: z.string().regex(/^\d{4}-\d{2}$/),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -638,13 +677,14 @@ export const registerAdminPayment = createServerFn({ method: "POST" })
         company_id: data.companyId,
         amount: data.amount,
         reference_month: data.referenceMonth,
+        registered_by: userId,
       });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 // ----------------------------------------------------------------------
-// MASTER: listar pagamentos de assinaturas dos admins
+// MASTER: list admin payments
 // ----------------------------------------------------------------------
 export const listAdminPayments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -663,5 +703,6 @@ export const listAdminPayments = createServerFn({ method: "GET" })
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return { payments: payments ?? [] };
+    return { payments };
   });
+
