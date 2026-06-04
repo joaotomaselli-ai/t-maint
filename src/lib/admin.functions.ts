@@ -460,7 +460,7 @@ export const listAllUsersGrouped = createServerFn({ method: "GET" })
 
     const { data: companies } = await supabaseAdmin
       .from("companies")
-      .select("id, name, owner_user_id, created_at")
+      .select("id, name, owner_user_id, created_at, subscription_fee")
       .order("created_at", { ascending: false });
 
     const { data: allRoles } = await supabaseAdmin
@@ -489,11 +489,13 @@ export const listAllUsersGrouped = createServerFn({ method: "GET" })
       return {
         id: c.id,
         name: c.name,
-        ownerEmail: owner?.email ?? "",
+        ownerEmail: userMap.get(c.owner_user_id)?.email ?? "Desconhecido",
         createdAt: c.created_at,
+        subscriptionFee: c.subscription_fee,
         members,
       };
     });
+
     return { groups };
   });
 
@@ -677,7 +679,7 @@ export const registerAdminPayment = createServerFn({ method: "POST" })
         company_id: data.companyId,
         amount: data.amount,
         reference_month: data.referenceMonth,
-        registered_by: userId,
+        paid_at: new Date().toISOString()
       });
     if (error) throw new Error(error.message);
     return { ok: true };
