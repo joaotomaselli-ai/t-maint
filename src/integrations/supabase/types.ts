@@ -108,28 +108,28 @@ export type Database = {
       }
       admin_payments: {
         Row: {
-          id: string
-          company_id: string
           amount: number
-          reference_month: string
-          registered_by: string
+          company_id: string
           created_at: string
+          id: string
+          paid_at: string
+          reference_month: string
         }
         Insert: {
-          id?: string
+          amount?: number
           company_id: string
-          amount: number
-          reference_month: string
-          registered_by: string
           created_at?: string
+          id?: string
+          paid_at?: string
+          reference_month: string
         }
         Update: {
-          id?: string
-          company_id?: string
           amount?: number
-          reference_month?: string
-          registered_by?: string
+          company_id?: string
           created_at?: string
+          id?: string
+          paid_at?: string
+          reference_month?: string
         }
         Relationships: [
           {
@@ -207,7 +207,15 @@ export type Database = {
           paid_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "client_payments_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: true
+            referencedRelation: "service_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clients: {
         Row: {
@@ -216,11 +224,14 @@ export type Database = {
           company_id: string
           contact: string | null
           created_at: string
+          has_preventive_contract: boolean
           hourly_rate: number
           id: string
           km_rate: number
           name: string
           phone: string | null
+          preventive_contract_file: string | null
+          preventive_contract_value: number | null
           user_id: string
         }
         Insert: {
@@ -229,11 +240,14 @@ export type Database = {
           company_id?: string
           contact?: string | null
           created_at?: string
+          has_preventive_contract?: boolean
           hourly_rate?: number
           id?: string
           km_rate?: number
           name: string
           phone?: string | null
+          preventive_contract_file?: string | null
+          preventive_contract_value?: number | null
           user_id: string
         }
         Update: {
@@ -242,11 +256,14 @@ export type Database = {
           company_id?: string
           contact?: string | null
           created_at?: string
+          has_preventive_contract?: boolean
           hourly_rate?: number
           id?: string
           km_rate?: number
           name?: string
           phone?: string | null
+          preventive_contract_file?: string | null
+          preventive_contract_value?: number | null
           user_id?: string
         }
         Relationships: []
@@ -315,7 +332,15 @@ export type Database = {
           technician_name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_reports: {
         Row: {
@@ -487,6 +512,13 @@ export type Database = {
             referencedRelation: "service_reports"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "service_sessions_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
         ]
       }
       technician_payments: {
@@ -523,7 +555,22 @@ export type Database = {
           technician_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "technician_payments_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "service_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technician_payments_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       technicians: {
         Row: {
