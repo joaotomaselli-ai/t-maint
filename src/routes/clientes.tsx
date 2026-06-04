@@ -39,16 +39,39 @@ function Clientes() {
 
       if (editing.id) {
         if (editing.fileToUpload && user) {
-          finalFile = await uploadClientContract(user.id, editing.id, editing.fileToUpload);
+          try {
+            finalFile = await uploadClientContract(user.id, editing.id, editing.fileToUpload);
+          } catch (e: any) {
+            throw new Error(`Erro no upload (Storage): ${e?.message}`);
+          }
         }
-        await updateClient.mutateAsync({ ...editing, preventiveContractFile: finalFile } as Client);
+        try {
+          await updateClient.mutateAsync({ ...editing, preventiveContractFile: finalFile } as Client);
+        } catch (e: any) {
+          throw new Error(`Erro no update do cliente (DB): ${e?.message}`);
+        }
         toast.success("Cliente atualizado");
       } else {
         const { id: _drop, fileToUpload, ...rest } = editing;
-        const newClient = await addClient.mutateAsync(rest);
+        let newClient;
+        try {
+          newClient = await addClient.mutateAsync(rest);
+        } catch (e: any) {
+          throw new Error(`Erro ao criar cliente (DB INSERT): ${e?.message}`);
+        }
+        
         if (fileToUpload && user && newClient && newClient.id) {
-           const path = await uploadClientContract(user.id, newClient.id, fileToUpload);
-           await updateClient.mutateAsync({ ...newClient, preventiveContractFile: path });
+           let path;
+           try {
+             path = await uploadClientContract(user.id, newClient.id, fileToUpload);
+           } catch (e: any) {
+             throw new Error(`Erro no upload (Storage): ${e?.message}`);
+           }
+           try {
+             await updateClient.mutateAsync({ ...newClient, preventiveContractFile: path });
+           } catch (e: any) {
+             throw new Error(`Erro ao atualizar cliente com arquivo (DB UPDATE): ${e?.message}`);
+           }
         }
         toast.success("Cliente cadastrado");
       }
