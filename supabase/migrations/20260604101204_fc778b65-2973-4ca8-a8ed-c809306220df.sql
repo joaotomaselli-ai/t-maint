@@ -1,0 +1,2 @@
+CREATE POLICY "Master manages admin_payments" ON public.admin_payments FOR ALL TO authenticated USING (public.is_master(auth.uid())) WITH CHECK (public.is_master(auth.uid()));
+CREATE POLICY "Admins view their company admin_payments" ON public.admin_payments FOR SELECT TO authenticated USING (company_id = public.current_company_id());
