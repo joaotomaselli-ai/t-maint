@@ -1,27 +1,53 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // ----------------------------------------------------------------------
-// PUBLIC: resolve username -> email (used by login form)
+// PUBLIC: sign in using either username or email + password.
+// Resolves username -> email server-side WITHOUT leaking the email,
+// then performs the password sign-in and returns the session tokens.
 // ----------------------------------------------------------------------
-export const resolveUsernameToEmail = createServerFn({ method: "POST" })
+export const signInWithUsernameOrEmail = createServerFn({ method: "POST" })
   .inputValidator((d) =>
-    z.object({ username: z.string().trim().min(1).max(64) }).parse(d),
+    z
+      .object({
+        identifier: z.string().trim().min(1).max(255),
+        password: z.string().min(1).max(128),
+      })
+      .parse(d),
   )
   .handler(async ({ data }) => {
-    const { data: role, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id")
-      .eq("username", data.username)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!role) return { email: null as string | null };
-    const { data: u, error: uerr } = await supabaseAdmin.auth.admin.getUserById(role.user_id);
-    if (uerr) throw new Error(uerr.message);
-    return { email: u.user?.email ?? null };
+    let email = data.identifier;
+    if (!email.includes("@")) {
+      const { data: role, error } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id")
+        .eq("username", email)
+        .maybeSingle();
+      if (error) throw new Error("Falha ao autenticar.");
+      if (!role) throw new Error("Credenciais inválidas.");
+      const { data: u, error: uerr } = await supabaseAdmin.auth.admin.getUserById(role.user_id);
+      if (uerr || !u.user?.email) throw new Error("Credenciais inválidas.");
+      email = u.user.email;
+    }
+    const SUPABASE_URL = process.env.SUPABASE_URL!;
+    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const client = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: signIn, error: signErr } = await client.auth.signInWithPassword({
+      email: email.toLowerCase(),
+      password: data.password,
+    });
+    if (signErr || !signIn.session) throw new Error("Credenciais inválidas.");
+    return {
+      accessToken: signIn.session.access_token,
+      refreshToken: signIn.session.refresh_token,
+    };
   });
+
 
 // ----------------------------------------------------------------------
 // PUBLIC: check if an email is allowed to log in
@@ -53,13 +79,25 @@ export const isEmailAllowed = createServerFn({ method: "POST" })
 export const getMyAccess = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { userId } = context;
+    const { userId, claims } = context;
     const { data, error } = await supabaseAdmin
       .from("user_roles")
       .select("role, company_id, username, allowed_features")
       .eq("user_id", userId);
     if (error) throw new Error(error.message);
     const roles = (data ?? []).map((r) => r.role);
+    // Server-side allowlist enforcement: any signed-in user without a role
+    // must have an entry in allowed_emails, otherwise access is denied.
+    if (roles.length === 0) {
+      const email = (claims as any)?.email as string | undefined;
+      if (!email) throw new Error("Acesso não autorizado.");
+      const { data: allowed } = await supabaseAdmin
+        .from("allowed_emails")
+        .select("id")
+        .eq("email", email.toLowerCase())
+        .maybeSingle();
+      if (!allowed) throw new Error("Acesso não autorizado.");
+    }
     const isMaster = roles.includes("master");
     const isAdmin = roles.includes("admin");
     const companyId =
@@ -598,9 +636,9 @@ export const revokeAuthorizedEmail = createServerFn({ method: "POST" })
     const adminEntry = roles?.find((r) => r.role === "admin");
     if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
 
-    const filter = supabaseAdmin.from("allowed_emails").delete().eq("id", data.id);
+    let filter = supabaseAdmin.from("allowed_emails").delete().eq("id", data.id);
     if (!isMaster && adminEntry?.company_id) {
-      filter.eq("company_id", adminEntry.company_id);
+      filter = filter.eq("company_id", adminEntry.company_id);
     }
     const { error } = await filter;
     if (error) throw new Error(error.message);

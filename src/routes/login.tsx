@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { resolveUsernameToEmail, isEmailAllowed } from "@/lib/admin.functions";
+import { signInWithUsernameOrEmail, isEmailAllowed } from "@/lib/admin.functions";
 import { Cog, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,7 +20,7 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const resolveUsername = useServerFn(resolveUsernameToEmail);
+  const signInFn = useServerFn(signInWithUsernameOrEmail);
   const checkEmail = useServerFn(isEmailAllowed);
 
   useEffect(() => {
@@ -31,21 +31,15 @@ function LoginPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      let email = identifier.trim();
-      if (!email.includes("@")) {
-        const res = await resolveUsername({ data: { username: email } });
-        if (!res.email) {
-          toast.error("Usuário não encontrado");
-          setBusy(false);
-          return;
-        }
-        email = res.email;
-      }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const res = await signInFn({ data: { identifier: identifier.trim(), password } });
+      const { error } = await supabase.auth.setSession({
+        access_token: res.accessToken,
+        refresh_token: res.refreshToken,
+      });
       if (error) toast.error(error.message);
       else navigate({ to: "/" });
     } catch (err: any) {
-      toast.error(err?.message ?? "Erro ao entrar");
+      toast.error(err?.message ?? "Credenciais inválidas");
     } finally {
       setBusy(false);
     }
@@ -71,8 +65,10 @@ function LoginPage() {
           await supabase.auth.signOut();
         }
       } catch (e) {
-        // network/server error: don't lock out user, but log
+        if (cancelled) return;
         console.error(e);
+        toast.error("Não foi possível validar o e-mail. Tente novamente.");
+        await supabase.auth.signOut();
       }
     })();
     return () => { cancelled = true; };
