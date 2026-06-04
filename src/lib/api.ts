@@ -296,7 +296,7 @@ export async function uploadClientContract(userId: string, clientId: string, fil
   const ext = nameParts.length > 1 ? (nameParts.pop() || "pdf").toLowerCase() : "pdf";
   const safeExt = ext.replace(/[^a-z0-9]/g, "").slice(0, 8) || "pdf";
   const path = `${userId}/contracts/${clientId}_${crypto.randomUUID()}.${safeExt}`;
-  const up = await supabase.storage.from("activity-attachments")
+  const up = await supabase.storage.from("client-contracts")
     .upload(path, file, { contentType: file.type || "application/pdf", upsert: false });
   if (up.error) throw up.error;
   return path;
