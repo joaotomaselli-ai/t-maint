@@ -9,6 +9,9 @@ export type Client = {
   phone?: string;
   address?: string;
   contact?: string;
+  hasPreventiveContract: boolean;
+  preventiveContractValue?: number | null;
+  preventiveContractFile?: string | null;
 };
 
 export type Technician = {
@@ -83,6 +86,9 @@ const fromClient = (r: any): Client => ({
   hourlyRate: Number(r.hourly_rate), kmRate: Number(r.km_rate),
   cnpj: r.cnpj ?? "", phone: r.phone ?? "",
   address: r.address ?? "", contact: r.contact ?? "",
+  hasPreventiveContract: Boolean(r.has_preventive_contract),
+  preventiveContractValue: r.preventive_contract_value == null ? null : Number(r.preventive_contract_value),
+  preventiveContractFile: r.preventive_contract_file ?? null,
 });
 
 const toClientRow = (c: Omit<Client, "id">) => ({
@@ -93,6 +99,9 @@ const toClientRow = (c: Omit<Client, "id">) => ({
   phone: c.phone || null,
   address: c.address || null,
   contact: c.contact || null,
+  has_preventive_contract: c.hasPreventiveContract ?? false,
+  preventive_contract_value: c.preventiveContractValue ?? null,
+  preventive_contract_file: c.preventiveContractFile ?? null,
 });
 
 const fromTechnician = (r: any): Technician => ({
@@ -280,6 +289,17 @@ export async function deleteAttachment(att: ActivityAttachment): Promise<void> {
   await supabase.storage.from("activity-attachments").remove([att.storagePath]);
   const { error } = await supabase.from("activity_attachments").delete().eq("id", att.id);
   if (error) throw error;
+}
+
+export async function uploadClientContract(userId: string, clientId: string, file: File): Promise<string> {
+  const nameParts = file.name.split(".");
+  const ext = nameParts.length > 1 ? (nameParts.pop() || "pdf").toLowerCase() : "pdf";
+  const safeExt = ext.replace(/[^a-z0-9]/g, "").slice(0, 8) || "pdf";
+  const path = `${userId}/contracts/${clientId}_${crypto.randomUUID()}.${safeExt}`;
+  const up = await supabase.storage.from("activity-attachments")
+    .upload(path, file, { contentType: file.type || "application/pdf", upsert: false });
+  if (up.error) throw up.error;
+  return path;
 }
 
 export async function getAttachmentUrl(storagePath: string): Promise<string> {
@@ -500,14 +520,14 @@ export async function deleteTechnicianPayment(activityId: string, technicianId: 
   if (error) throw error;
 }
 
-export function sessionClientTotals(s: ServiceSession, client?: Client) {
+export function sessionClientTotals(s: ServiceSession, client?: Client, isPreventive?: boolean) {
   const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
   const service = diffHours(s.serviceStart, s.serviceEnd);
   const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
   const discount = Math.max(0, s.discountHours || 0);
   const totalHours = Math.max(0, travelOut + service + travelBack - discount);
-  const hoursValue = totalHours * (client?.hourlyRate ?? 0);
-  const kmValue = (s.km || 0) * (client?.kmRate ?? 0);
+  const hoursValue = isPreventive ? 0 : totalHours * (client?.hourlyRate ?? 0);
+  const kmValue = isPreventive ? 0 : (s.km || 0) * (client?.kmRate ?? 0);
   return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
@@ -542,7 +562,7 @@ export function reportTotalsWithSessions(r: ServiceReport, sessions: ServiceSess
   let kmValue = base.kmValue;
   let km = r.km || 0;
   for (const s of extras) {
-    const t = sessionClientTotals(s, client);
+    const t = sessionClientTotals(s, client, r.type === "preventiva");
     totalHours += t.totalHours; service += t.service;
     travelOut += t.travelOut; travelBack += t.travelBack;
     hoursValue += t.hoursValue; kmValue += t.kmValue;
@@ -568,8 +588,9 @@ export function reportTotals(r: ServiceReport, client?: Client) {
   const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const hourlyRate = client?.hourlyRate ?? 0;
   const kmRate = client?.kmRate ?? 0;
-  const hoursValue = totalHours * hourlyRate;
-  const kmValue = (r.km || 0) * kmRate;
+  const isPreventive = r.type === "preventiva";
+  const hoursValue = isPreventive ? 0 : totalHours * hourlyRate;
+  const kmValue = isPreventive ? 0 : (r.km || 0) * kmRate;
   return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 

@@ -6,17 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useClients } from "@/hooks/use-data";
-import { fmtCurrency, type Client } from "@/lib/api";
+import { fmtCurrency, uploadClientContract, getAttachmentUrl, type Client } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/clientes")({ component: Clientes });
 
-type Editing = Omit<Client, "id"> & { id?: string };
-const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, cnpj: "", phone: "", address: "" });
+type Editing = Omit<Client, "id"> & { id?: string; fileToUpload?: File | null };
+const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, cnpj: "", phone: "", address: "", contact: "", hasPreventiveContract: false, preventiveContractValue: null, preventiveContractFile: null, fileToUpload: null });
 
 function Clientes() {
+  const { user } = useAuth();
   const money = useMoney();
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients();
   const [open, setOpen] = useState(false);
@@ -29,18 +31,39 @@ function Clientes() {
     if (!editing.name.trim()) { toast.error("Informe o nome do cliente"); return; }
     if (!editing.hourlyRate || editing.hourlyRate <= 0) { toast.error("Informe o valor por hora"); return; }
     if (!editing.kmRate || editing.kmRate <= 0) { toast.error("Informe o valor por km"); return; }
+    if (editing.hasPreventiveContract && (!editing.preventiveContractValue || editing.preventiveContractValue <= 0)) {
+        toast.error("Informe o valor do contrato de preventiva"); return;
+    }
     try {
+      let finalFile = editing.preventiveContractFile;
+
       if (editing.id) {
-        await updateClient.mutateAsync(editing as Client);
+        if (editing.fileToUpload && user) {
+          finalFile = await uploadClientContract(user.id, editing.id, editing.fileToUpload);
+        }
+        await updateClient.mutateAsync({ ...editing, preventiveContractFile: finalFile } as Client);
         toast.success("Cliente atualizado");
       } else {
-        const { id: _drop, ...rest } = editing;
-        await addClient.mutateAsync(rest);
+        const { id: _drop, fileToUpload, ...rest } = editing;
+        const newClient = await addClient.mutateAsync(rest);
+        if (fileToUpload && user && newClient && newClient.id) {
+           const path = await uploadClientContract(user.id, newClient.id, fileToUpload);
+           await updateClient.mutateAsync({ ...newClient, preventiveContractFile: path });
+        }
         toast.success("Cliente cadastrado");
       }
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
+    }
+  };
+
+  const viewPdf = async (path: string) => {
+    try {
+      const url = await getAttachmentUrl(path);
+      window.open(url, "_blank");
+    } catch (e: any) {
+      toast.error("Erro ao abrir PDF");
     }
   };
 
@@ -98,6 +121,30 @@ function Clientes() {
                 <Label>Endereço</Label>
                 <Input value={editing.address || ""} onChange={e => setEditing({ ...editing, address: e.target.value })} placeholder="Rua, número, cidade" />
               </div>
+
+              <div className="border rounded-md p-4 mt-2 space-y-4">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="hasPreventive" className="w-4 h-4 cursor-pointer" checked={editing.hasPreventiveContract} onChange={e => setEditing({ ...editing, hasPreventiveContract: e.target.checked })} />
+                  <Label htmlFor="hasPreventive" className="cursor-pointer">Possui Contrato de Preventiva?</Label>
+                </div>
+                {editing.hasPreventiveContract && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label>Valor Mensal (R$)</Label>
+                      <Input type="number" step="0.01" value={editing.preventiveContractValue || ""} onChange={e => setEditing({ ...editing, preventiveContractValue: Number(e.target.value) })} placeholder="500,00" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Contrato PDF</Label>
+                      <div className="flex flex-col gap-2">
+                         <Input type="file" accept="application/pdf" className="text-xs" onChange={e => setEditing({ ...editing, fileToUpload: e.target.files?.[0] || null })} />
+                         {editing.preventiveContractFile && !editing.fileToUpload && (
+                           <Button type="button" variant="link" className="px-0 h-auto self-start text-xs" onClick={() => viewPdf(editing.preventiveContractFile!)}>Ver PDF atual</Button>
+                         )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
@@ -144,6 +191,14 @@ function Clientes() {
                   </div>
                 </div>
                 {c.address && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{c.address}</p>}
+                {c.hasPreventiveContract && (
+                  <div className="mt-3 p-2 bg-blue-50/50 text-blue-800 text-xs rounded border border-blue-100 flex items-center justify-between">
+                    <span>Contrato: <strong>{money(c.preventiveContractValue || 0)}/mês</strong></span>
+                    {c.preventiveContractFile && (
+                      <Button variant="link" className="p-0 h-auto text-xs" onClick={() => viewPdf(c.preventiveContractFile!)}>Ver PDF</Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
