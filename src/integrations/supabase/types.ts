@@ -578,6 +578,7 @@ export type Database = {
           created_at: string
           hourly_rate: number
           id: string
+          is_salaried: boolean
           km_rate: number
           monthly_fixed_hours: number | null
           name: string
@@ -591,6 +592,7 @@ export type Database = {
           created_at?: string
           hourly_rate?: number
           id?: string
+          is_salaried?: boolean
           km_rate?: number
           monthly_fixed_hours?: number | null
           name: string
@@ -604,6 +606,7 @@ export type Database = {
           created_at?: string
           hourly_rate?: number
           id?: string
+          is_salaried?: boolean
           km_rate?: number
           monthly_fixed_hours?: number | null
           name?: string
