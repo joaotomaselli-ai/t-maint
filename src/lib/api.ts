@@ -291,15 +291,18 @@ export async function deleteAttachment(att: ActivityAttachment): Promise<void> {
   if (error) throw error;
 }
 
-export async function uploadClientContract(userId: string, clientId: string, file: File): Promise<string> {
-  const nameParts = file.name.split(".");
-  const ext = nameParts.length > 1 ? (nameParts.pop() || "pdf").toLowerCase() : "pdf";
-  const safeExt = ext.replace(/[^a-z0-9]/g, "").slice(0, 8) || "pdf";
-  const path = `${userId}/contracts/${clientId}_${crypto.randomUUID()}.${safeExt}`;
-  const up = await supabase.storage.from("client-contracts")
-    .upload(path, file, { contentType: file.type || "application/pdf", upsert: false });
-  if (up.error) throw up.error;
-  return path;
+export async function uploadClientContract(userId: string, clientId: string | number, file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      resolve(base64);
+    };
+    reader.onerror = (error) => {
+      reject(new Error("Failed to read file as base64: " + error));
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 export async function getAttachmentUrl(storagePath: string): Promise<string> {
