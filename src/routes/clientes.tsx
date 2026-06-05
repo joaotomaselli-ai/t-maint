@@ -176,9 +176,15 @@ function Clientes() {
                     <div className="grid gap-2">
                       <Label>Contrato PDF</Label>
                       <div className="flex flex-col gap-2">
-                         <Input type="file" accept="application/pdf" className="text-xs" onChange={e => setEditing({ ...editing, fileToUpload: e.target.files?.[0] || null })} />
+                         <Input key={editing.fileToUpload ? 'has-file' : 'no-file'} type="file" accept="application/pdf" className="text-xs" onChange={e => setEditing({ ...editing, fileToUpload: e.target.files?.[0] || null })} />
+                         {editing.fileToUpload && (
+                           <Button type="button" variant="link" className="px-0 h-auto self-start text-xs text-destructive" onClick={() => setEditing({ ...editing, fileToUpload: null })}>Remover arquivo selecionado</Button>
+                         )}
                          {editing.preventiveContractFile && !editing.fileToUpload && (
-                           <Button type="button" variant="link" className="px-0 h-auto self-start text-xs" onClick={() => viewPdf(editing.preventiveContractFile!)}>Ver PDF atual</Button>
+                           <div className="flex items-center gap-4">
+                             <Button type="button" variant="link" className="px-0 h-auto self-start text-xs" onClick={() => viewPdf(editing.preventiveContractFile!)}>Ver PDF atual</Button>
+                             <Button type="button" variant="link" className="px-0 h-auto self-start text-xs text-destructive" onClick={() => setEditing({ ...editing, preventiveContractFile: null })}>Excluir PDF salvo</Button>
+                           </div>
                          )}
                       </div>
                     </div>
