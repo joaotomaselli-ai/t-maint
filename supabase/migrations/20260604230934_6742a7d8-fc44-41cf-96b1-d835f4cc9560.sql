@@ -1,0 +1,1 @@
+ALTER TABLE public.technicians ADD COLUMN IF NOT EXISTS is_salaried BOOLEAN NOT NULL DEFAULT false;

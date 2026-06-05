@@ -21,6 +21,7 @@ export type Technician = {
   kmRate: number;
   overtimeWeekdayRate: number;
   overtimeWeekendRate: number;
+  isSalaried?: boolean;
   monthlyFixedHours?: number | null;
 };
 
@@ -109,8 +110,9 @@ const fromTechnician = (r: any): Technician => ({
   name: r.name,
   hourlyRate: Number(r.hourly_rate),
   kmRate: Number(r.km_rate),
-  overtimeWeekdayRate: Number(r.overtime_weekday_rate),
-  overtimeWeekendRate: Number(r.overtime_weekend_rate),
+  overtimeWeekdayRate: r.overtime_weekday_rate ?? Number(r.hourly_rate) * 1.5,
+  overtimeWeekendRate: r.overtime_weekend_rate ?? Number(r.hourly_rate) * 2.0,
+  isSalaried: Boolean(r.is_salaried),
   monthlyFixedHours: r.monthly_fixed_hours == null ? null : Number(r.monthly_fixed_hours),
 });
 
@@ -120,6 +122,7 @@ const toTechnicianRow = (t: Omit<Technician, "id">) => ({
   km_rate: t.kmRate ?? 0,
   overtime_weekday_rate: t.overtimeWeekdayRate ?? 0,
   overtime_weekend_rate: t.overtimeWeekendRate ?? 0,
+  is_salaried: t.isSalaried ?? false,
   monthly_fixed_hours: t.monthlyFixedHours == null || Number.isNaN(t.monthlyFixedHours as number) ? null : t.monthlyFixedHours,
 });
 
@@ -544,10 +547,10 @@ export function sessionTechnicianTotals(s: ServiceSession, technician?: Technici
   const ovtWe = Math.max(0, s.overtimeWeekendHours || 0);
   const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
   const regularHours = Math.max(0, totalHours - specialTotal);
-  const hourlyRate = technician?.hourlyRate ?? 0;
+  const hourlyRate = technician?.isSalaried ? 0 : (technician?.hourlyRate ?? 0);
   const kmRate = technician?.kmRate ?? 0;
-  const ovtWkRate = technician?.overtimeWeekdayRate ?? 0;
-  const ovtWeRate = technician?.overtimeWeekendRate ?? 0;
+  const ovtWkRate = technician?.isSalaried ? 0 : (technician?.overtimeWeekdayRate ?? 0);
+  const ovtWeRate = technician?.isSalaried ? 0 : (technician?.overtimeWeekendRate ?? 0);
   const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
   const kmValue = (s.km || 0) * kmRate;
   return { totalHours, regularHours, discount, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };

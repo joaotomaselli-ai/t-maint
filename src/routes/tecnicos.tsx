@@ -18,7 +18,7 @@ type Editing = Omit<Technician, "id"> & { id?: string; hasFixedHours?: boolean }
 const empty = (): Editing => ({
   name: "", hourlyRate: 0, kmRate: 0,
   overtimeWeekdayRate: 0, overtimeWeekendRate: 0,
-  monthlyFixedHours: null, hasFixedHours: false,
+  monthlyFixedHours: null, hasFixedHours: false, isSalaried: false,
 });
 
 function Tecnicos() {
@@ -35,18 +35,20 @@ function Tecnicos() {
 
   const save = async () => {
     if (!editing.name.trim()) { toast.error("Informe o nome do técnico"); return; }
-    if (!editing.hourlyRate || editing.hourlyRate <= 0) { toast.error("Informe o valor por hora"); return; }
-    if (!editing.kmRate || editing.kmRate <= 0) { toast.error("Informe o valor por km"); return; }
-    if (!editing.overtimeWeekdayRate || editing.overtimeWeekdayRate <= 0) { toast.error("Informe a hora extra de semana"); return; }
-    if (!editing.overtimeWeekendRate || editing.overtimeWeekendRate <= 0) { toast.error("Informe a hora extra de fim de semana"); return; }
+    if (!editing.isSalaried) {
+      if (!editing.hourlyRate || editing.hourlyRate <= 0) { toast.error("Informe o valor por hora"); return; }
+      if (!editing.overtimeWeekdayRate || editing.overtimeWeekdayRate <= 0) { toast.error("Informe a hora extra de semana"); return; }
+      if (!editing.overtimeWeekendRate || editing.overtimeWeekendRate <= 0) { toast.error("Informe a hora extra de fim de semana"); return; }
+    }
     if (editing.hasFixedHours && (!editing.monthlyFixedHours || editing.monthlyFixedHours <= 0)) { toast.error("Informe as horas fixas por mês"); return; }
     const payload: Omit<Technician, "id"> = {
       name: editing.name.trim(),
       hourlyRate: Number(editing.hourlyRate) || 0,
       kmRate: Number(editing.kmRate) || 0,
-      overtimeWeekdayRate: Number(editing.overtimeWeekdayRate) || 0,
-      overtimeWeekendRate: Number(editing.overtimeWeekendRate) || 0,
+      overtimeWeekdayRate: editing.isSalaried ? 0 : (Number(editing.overtimeWeekdayRate) || 0),
+      overtimeWeekendRate: editing.isSalaried ? 0 : (Number(editing.overtimeWeekendRate) || 0),
       monthlyFixedHours: editing.hasFixedHours ? (Number(editing.monthlyFixedHours) || 0) : null,
+      isSalaried: !!editing.isSalaried,
     };
     try {
       if (editing.id) {
@@ -92,24 +94,36 @@ function Tecnicos() {
                 <Label>Nome do técnico *</Label>
                 <Input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="Ex: João Silva" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-md border p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm">O técnico é Mensalista?</Label>
+                    <p className="text-xs text-muted-foreground">Os custos de hora serão zerados para este técnico.</p>
+                  </div>
+                  <Switch
+                    checked={!!editing.isSalaried}
+                    onCheckedChange={(v) => setEditing({ ...editing, isSalaried: v, hourlyRate: v ? 0 : editing.hourlyRate, overtimeWeekdayRate: v ? 0 : editing.overtimeWeekdayRate, overtimeWeekendRate: v ? 0 : editing.overtimeWeekendRate })}
+                  />
+                </div>
+              </div>
+              <div className={`grid grid-cols-2 gap-4 ${editing.isSalaried ? "opacity-50 pointer-events-none" : ""}`}>
                 <div className="grid gap-2">
                   <Label>Valor por hora (R$)</Label>
-                  <Input type="number" step="0.01" value={editing.hourlyRate || ""} onChange={e => setEditing({ ...editing, hourlyRate: Number(e.target.value) })} placeholder="80,00" />
+                  <Input type="number" step="0.01" disabled={!!editing.isSalaried} value={editing.hourlyRate || ""} onChange={e => setEditing({ ...editing, hourlyRate: Number(e.target.value) })} placeholder="80,00" />
                 </div>
                 <div className="grid gap-2">
                   <Label>Valor por km (R$)</Label>
                   <Input type="number" step="0.01" value={editing.kmRate || ""} onChange={e => setEditing({ ...editing, kmRate: Number(e.target.value) })} placeholder="1,50" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid grid-cols-2 gap-4 ${editing.isSalaried ? "opacity-50 pointer-events-none" : ""}`}>
                 <div className="grid gap-2">
                   <Label>Hora extra — semana (R$)</Label>
-                  <Input type="number" step="0.01" value={editing.overtimeWeekdayRate || ""} onChange={e => setEditing({ ...editing, overtimeWeekdayRate: Number(e.target.value) })} placeholder="120,00" />
+                  <Input type="number" step="0.01" disabled={!!editing.isSalaried} value={editing.overtimeWeekdayRate || ""} onChange={e => setEditing({ ...editing, overtimeWeekdayRate: Number(e.target.value) })} placeholder="120,00" />
                 </div>
                 <div className="grid gap-2">
                   <Label>Hora extra — fim de semana (R$)</Label>
-                  <Input type="number" step="0.01" value={editing.overtimeWeekendRate || ""} onChange={e => setEditing({ ...editing, overtimeWeekendRate: Number(e.target.value) })} placeholder="160,00" />
+                  <Input type="number" step="0.01" disabled={!!editing.isSalaried} value={editing.overtimeWeekendRate || ""} onChange={e => setEditing({ ...editing, overtimeWeekendRate: Number(e.target.value) })} placeholder="160,00" />
                 </div>
               </div>
               <div className="rounded-md border p-3 space-y-3">
@@ -156,7 +170,10 @@ function Tecnicos() {
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-lg truncate">{t.name}</h3>
+                    <h3 className="font-semibold text-lg truncate flex items-center gap-2">
+                      {t.name}
+                      {t.isSalaried && <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary">Mensalista</span>}
+                    </h3>
                     {t.monthlyFixedHours != null && (
                       <p className="text-xs text-muted-foreground">Carga fixa: {t.monthlyFixedHours}h/mês</p>
                     )}
