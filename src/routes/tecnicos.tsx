@@ -54,6 +54,7 @@ function Tecnicos() {
       monthlyFixedHours: editing.hasFixedHours ? (Number(editing.monthlyFixedHours) || 0) : null,
       isSalaried: !!editing.isSalaried,
     };
+    try {
       if (editing.hasLogin && !editing.userId) {
         if (!editing.loginEmail || !editing.loginPassword) {
           toast.error("Preencha o e-mail e senha para o acesso ao sistema.");
