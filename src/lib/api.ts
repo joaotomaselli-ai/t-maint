@@ -614,10 +614,10 @@ export function technicianTotals(r: ServiceReport, technician?: Technician) {
   const ovtWe = Math.max(0, r.overtimeWeekendHours || 0);
   const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
   const regularHours = Math.max(0, totalHours - specialTotal);
-  const hourlyRate = technician?.hourlyRate ?? 0;
+  const hourlyRate = technician?.isSalaried ? 0 : (technician?.hourlyRate ?? 0);
   const kmRate = technician?.kmRate ?? 0;
-  const ovtWkRate = technician?.overtimeWeekdayRate ?? 0;
-  const ovtWeRate = technician?.overtimeWeekendRate ?? 0;
+  const ovtWkRate = technician?.isSalaried ? 0 : (technician?.overtimeWeekdayRate ?? 0);
+  const ovtWeRate = technician?.isSalaried ? 0 : (technician?.overtimeWeekendRate ?? 0);
   const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
   const kmValue = (r.km || 0) * kmRate;
   return { totalHours, regularHours, discount, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };

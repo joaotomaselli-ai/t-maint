@@ -594,6 +594,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
   // Sum session contributions per their assigned technician
   const sessionsTechTotal = useMemo(() => {
     return effectiveSessions.reduce((acc, s) => {
+      if (isTechnician && myTechId && s.technicianId !== myTechId) return acc;
       const tech = technicians.find(tc => tc.id === s.technicianId);
       if (!tech) return acc;
       const tt = sessionTechnicianTotals(s, tech);
@@ -605,7 +606,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
       acc.ovtWe += tt.ovtWe;
       return acc;
     }, { totalHours: 0, hoursValue: 0, kmValue: 0, total: 0, ovtWk: 0, ovtWe: 0 });
-  }, [effectiveSessions, technicians]);
+  }, [effectiveSessions, technicians, isTechnician, myTechId]);
 
   const ttSingle = {
     ...ttSingleBase,
@@ -621,6 +622,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
   const preventiveTechTotals = useMemo(() => {
     if (!isPreventive) return null;
     const base = extras.activityTechnicians.reduce((acc, at) => {
+      if (isTechnician && myTechId && at.technicianId !== myTechId) return acc;
       const tech = technicians.find(t => t.id === at.technicianId);
       if (!tech) return acc;
       const reportLike = {
@@ -644,7 +646,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
     base.ovtWk += sessionsTechTotal.ovtWk;
     base.ovtWe += sessionsTechTotal.ovtWe;
     return base;
-  }, [isPreventive, extras.activityTechnicians, technicians, editing, sessionsTechTotal]);
+  }, [isPreventive, extras.activityTechnicians, technicians, editing, sessionsTechTotal, isTechnician, myTechId]);
 
   const techTotalsForApur = isPreventive ? preventiveTechTotals! : ttSingle;
   const showApur = client || (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) || effectiveSessions.length > 0;
@@ -899,7 +901,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
             <Card className="bg-primary/5 border-primary/20">
               <CardHeader className="pb-2"><CardTitle className="text-base">Apuração</CardTitle></CardHeader>
               <CardContent className="space-y-4 text-sm">
-                {client && (
+                {!isTechnician && client && (
                   <div>
                     <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">A receber do cliente</div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -923,7 +925,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                     </div>
                   </div>
                 )}
-                {client && techTotalsForApur && (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) && (
+                {!isTechnician && client && techTotalsForApur && (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) && (
                   <div className="pt-3 border-t border-primary/20 flex items-center justify-between">
                     <div className="text-xs font-semibold text-muted-foreground uppercase">Lucro em horas (receber − pagar)</div>
                     <div className={`font-bold text-lg ${profit >= 0 ? "text-success" : "text-destructive"}`}>{money(profit)}</div>
