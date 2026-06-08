@@ -54,6 +54,7 @@ function Tecnicos() {
       monthlyFixedHours: editing.hasFixedHours ? (Number(editing.monthlyFixedHours) || 0) : null,
       isSalaried: !!editing.isSalaried,
     };
+    try {
       if (editing.hasLogin && !editing.userId) {
         if (!editing.loginEmail || !editing.loginPassword) {
           toast.error("Preencha o e-mail e senha para o acesso ao sistema.");
@@ -73,9 +74,11 @@ function Tecnicos() {
 
       if (techId && editing.hasLogin && !editing.userId && editing.loginEmail && editing.loginPassword) {
         await createLogin({
-          email: editing.loginEmail,
-          password: editing.loginPassword,
-          technicianId: techId,
+          data: {
+            email: editing.loginEmail,
+            password: editing.loginPassword,
+            technicianId: techId,
+          }
         });
         toast.success("Acesso ao sistema criado com sucesso!");
         // We might want to refresh technicians here to grab the new user_id, 

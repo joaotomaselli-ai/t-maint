@@ -585,7 +585,9 @@ export type Database = {
           overtime_weekday_rate: number
           overtime_weekend_rate: number
           updated_at: string
-          user_id: string
+          updated_at: string
+          user_id: string | null
+          has_login: boolean
         }
         Insert: {
           company_id?: string
@@ -599,7 +601,8 @@ export type Database = {
           overtime_weekday_rate?: number
           overtime_weekend_rate?: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
+          has_login?: boolean
         }
         Update: {
           company_id?: string
@@ -613,7 +616,8 @@ export type Database = {
           overtime_weekday_rate?: number
           overtime_weekend_rate?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
+          has_login?: boolean
         }
         Relationships: []
       }
@@ -679,7 +683,7 @@ export type Database = {
       is_master: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "master" | "admin" | "user"
+      app_role: "master" | "admin" | "user" | "technician"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -807,7 +811,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["master", "admin", "user"],
+      app_role: ["master", "admin", "user", "technician"],
     },
   },
 } as const
