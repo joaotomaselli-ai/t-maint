@@ -15,7 +15,7 @@ import {
   listAttachments, uploadAttachment, deleteAttachment,
   listActivityTechnicians, replaceActivityTechnicians,
   listSessions, createSession, updateSession, deleteSession,
-  reportTotalsWithSessions, sessionTechnicianTotals,
+  reportTotalsWithSessions, sessionTechnicianTotals, technicianPayForReport,
   type Client, type ServiceReport, type ServiceType, type Technician,
   type ActivityAttachment, type ActivityTechnician, type AttachmentKind,
   type ServiceSession,
