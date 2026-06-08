@@ -17,6 +17,7 @@ export function useAccess() {
     role: q.data?.role ?? "user",
     isMaster: q.data?.isMaster ?? false,
     isAdmin: q.data?.isAdmin ?? false,
+    isTechnician: q.data?.role === "technician",
     companyId: q.data?.companyId ?? null,
     companyName: q.data?.companyName ?? null,
     allowedFeatures: q.data?.allowedFeatures ?? null,

@@ -9,13 +9,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { reportTotalsWithSessions, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
-// PDF lib is imported dynamically inside click handlers to avoid SSR issues
+import { useAccess } from "@/hooks/use-access";
+import { useAuth } from "@/hooks/use-auth";
 import { FileDown, FileText, HardHat, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/relatorios")({ component: Relatorios });
 
 function Relatorios() {
+  const { isTechnician } = useAccess();
+
   return (
     <div className="space-y-6">
       <header>
@@ -23,12 +26,12 @@ function Relatorios() {
         <p className="text-muted-foreground mt-1">Gere relatórios consolidados em PDF</p>
       </header>
 
-      <Tabs defaultValue="clientes" className="space-y-4">
+      <Tabs defaultValue={isTechnician ? "tecnicos" : "clientes"} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>
+          {!isTechnician && <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>}
           <TabsTrigger value="tecnicos" className="gap-2"><HardHat className="h-4 w-4" /> Técnicos</TabsTrigger>
         </TabsList>
-        <TabsContent value="clientes"><ClientReport /></TabsContent>
+        {!isTechnician && <TabsContent value="clientes"><ClientReport /></TabsContent>}
         <TabsContent value="tecnicos"><TechnicianReport /></TabsContent>
       </Tabs>
     </div>
@@ -194,13 +197,19 @@ function TechnicianReport() {
   const { settings } = useSettings();
   const { sessions } = useAllSessions();
   const { payments: techPays } = useTechnicianPayments();
+  const { isTechnician } = useAccess();
+  const { user } = useAuth();
+  
+  const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
+  
   const [technicianId, setTechnicianId] = useState<string>("");
   const [clientId, setClientId] = useState<string>(ALL_CLIENTS);
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
 
-  const technician = technicians.find(t => t.id === technicianId);
+  const effectiveTechnicianId = isTechnician && myTechId ? myTechId : technicianId;
+  const technician = technicians.find(t => t.id === effectiveTechnicianId);
   const clientsById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
   const filterClient = clientId !== ALL_CLIENTS ? clients.find(c => c.id === clientId) : undefined;
 
@@ -276,7 +285,7 @@ function TechnicianReport() {
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_160px_160px_auto]">
           <div className="grid gap-2">
             <Label>Técnico *</Label>
-            <Select value={technicianId} onValueChange={setTechnicianId}>
+            <Select disabled={isTechnician} value={effectiveTechnicianId} onValueChange={setTechnicianId}>
               <SelectTrigger><SelectValue placeholder="Selecione um técnico" /></SelectTrigger>
               <SelectContent>
                 {technicians.length === 0 && <div className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum técnico cadastrado</div>}
@@ -297,10 +306,10 @@ function TechnicianReport() {
           <div className="grid gap-2"><Label>De</Label><Input type="date" value={from} onChange={e => setFrom(e.target.value)} /></div>
           <div className="grid gap-2"><Label>Até</Label><Input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
           <div className="flex flex-col sm:flex-row gap-2 items-stretch lg:items-end">
-            <Button onClick={generate} className="gap-2" size="lg" disabled={!technicianId || filtered.length === 0}>
+            <Button onClick={generate} className="gap-2" size="lg" disabled={!effectiveTechnicianId || filtered.length === 0}>
               <FileDown className="h-4 w-4" /> Gerar PDF
             </Button>
-            <Button onClick={generateWord} variant="outline" className="gap-2" size="lg" disabled={!technicianId || filtered.length === 0}>
+            <Button onClick={generateWord} variant="outline" className="gap-2" size="lg" disabled={!effectiveTechnicianId || filtered.length === 0}>
               <FileDown className="h-4 w-4" /> Gerar Word
             </Button>
           </div>

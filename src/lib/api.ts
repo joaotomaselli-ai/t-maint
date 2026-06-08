@@ -23,6 +23,8 @@ export type Technician = {
   overtimeWeekendRate: number;
   isSalaried?: boolean;
   monthlyFixedHours?: number | null;
+  userId?: string | null;
+  hasLogin?: boolean;
 };
 
 export type ServiceType = "corretiva" | "preventiva";
@@ -106,14 +108,14 @@ const toClientRow = (c: Omit<Client, "id">) => ({
 });
 
 const fromTechnician = (r: any): Technician => ({
-  id: r.id,
-  name: r.name,
-  hourlyRate: Number(r.hourly_rate),
-  kmRate: Number(r.km_rate),
-  overtimeWeekdayRate: r.overtime_weekday_rate ?? Number(r.hourly_rate) * 1.5,
-  overtimeWeekendRate: r.overtime_weekend_rate ?? Number(r.hourly_rate) * 2.0,
+  id: r.id, name: r.name,
+  hourlyRate: Number(r.hourly_rate), kmRate: Number(r.km_rate),
+  overtimeWeekdayRate: Number(r.overtime_weekday_rate),
+  overtimeWeekendRate: Number(r.overtime_weekend_rate),
   isSalaried: Boolean(r.is_salaried),
-  monthlyFixedHours: r.monthly_fixed_hours == null ? null : Number(r.monthly_fixed_hours),
+  monthlyFixedHours: r.monthly_fixed_hours ? Number(r.monthly_fixed_hours) : null,
+  userId: r.user_id || null,
+  hasLogin: Boolean(r.has_login),
 });
 
 const toTechnicianRow = (t: Omit<Technician, "id">) => ({
@@ -123,7 +125,9 @@ const toTechnicianRow = (t: Omit<Technician, "id">) => ({
   overtime_weekday_rate: t.overtimeWeekdayRate ?? 0,
   overtime_weekend_rate: t.overtimeWeekendRate ?? 0,
   is_salaried: t.isSalaried ?? false,
-  monthly_fixed_hours: t.monthlyFixedHours == null || Number.isNaN(t.monthlyFixedHours as number) ? null : t.monthlyFixedHours,
+  monthly_fixed_hours: t.monthlyFixedHours ?? null,
+  user_id: t.userId ?? null,
+  has_login: t.hasLogin ?? false,
 });
 
 const fromReport = (r: any): ServiceReport => ({

@@ -21,12 +21,15 @@ import { useMoney } from "@/hooks/use-money-visibility";
 import { Users, HardHat, CheckCircle2, Circle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useAccess } from "@/hooks/use-access";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/financeiro")({ component: Financeiro });
 
 function Financeiro() {
   const accessFn = useServerFn(getMyAccess);
   const { data: access } = useQuery({ queryKey: ["my-access"], queryFn: () => accessFn() });
+  const { isTechnician } = useAccess();
 
   if (access?.isMaster) {
     return <MasterFinanceiro />;
@@ -39,12 +42,12 @@ function Financeiro() {
         <p className="text-muted-foreground mt-1">Controle de pagamentos recebidos dos clientes e pagos aos técnicos</p>
       </header>
 
-      <Tabs defaultValue="clientes" className="space-y-4">
+      <Tabs defaultValue={isTechnician ? "tecnicos" : "clientes"} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>
+          {!isTechnician && <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>}
           <TabsTrigger value="tecnicos" className="gap-2"><HardHat className="h-4 w-4" /> Técnicos</TabsTrigger>
         </TabsList>
-        <TabsContent value="clientes"><ClientFinance /></TabsContent>
+        {!isTechnician && <TabsContent value="clientes"><ClientFinance /></TabsContent>}
         <TabsContent value="tecnicos"><TechnicianFinance /></TabsContent>
       </Tabs>
     </div>
@@ -313,10 +316,14 @@ function ClientFinance() {
 function TechnicianFinance() {
   const money = useMoney();
   const { clients } = useClients();
-  const { technicians } = useTechnicians();
   const { reports } = useReports();
+  const { technicians } = useTechnicians();
   const { sessions } = useAllSessions();
   const { payments, markPaid, unmarkPaid } = useTechnicianPayments();
+  const { isTechnician } = useAccess();
+  const { user } = useAuth();
+  
+  const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
 
   const [technicianId, setTechnicianId] = useState<string>("");
   const [clientId, setClientId] = useState<string>(ALL);
@@ -326,7 +333,8 @@ function TechnicianFinance() {
   const [osTo, setOsTo] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "unpaid">("all");
 
-  const technician = technicians.find(t => t.id === technicianId);
+  const effectiveTechnicianId = isTechnician && myTechId ? myTechId : technicianId;
+  const technician = technicians.find(t => t.id === effectiveTechnicianId);
   const clientById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
   const payKey = (a: string, t: string) => `${a}::${t}`;
   const payByKey = useMemo(
@@ -393,7 +401,7 @@ function TechnicianFinance() {
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <div className="grid gap-2 lg:col-span-2">
             <Label>Técnico *</Label>
-            <Select value={technicianId} onValueChange={setTechnicianId}>
+            <Select disabled={isTechnician} value={effectiveTechnicianId} onValueChange={setTechnicianId}>
               <SelectTrigger><SelectValue placeholder="Selecione um técnico" /></SelectTrigger>
               <SelectContent>
                 {technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}

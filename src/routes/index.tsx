@@ -25,6 +25,7 @@ function CompanyDashboard() {
   const { clients } = useClients();
   const { reports } = useReports();
   const money = useMoney();
+  const { isTechnician } = useAccess();
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -63,7 +64,7 @@ function CompanyDashboard() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Wrench} label="Atendimentos no mês" value={String(monthReports.length)} accent="primary" />
-        <StatCard icon={Users} label="Clientes" value={String(clients.length)} accent="accent" />
+        {!isTechnician && <StatCard icon={Users} label="Clientes" value={String(clients.length)} accent="accent" />}
         <StatCard icon={Clock} label="Horas no mês" value={fmtHours(stats.hours)} accent="warning" />
         <StatCard icon={DollarSign} label="Faturamento do mês" value={money(stats.value)} accent="success" />
       </div>
@@ -80,7 +81,7 @@ function CompanyDashboard() {
               <p className="font-medium">Nenhuma OS registrada neste mês</p>
               <p className="text-sm mt-1">Cadastre seus clientes e comece a registrar atendimentos.</p>
               <div className="flex justify-center gap-2 mt-4">
-                <Link to="/clientes"><Button variant="outline" size="sm">Cadastrar cliente</Button></Link>
+                {!isTechnician && <Link to="/clientes"><Button variant="outline" size="sm">Cadastrar cliente</Button></Link>}
                 <Link to="/atividades"><Button size="sm">Ordem de Serviço</Button></Link>
               </div>
             </div>

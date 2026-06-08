@@ -8,17 +8,20 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useTechnicians } from "@/hooks/use-data";
 import { fmtCurrency, type Technician } from "@/lib/api";
+import { useServerFn } from "@tanstack/react-start";
+import { createTechnicianLogin } from "@/lib/admin.functions";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { Plus, Pencil, Trash2, HardHat } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tecnicos")({ component: Tecnicos });
 
-type Editing = Omit<Technician, "id"> & { id?: string; hasFixedHours?: boolean };
+type Editing = Omit<Technician, "id"> & { id?: string; hasFixedHours?: boolean; loginEmail?: string; loginPassword?: string };
 const empty = (): Editing => ({
   name: "", hourlyRate: 0, kmRate: 0,
   overtimeWeekdayRate: 0, overtimeWeekendRate: 0,
   monthlyFixedHours: null, hasFixedHours: false, isSalaried: false,
+  hasLogin: false, loginEmail: "", loginPassword: "",
 });
 
 function Tecnicos() {
@@ -26,6 +29,7 @@ function Tecnicos() {
   const { technicians, addTechnician, updateTechnician, deleteTechnician, isLoading } = useTechnicians();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
+  const createLogin = useServerFn(createTechnicianLogin);
 
   const startNew = () => { setEditing(empty()); setOpen(true); };
   const startEdit = (t: Technician) => {
@@ -50,14 +54,34 @@ function Tecnicos() {
       monthlyFixedHours: editing.hasFixedHours ? (Number(editing.monthlyFixedHours) || 0) : null,
       isSalaried: !!editing.isSalaried,
     };
-    try {
+      if (editing.hasLogin && !editing.userId) {
+        if (!editing.loginEmail || !editing.loginPassword) {
+          toast.error("Preencha o e-mail e senha para o acesso ao sistema.");
+          return;
+        }
+      }
+
+      let techId = editing.id;
       if (editing.id) {
         await updateTechnician.mutateAsync({ ...payload, id: editing.id });
         toast.success("Técnico atualizado");
       } else {
-        await addTechnician.mutateAsync(payload);
+        const result = await addTechnician.mutateAsync(payload);
+        techId = result.id;
         toast.success("Técnico cadastrado");
       }
+
+      if (techId && editing.hasLogin && !editing.userId && editing.loginEmail && editing.loginPassword) {
+        await createLogin({
+          email: editing.loginEmail,
+          password: editing.loginPassword,
+          technicianId: techId,
+        });
+        toast.success("Acesso ao sistema criado com sucesso!");
+        // We might want to refresh technicians here to grab the new user_id, 
+        // but react-query invalidation from useTechnicians should cover it eventually or next render.
+      }
+
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
@@ -142,6 +166,35 @@ function Tecnicos() {
                     <Label>Horas fixas por mês</Label>
                     <Input type="number" step="1" value={editing.monthlyFixedHours ?? ""} onChange={e => setEditing({ ...editing, monthlyFixedHours: Number(e.target.value) })} placeholder="220" />
                   </div>
+                )}
+              </div>
+
+              <div className="rounded-md border p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm">Possui acesso ao sistema?</Label>
+                    <p className="text-xs text-muted-foreground">Permite que o técnico faça login e gerencie suas OS</p>
+                  </div>
+                  <Switch
+                    checked={!!editing.hasLogin}
+                    disabled={!!editing.userId} // If already has login, we disable the switch to avoid complexity of deleting/recreating here
+                    onCheckedChange={(v) => setEditing({ ...editing, hasLogin: v })}
+                  />
+                </div>
+                {editing.hasLogin && !editing.userId && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label>E-mail de acesso</Label>
+                      <Input type="email" value={editing.loginEmail || ""} onChange={e => setEditing({ ...editing, loginEmail: e.target.value })} placeholder="tecnico@email.com" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Senha</Label>
+                      <Input type="text" value={editing.loginPassword || ""} onChange={e => setEditing({ ...editing, loginPassword: e.target.value })} placeholder="******" />
+                    </div>
+                  </div>
+                )}
+                {editing.userId && (
+                  <div className="text-xs text-success">Login ativo e configurado.</div>
                 )}
               </div>
             </div>

@@ -25,12 +25,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const moneyHidden = useMoneyHidden();
-  const { isMaster, isAdmin, allowedFeatures } = useAccess();
+  const { isMaster, isAdmin, isTechnician, allowedFeatures } = useAccess();
 
   const nav: NavItem[] = ALL_NAV.filter((item) => {
     if (!item.feature) return true;
     // Master: hide operational tabs (clientes, técnicos, atividades, relatórios)
     if (isMaster) return item.feature === "financeiro";
+    if (isTechnician) {
+      if (item.feature === "clientes" || item.feature === "tecnicos") return false;
+      return true;
+    }
     if (isAdmin) return true;
     if (allowedFeatures === null) return true;
     return allowedFeatures.includes(item.feature);

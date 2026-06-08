@@ -340,6 +340,76 @@ export const createSubUser = createServerFn({ method: "POST" })
   });
 
 // ----------------------------------------------------------------------
+// ADMIN / MASTER: create a technician login
+// ----------------------------------------------------------------------
+export const createTechnicianLogin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        email: z.string().trim().email(),
+        password: z.string().min(6).max(128),
+        technicianId: z.string().uuid(),
+        companyId: z.string().uuid().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role, company_id")
+      .eq("user_id", userId);
+    const isMaster = roles?.some((r) => r.role === "master");
+    const adminEntry = roles?.find((r) => r.role === "admin");
+    const targetCompany = data.companyId ?? adminEntry?.company_id ?? null;
+    if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
+    if (!targetCompany) throw new Error("Empresa não definida.");
+
+    const email = data.email.toLowerCase();
+    let newUserId: string;
+    const created = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: data.password,
+      email_confirm: true,
+    });
+    if (created.error) {
+      const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const found = list.data?.users.find((u) => u.email?.toLowerCase() === email);
+      if (!found) throw new Error(created.error.message);
+      newUserId = found.id;
+      await supabaseAdmin.auth.admin.updateUserById(found.id, { password: data.password });
+    } else {
+      newUserId = created.data.user!.id;
+    }
+
+    const { error: re } = await supabaseAdmin
+      .from("user_roles")
+      .insert({
+        user_id: newUserId,
+        role: "technician",
+        company_id: targetCompany,
+      });
+    if (re && !re.message.includes("duplicate")) throw new Error(re.message);
+
+    await supabaseAdmin.from("allowed_emails").upsert({
+      email,
+      role: "technician",
+      company_id: targetCompany,
+      invited_by: userId,
+    }, { onConflict: "email" });
+
+    const { error: te } = await supabaseAdmin
+      .from("technicians")
+      .update({ user_id: newUserId, has_login: true })
+      .eq("id", data.technicianId);
+    if (te) throw new Error(te.message);
+
+    return { userId: newUserId };
+  });
+
+
+// ----------------------------------------------------------------------
 // ADMIN / MASTER: update a sub-user (email, password, role, features)
 // ----------------------------------------------------------------------
 export const updateSubUser = createServerFn({ method: "POST" })

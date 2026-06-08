@@ -61,6 +61,7 @@ function Atividades() {
   const paidByClient = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
   const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
   const { user } = useAuth();
+  const { isTechnician } = useAccess();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
@@ -139,8 +140,24 @@ function Atividades() {
   const startNew = () => {
     if (clients.length === 0) { toast.error("Cadastre um cliente primeiro"); return; }
     if (technicians.length === 0) { toast.error("Cadastre um técnico primeiro"); return; }
-    setEditing(empty(settings.technicianName));
-    setEditingExtras(emptyExtras());
+    
+    let defaultTechName = settings.technicianName;
+    let initialTechs: ActivityTechnician[] = [];
+    if (isTechnician) {
+      const myTech = technicians.find(t => t.userId === user?.id);
+      if (myTech) {
+        defaultTechName = myTech.name;
+        initialTechs = [{
+          technicianId: myTech.id, position: 1,
+          overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
+        }];
+      }
+    }
+
+    setEditing(empty(defaultTechName));
+    const extras = emptyExtras();
+    if (initialTechs.length > 0) extras.activityTechnicians = initialTechs;
+    setEditingExtras(extras);
     setOpen(true);
   };
 
@@ -549,8 +566,11 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
   clients: Client[]; technicians: Technician[]; onSave: () => void;
 }) {
   const money = useMoney();
+  const { user } = useAuth();
+  const { isTechnician } = useAccess();
   const client = clients.find((c) => c.id === editing.clientId);
   const isPreventive = editing.type === "preventiva";
+  const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
 
   // Effective sessions = existing (minus removed, with edits applied) + new
   const effectiveSessions = useMemo<ServiceSession[]>(() => {
@@ -665,10 +685,19 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
             overtimeWeekendHours: editing.overtimeWeekendHours || 0,
           }],
         }));
+      } else if (isTechnician && myTechId) {
+        setExtras(prev => ({
+          ...prev,
+          activityTechnicians: [{
+            technicianId: myTechId, position: 1,
+            overtimeWeekdayHours: editing.overtimeWeekdayHours || 0,
+            overtimeWeekendHours: editing.overtimeWeekendHours || 0,
+          }],
+        }));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPreventive]);
+  }, [isPreventive, isTechnician, myTechId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -781,7 +810,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               {!isPreventive && (
                 <div className="grid gap-2">
                   <Label>Técnico *</Label>
-                  <Select value={editing.technician} onValueChange={(v) => setEditing({ ...editing, technician: v })}>
+                  <Select disabled={isTechnician} value={editing.technician} onValueChange={(v) => setEditing({ ...editing, technician: v })}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
                       {technicians.map((tc) => <SelectItem key={tc.id} value={tc.name}>{tc.name}</SelectItem>)}
@@ -822,7 +851,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                 <div key={idx} className="grid gap-2 sm:grid-cols-[1fr_140px_140px_auto] items-end p-3 rounded bg-muted/40">
                   <div className="grid gap-1">
                     <Label className="text-xs">Técnico #{idx + 1}</Label>
-                    <Select value={at.technicianId} onValueChange={v => updateAt(idx, { technicianId: v })}>
+                    <Select disabled={isTechnician && idx === 0} value={at.technicianId} onValueChange={v => updateAt(idx, { technicianId: v })}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
                         {technicians.map(tc => <SelectItem key={tc.id} value={tc.id}>{tc.name}</SelectItem>)}
@@ -839,9 +868,13 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                     <Input type="number" step="0.5" min="0" value={at.overtimeWeekendHours || ""}
                       onChange={e => updateAt(idx, { overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
                   </div>
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeAt(idx)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="w-10">
+                    {!(isTechnician && idx === 0) && (
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeAt(idx)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </section>
