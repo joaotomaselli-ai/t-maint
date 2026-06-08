@@ -63,6 +63,7 @@ function Atividades() {
   const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
   const { user } = useAuth();
   const { isTechnician } = useAccess();
+  const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
