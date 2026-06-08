@@ -288,11 +288,13 @@ function Atividades() {
   const totals = useMemo(() => {
     return filtered.reduce((acc, r) => {
       const sess = sessionsByActivity.get(r.id) ?? [];
-      const t = reportTotalsWithSessions(r, sess, clientMap.get(r.clientId));
+      const t = isTechnician && myTechId
+        ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
+        : reportTotalsWithSessions(r, sess, clientMap.get(r.clientId));
       acc.hours += t.totalHours; acc.value += t.total; acc.km += t.km;
       return acc;
     }, { hours: 0, value: 0, km: 0 });
-  }, [filtered, clientMap, sessionsByActivity]);
+  }, [filtered, clientMap, sessionsByActivity, isTechnician, myTechId, technicians]);
 
   return (
     <div className="space-y-6">
@@ -376,7 +378,9 @@ function Atividades() {
           {paginated.map(r => {
             const c = clientMap.get(r.clientId);
             const sess = sessionsByActivity.get(r.id) ?? [];
-            const t = reportTotalsWithSessions(r, sess, c);
+            const t = isTechnician && myTechId
+              ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
+              : reportTotalsWithSessions(r, sess, c);
             return (
               <Card key={r.id} className="hover:shadow-elegant transition-shadow">
                 <CardContent className="p-5">

@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useClients, useReports } from "@/hooks/use-data";
-import { reportTotals, fmtHours } from "@/lib/api";
+import { useClients, useReports, useTechnicians, useAllSessions } from "@/hooks/use-data";
+import { reportTotalsWithSessions, technicianPayForReport, fmtHours } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useAccess } from "@/hooks/use-access";
+import { useAuth } from "@/hooks/use-auth";
 import { MasterPanel } from "@/components/MasterPanel";
 import { Wrench, Users, Clock, DollarSign, Plus, TrendingUp, Loader2 } from "lucide-react";
 import { format } from "date-fns";
@@ -24,8 +25,13 @@ function Dashboard() {
 function CompanyDashboard() {
   const { clients } = useClients();
   const { reports } = useReports();
+  const { technicians } = useTechnicians();
+  const { sessions } = useAllSessions();
   const money = useMoney();
   const { isTechnician } = useAccess();
+  const { user } = useAuth();
+  
+  const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -39,10 +45,14 @@ function CompanyDashboard() {
   });
 
   const stats = monthReports.reduce((acc, r) => {
-    const t = reportTotals(r, clientMap.get(r.clientId));
+    const sess = sessions.filter(s => s.activityId === r.id);
+    const c = clientMap.get(r.clientId);
+    const t = isTechnician && myTechId
+      ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
+      : reportTotalsWithSessions(r, sess, c);
     acc.hours += t.totalHours;
     acc.value += t.total;
-    acc.km += r.km || 0;
+    acc.km += "km" in t ? (t as any).km : (r.km || 0);
     return acc;
   }, { hours: 0, value: 0, km: 0 });
 
@@ -66,7 +76,7 @@ function CompanyDashboard() {
         <StatCard icon={Wrench} label="Atendimentos no mês" value={String(monthReports.length)} accent="primary" />
         {!isTechnician && <StatCard icon={Users} label="Clientes" value={String(clients.length)} accent="accent" />}
         <StatCard icon={Clock} label="Horas no mês" value={fmtHours(stats.hours)} accent="warning" />
-        <StatCard icon={DollarSign} label="Faturamento do mês" value={money(stats.value)} accent="success" />
+        <StatCard icon={DollarSign} label={isTechnician ? "Ganhos do mês" : "Faturamento do mês"} value={money(stats.value)} accent="success" />
       </div>
 
       <Card>
@@ -89,7 +99,11 @@ function CompanyDashboard() {
             <div className="divide-y">
               {recent.map(r => {
                 const c = clientMap.get(r.clientId);
-                const t = reportTotals(r, c);
+                const sess = sessions.filter(s => s.activityId === r.id);
+                const t = isTechnician && myTechId
+                  ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
+                  : reportTotalsWithSessions(r, sess, c);
+                const actualKm = "km" in t ? (t as any).km : (r.km || 0);
                 return (
                   <div key={r.id} className="py-3 flex items-center justify-between gap-4">
                     <div className="min-w-0">
@@ -105,7 +119,7 @@ function CompanyDashboard() {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold">{money(t.total)}</div>
-                      <div className="text-xs text-muted-foreground">{fmtHours(t.totalHours)} · {r.km}km</div>
+                      <div className="text-xs text-muted-foreground">{fmtHours(t.totalHours)} · {actualKm}km</div>
                     </div>
                   </div>
                 );
