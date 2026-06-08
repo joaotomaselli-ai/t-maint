@@ -378,9 +378,10 @@ function Atividades() {
           {paginated.map(r => {
             const c = clientMap.get(r.clientId);
             const sess = sessionsByActivity.get(r.id) ?? [];
+            const baseT = reportTotalsWithSessions(r, sess, c);
             const t = isTechnician && myTechId
               ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
-              : reportTotalsWithSessions(r, sess, c);
+              : baseT;
             return (
               <Card key={r.id} className="hover:shadow-elegant transition-shadow">
                 <CardContent className="p-5">
@@ -412,9 +413,9 @@ function Atividades() {
                       <p className="text-sm text-muted-foreground">{r.machine} {r.requester && `· Sol.: ${r.requester}`}</p>
                       {r.description && <p className="text-sm mt-2 line-clamp-2">{r.description}</p>}
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span>Serviço: <b className="text-foreground">{fmtHours(t.service)}</b></span>
-                        <span>Deslocamento: <b className="text-foreground">{fmtHours(t.travelOut + t.travelBack)}</b></span>
-                        <span>KM: <b className="text-foreground">{t.km}</b></span>
+                        <span>Serviço: <b className="text-foreground">{fmtHours(baseT.service)}</b></span>
+                        <span>Deslocamento: <b className="text-foreground">{fmtHours(baseT.travelOut + baseT.travelBack)}</b></span>
+                        <span>KM: <b className="text-foreground">{baseT.km}</b></span>
                       </div>
                     </div>
                     <div className="flex sm:flex-col items-end gap-2 shrink-0">
