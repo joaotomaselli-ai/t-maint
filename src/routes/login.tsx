@@ -84,10 +84,10 @@ function LoginPage() {
       </div>
       
       <div className="w-full max-w-[420px] relative z-10 animate-in fade-in zoom-in-95 duration-700 px-4">
-        {/* Logo and Subtitle */}
         <div className="text-center flex flex-col items-center mb-8">
-          <img src="/logo.png" alt="T-Maint Logo" className="h-36 w-auto drop-shadow-md mb-4" />
-          <h2 className="text-[#003B73] text-lg font-bold tracking-wide">Gestão Inteligente de Manutenção</h2>
+          <img src="/logo.png" alt="T-Maint Logo" className="h-44 w-auto drop-shadow-md mb-2" />
+          <h1 className="text-[#002b5e] text-3xl font-black tracking-tight mb-1">T-MAINT</h1>
+          <h2 className="text-[#003B73] text-sm font-semibold uppercase tracking-widest opacity-80">Gestão Inteligente de Manutenção</h2>
         </div>
 
         {/* Main Card */}
