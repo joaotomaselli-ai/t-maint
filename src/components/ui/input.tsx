@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, ...props }, ref) => {
-    const isSpecialType = type === "email" || type === "password" || type === "url" || type === "date" || type === "time" || type === "number" || type === "tel" || type === "file";
+    const isSpecialType = type === "email" || type === "password" || type === "url" || type === "date" || type === "time" || type === "number" || type === "tel" || type === "file" || (typeof className === "string" && className.includes("normal-case"));
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!isSpecialType && typeof e.target.value === "string") {

@@ -99,7 +99,7 @@ function LoginPage() {
               <div className="space-y-2">
                 <Label className="text-slate-800 font-semibold text-sm">Usuário ou e-mail</Label>
                 <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#1E90FF] focus-within:border-transparent transition-all">
-                  <Input required value={identifier} onChange={e => setIdentifier(e.target.value)} placeholder="Seu usuário ou e-mail" className="h-12 border-0 bg-transparent relative z-10 focus-visible:ring-0 placeholder:text-slate-400" />
+                  <Input required value={identifier} onChange={e => setIdentifier(e.target.value)} placeholder="Seu usuário ou e-mail" className="normal-case h-12 border-0 bg-transparent relative z-10 focus-visible:ring-0 placeholder:text-slate-400" />
                   <Cog className="absolute -right-4 -top-2 h-16 w-16 text-slate-100 z-0 pointer-events-none" strokeWidth={1} />
                 </div>
               </div>
