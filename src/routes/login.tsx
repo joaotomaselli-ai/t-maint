@@ -9,7 +9,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { signInWithUsernameOrEmail, isEmailAllowed } from "@/lib/admin.functions";
-import { Cog, Loader2 } from "lucide-react";
+import { Cog, Loader2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({ component: LoginPage });
