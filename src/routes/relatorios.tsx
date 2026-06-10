@@ -80,19 +80,6 @@ function ClientReport() {
     }
   };
 
-  const generateWord = async () => {
-    if (!client) { toast.error("Selecione um cliente"); return; }
-    if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
-    try {
-      const { exportClientReportDocx } = await import("@/lib/docx-reports");
-      await exportClientReportDocx(client, filtered, settings, { from, to }, sessions);
-      toast.success("Documento Word gerado");
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao gerar Word");
-    }
-  };
-
 
 
   return (
@@ -115,9 +102,6 @@ function ClientReport() {
           <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
             <Button onClick={generate} className="gap-2" size="lg" disabled={!clientId || filtered.length === 0}>
               <FileDown className="h-4 w-4" /> Gerar PDF
-            </Button>
-            <Button onClick={generateWord} variant="outline" className="gap-2" size="lg" disabled={!clientId || filtered.length === 0}>
-              <FileDown className="h-4 w-4" /> Gerar Word
             </Button>
           </div>
         </CardContent>
@@ -264,19 +248,6 @@ function TechnicianReport() {
     }
   };
 
-  const generateWord = async () => {
-    if (!technician) { toast.error("Selecione um técnico"); return; }
-    if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
-    try {
-      const { exportTechnicianReportDocx } = await import("@/lib/docx-reports");
-      await exportTechnicianReportDocx(technician, filtered, clientsById, settings, { from, to }, filterClient, sessions);
-      toast.success("Documento Word gerado");
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao gerar Word");
-    }
-  };
-
 
   return (
     <div className="space-y-6">
@@ -308,9 +279,6 @@ function TechnicianReport() {
           <div className="flex flex-col sm:flex-row gap-2 items-stretch lg:items-end">
             <Button onClick={generate} className="gap-2" size="lg" disabled={!effectiveTechnicianId || filtered.length === 0}>
               <FileDown className="h-4 w-4" /> Gerar PDF
-            </Button>
-            <Button onClick={generateWord} variant="outline" className="gap-2" size="lg" disabled={!effectiveTechnicianId || filtered.length === 0}>
-              <FileDown className="h-4 w-4" /> Gerar Word
             </Button>
           </div>
         </CardContent>
