@@ -621,7 +621,19 @@ function BulletedTextarea({ value, onChange, ...props }: React.ComponentProps<ty
     }
   };
 
-  return <Textarea value={value} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} {...props} />;
+  const handleFocus = () => {
+    if (!value || value.trim() === "") {
+      onChange("• ");
+    }
+  };
+
+  const handleBlur = () => {
+    if (value === "• " || value === "•") {
+      onChange("");
+    }
+  };
+
+  return <Textarea value={value} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleFocus} onBlur={handleBlur} {...props} />;
 }
 
 function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave }: {
