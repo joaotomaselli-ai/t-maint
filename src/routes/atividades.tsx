@@ -591,6 +591,39 @@ type Extras = {
   removedSessionIds: Set<string>;
 };
 
+function BulletedTextarea({ value, onChange, ...props }: React.ComponentProps<typeof Textarea> & { value: string, onChange: (val: string) => void }) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter") {
+      const target = e.target as HTMLTextAreaElement;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const val = target.value;
+
+      const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+      const currentLine = val.substring(lineStart, start);
+
+      if (currentLine.trim() === '•') {
+          e.preventDefault();
+          const newValue = val.substring(0, lineStart) + '\n' + val.substring(end);
+          onChange(newValue);
+          requestAnimationFrame(() => {
+              target.selectionStart = target.selectionEnd = lineStart + 1;
+          });
+          return;
+      }
+
+      e.preventDefault();
+      const newValue = val.substring(0, start) + "\n• " + val.substring(end);
+      onChange(newValue);
+      requestAnimationFrame(() => {
+        target.selectionStart = target.selectionEnd = start + 3;
+      });
+    }
+  };
+
+  return <Textarea value={value} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} {...props} />;
+}
+
 function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   editing: Editing; setEditing: (e: Editing) => void;
@@ -784,7 +817,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
 
           <div className="grid gap-2">
             <Label>{isPreventive ? "Descrição de Atividades Mecânicas" : "Descrição do serviço solicitado / problema"}</Label>
-            <Textarea rows={isPreventive ? 3 : 2} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} />
+            <BulletedTextarea rows={isPreventive ? 3 : 2} value={editing.description} onChange={val => setEditing({ ...editing, description: val })} />
             {isPreventive && (
               <AttachmentBlocks
                 label="Atividades Mecânicas"
@@ -796,7 +829,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
 
           <div className="grid gap-2">
             <Label>{isPreventive ? "Descrição das Atividades Elétricas" : "Resumo dos serviços executados"}</Label>
-            <Textarea rows={3} value={editing.summary} onChange={e => setEditing({ ...editing, summary: e.target.value })} />
+            <BulletedTextarea rows={3} value={editing.summary} onChange={val => setEditing({ ...editing, summary: val })} />
             {isPreventive && (
               <AttachmentBlocks
                 label="Atividades Elétricas"
@@ -809,8 +842,8 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
           {isPreventive && (
             <div className="grid gap-2">
               <Label>Requisições para troca futura</Label>
-              <Textarea rows={2} value={editing.futureReplacements || ""}
-                onChange={e => setEditing({ ...editing, futureReplacements: e.target.value })}
+              <BulletedTextarea rows={2} value={editing.futureReplacements || ""}
+                onChange={val => setEditing({ ...editing, futureReplacements: val })}
                 placeholder="Itens / peças que precisarão ser substituídos no próximo atendimento" />
               <AttachmentBlocks
                 label="Requisições para troca futura"
@@ -916,7 +949,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
 
           <div className="grid gap-2">
             <Label>Observação</Label>
-            <Textarea rows={2} value={editing.observation || ""} onChange={e => setEditing({ ...editing, observation: e.target.value })} />
+            <BulletedTextarea rows={2} value={editing.observation || ""} onChange={val => setEditing({ ...editing, observation: val })} />
           </div>
 
           {editing.id ? (
@@ -1285,8 +1318,8 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
       </div>
       <div className="grid gap-1">
         <Label className="text-xs">Atividades realizadas neste dia</Label>
-        <Textarea rows={2} value={s.activitiesDone}
-          onChange={e => onChange({ activitiesDone: e.target.value })}
+        <BulletedTextarea rows={2} value={s.activitiesDone}
+          onChange={val => onChange({ activitiesDone: val })}
           placeholder="O que foi executado nesta sessão" />
       </div>
       <div className="grid gap-1">
