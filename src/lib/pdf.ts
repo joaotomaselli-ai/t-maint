@@ -400,14 +400,26 @@ export async function exportPreventiveInformativeReport(
   // Header
   doc.setFillColor(40, 60, 110);
   doc.rect(0, 0, pageW, 28, "F");
+
+  let startX = 14;
+  if (settings.logoUrl) {
+    const logoInfo = await fetchImageAsBase64(settings.logoUrl);
+    if (logoInfo) {
+      const maxH = 16;
+      const w = (logoInfo.width / logoInfo.height) * maxH;
+      doc.addImage(logoInfo.dataUrl, "PNG", startX, 6, w, maxH);
+      startX += w + 6;
+    }
+  }
+
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(settings.companyName || "Relatório de Manutenção Preventiva", 14, 12);
+  doc.text(settings.companyName || "Relatório de Manutenção Preventiva", startX, 12);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   const subParts = [settings.cnpj && `CNPJ ${settings.cnpj}`, settings.phone].filter(Boolean);
-  doc.text(subParts.join("  •  "), 14, 19);
+  doc.text(subParts.join("  •  "), startX, 19);
   doc.setFontSize(11);
   doc.text(`OS ${r.orderNumber || "—"}`, pageW - 14, 19, { align: "right" });
 
