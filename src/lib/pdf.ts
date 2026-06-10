@@ -5,7 +5,28 @@ import { ptBR } from "date-fns/locale";
 import type { Client, ServiceReport, Settings, ServiceSession, Technician } from "./api";
 import { reportTotals, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours, reportTotalsWithSessions } from "./api";
 
-export function exportClientReport(
+async function fetchImageAsBase64(url: string): Promise<{ dataUrl: string, width: number, height: number } | null> {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        const img = new Image();
+        img.onload = () => resolve({ dataUrl, width: img.width, height: img.height });
+        img.onerror = () => resolve(null);
+        img.src = dataUrl;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function exportClientReport(
   client: Client,
   reports: ServiceReport[],
   settings: Settings,
@@ -18,15 +39,27 @@ export function exportClientReport(
   // Header
   doc.setFillColor(40, 60, 110);
   doc.rect(0, 0, pageW, 28, "F");
+  
+  let startX = 14;
+  if (settings.logoUrl) {
+    const logoInfo = await fetchImageAsBase64(settings.logoUrl);
+    if (logoInfo) {
+      const maxH = 16;
+      const w = (logoInfo.width / logoInfo.height) * maxH;
+      doc.addImage(logoInfo.dataUrl, "PNG", startX, 6, w, maxH);
+      startX += w + 6;
+    }
+  }
+
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(settings.companyName || "Relatório de Serviços", 14, 12);
+  doc.text(settings.companyName || "Relatório de Serviços", startX, 12);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   const subParts = [settings.cnpj && `CNPJ ${settings.cnpj}`, settings.phone, settings.address].filter(Boolean);
-  doc.text(subParts.join("  •  "), 14, 19);
-  doc.text(`Emitido em ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, 14, 24);
+  doc.text(subParts.join("  •  "), startX, 19);
+  doc.text(`Emitido em ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, startX, 24);
 
   // Client block
   doc.setTextColor(20);
@@ -121,7 +154,7 @@ export function exportClientReport(
   doc.save(`relatorio-${client.name.replace(/\s+/g, "_")}-${format(new Date(), "yyyyMMdd")}.pdf`);
 }
 
-export function exportSingleReport(
+export async function exportSingleReport(
   r: ServiceReport,
   client: Client | undefined,
   settings: Settings,
@@ -133,17 +166,29 @@ export function exportSingleReport(
   const isPreventive = r.type === "preventiva";
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
-
+  // Header
   doc.setFillColor(40, 60, 110);
   doc.rect(0, 0, pageW, 28, "F");
+  
+  let startX = 14;
+  if (settings.logoUrl) {
+    const logoInfo = await fetchImageAsBase64(settings.logoUrl);
+    if (logoInfo) {
+      const maxH = 16;
+      const w = (logoInfo.width / logoInfo.height) * maxH;
+      doc.addImage(logoInfo.dataUrl, "PNG", startX, 6, w, maxH);
+      startX += w + 6;
+    }
+  }
+
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(settings.companyName || "Relatório de Serviço", 14, 12);
+  doc.text(settings.companyName || "Relatório de Serviço", startX, 12);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   const subParts = [settings.cnpj && `CNPJ ${settings.cnpj}`, settings.phone].filter(Boolean);
-  doc.text(subParts.join("  •  "), 14, 19);
+  doc.text(subParts.join("  •  "), startX, 19);
   doc.setFontSize(11);
   doc.text(`OS ${r.orderNumber || "—"}`, pageW - 14, 19, { align: "right" });
 
@@ -493,7 +538,7 @@ export async function exportPreventiveInformativeReport(
 }
 
 
-export function exportTechnicianReport(
+export async function exportTechnicianReport(
   technician: { name: string; hourlyRate: number; kmRate: number; overtimeWeekdayRate: number; overtimeWeekendRate: number },
   reports: ServiceReport[],
   clientsById: Record<string, Client | undefined>,
@@ -507,15 +552,27 @@ export function exportTechnicianReport(
 
   doc.setFillColor(40, 60, 110);
   doc.rect(0, 0, pageW, 28, "F");
+
+  let startX = 14;
+  if (settings.logoUrl) {
+    const logoInfo = await fetchImageAsBase64(settings.logoUrl);
+    if (logoInfo) {
+      const maxH = 16;
+      const w = (logoInfo.width / logoInfo.height) * maxH;
+      doc.addImage(logoInfo.dataUrl, "PNG", startX, 6, w, maxH);
+      startX += w + 6;
+    }
+  }
+
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(settings.companyName || "Relatório de Técnico", 14, 12);
+  doc.text(settings.companyName || "Relatório de Técnico", startX, 12);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   const subParts = [settings.cnpj && `CNPJ ${settings.cnpj}`, settings.phone, settings.address].filter(Boolean);
-  doc.text(subParts.join("  •  "), 14, 19);
-  doc.text(`Emitido em ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, 14, 24);
+  doc.text(subParts.join("  •  "), startX, 19);
+  doc.text(`Emitido em ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, startX, 24);
 
   doc.setTextColor(20);
   doc.setFontSize(13);

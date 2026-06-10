@@ -44,10 +44,23 @@ function bodyCell(text: string, opts: { width?: number; bold?: boolean; fill?: s
     children: [new Paragraph({ alignment: opts.align, children: [txt(text, { bold: opts.bold })] })],
   });
 }
-function buildHeader(settings: Settings, rightText?: string) {
+async function buildHeader(settings: Settings, rightText?: string) {
   const sub = [settings.cnpj && `CNPJ ${settings.cnpj}`, settings.phone, settings.address].filter(Boolean).join("  •  ");
+  
+  const headerChildren: any[] = [];
+  if (settings.logoUrl) {
+    const img = await fetchOrientedImage(settings.logoUrl, "image/png");
+    if (img) {
+      const maxH = 40;
+      const w = (img.w / img.h) * maxH;
+      headerChildren.push(new ImageRun({ type: "png", data: img.data, transformation: { width: Math.round(w), height: maxH } }));
+      headerChildren.push(txt("   ")); // spacing
+    }
+  }
+  headerChildren.push(txt(settings.companyName || "Relatório", { bold: true, size: 32 }));
+
   const out: Paragraph[] = [
-    p([txt(settings.companyName || "Relatório", { bold: true, size: 32 })], { spacingAfter: 40 }),
+    p(headerChildren, { spacingAfter: 40 }),
   ];
   if (sub) out.push(p([txt(sub, { size: 18, color: "555555" })], { spacingAfter: 20 }));
   out.push(p([txt(`Emitido em ${format(new Date(), "dd/MM/yyyy HH:mm")}${rightText ? `   •   ${rightText}` : ""}`, { size: 18, color: "555555" })], { spacingAfter: 200 }));
@@ -109,7 +122,7 @@ export async function exportClientReportDocx(
     : "";
 
   const children: any[] = [
-    ...buildHeader(settings),
+    ...(await buildHeader(settings)),
     p([txt("Relatório por Cliente", { bold: true, size: 28 })], { spacingAfter: 120 }),
     p(`Cliente: ${client.name}`, { bold: true }),
     p(`Valor/hora: ${fmtCurrency(client.hourlyRate)}   •   Valor/km: ${fmtCurrency(client.kmRate)}`),
@@ -180,7 +193,7 @@ export async function exportTechnicianReportDocx(
     : "";
 
   const children: any[] = [
-    ...buildHeader(settings),
+    ...(await buildHeader(settings)),
     p([txt("Relatório por Técnico", { bold: true, size: 28 })], { spacingAfter: 120 }),
     p(`Técnico: ${technician.name}`, { bold: true }),
     p(`Hora: ${fmtCurrency(technician.hourlyRate)}  •  KM: ${fmtCurrency(technician.kmRate)}  •  HE semana: ${fmtCurrency(technician.overtimeWeekdayRate)}  •  HE fim de semana: ${fmtCurrency(technician.overtimeWeekendRate)}`),
@@ -253,7 +266,7 @@ export async function exportSingleReportDocx(
   );
 
   const children: any[] = [
-    ...buildHeader(settings, `OS ${r.orderNumber || "—"}`),
+    ...(await buildHeader(settings, `OS ${r.orderNumber || "—"}`)),
     p([txt("Relatório de Serviço", { bold: true, size: 28 })], { spacingAfter: 120 }),
     infoTable,
     p(""),
@@ -339,7 +352,7 @@ export async function exportSingleReportDocx(
 }
 
 // ===================== PREVENTIVE INFORMATIVE (with photos) =====================
-async function fetchOrientedImage(url: string): Promise<{ data: ArrayBuffer; w: number; h: number } | null> {
+async function fetchOrientedImage(url: string, format: string = "image/jpeg"): Promise<{ data: ArrayBuffer; w: number; h: number } | null> {
   try {
     const res = await fetch(url);
     const blob = await res.blob();
@@ -354,7 +367,7 @@ async function fetchOrientedImage(url: string): Promise<{ data: ArrayBuffer; w: 
     const w = bitmap.width, h = bitmap.height;
     bitmap.close?.();
     const out: Blob = await new Promise((resolve, reject) => {
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error("toBlob failed")), "image/jpeg", 0.85);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error("toBlob failed")), format, format === "image/jpeg" ? 0.85 : undefined);
     });
     const buf = await out.arrayBuffer();
     return { data: buf, w, h };
@@ -379,7 +392,7 @@ export async function exportPreventiveInformativeReportDocx(
   );
 
   const children: any[] = [
-    ...buildHeader(settings, `OS ${r.orderNumber || "—"}`),
+    ...(await buildHeader(settings, `OS ${r.orderNumber || "—"}`)),
     p([txt("Relatório de Manutenção Preventiva", { bold: true, size: 28 })], { spacingAfter: 120 }),
     infoTable,
     p(""),

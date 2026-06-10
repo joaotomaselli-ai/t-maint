@@ -72,7 +72,7 @@ function ClientReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportClientReport } = await import("@/lib/pdf");
-      exportClientReport(client, filtered, settings, { from, to }, sessions);
+      await exportClientReport(client, filtered, settings, { from, to }, sessions);
       toast.success("Relatório gerado");
     } catch (e) {
       console.error(e);
@@ -256,7 +256,7 @@ function TechnicianReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportTechnicianReport } = await import("@/lib/pdf");
-      exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient, sessions);
+      await exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient, sessions);
       toast.success("Relatório gerado");
     } catch (e) {
       console.error(e);

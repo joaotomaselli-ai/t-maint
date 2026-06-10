@@ -11,7 +11,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
 import { UsersManager } from "@/components/UsersManager";
 import { toast } from "sonner";
-import { LogOut } from "lucide-react";
+import { LogOut, ImagePlus, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/configuracoes")({ component: Configuracoes });
 
@@ -21,7 +22,29 @@ function Configuracoes() {
   const { isAdmin, isMaster, companyId } = useAccess();
   const canManageUsers = isAdmin && !isMaster;
   const [form, setForm] = useState(settings);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  
   useEffect(() => setForm(settings), [settings]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingLogo(true);
+      const ext = file.name.split('.').pop();
+      const fileName = `${companyId || user?.id}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('company-logos').upload(fileName, file);
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from('company-logos').getPublicUrl(fileName);
+      setForm(prev => ({ ...prev, logoUrl: data.publicUrl }));
+      toast.success("Logo carregada com sucesso. Não esqueça de Salvar as configurações.");
+    } catch (err: any) {
+      toast.error("Erro ao carregar logo: " + err.message);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const save = async () => {
     try {
@@ -50,6 +73,21 @@ function Configuracoes() {
           <Card>
             <CardHeader><CardTitle>Dados da empresa / técnico</CardTitle></CardHeader>
             <CardContent className="grid gap-4">
+              <div className="grid gap-2">
+                <Label>Logo da Empresa nos Relatórios</Label>
+                <div className="flex items-center gap-4">
+                  {form.logoUrl && (
+                    <div className="h-16 w-32 rounded-md border flex items-center justify-center overflow-hidden bg-slate-50">
+                      <img src={form.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Input type="file" accept="image/png, image/jpeg" onChange={handleLogoUpload} disabled={uploadingLogo} />
+                    <p className="text-xs text-muted-foreground mt-1">Recomendado: Imagem PNG com fundo transparente.</p>
+                  </div>
+                  {uploadingLogo && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+                </div>
+              </div>
               <div className="grid gap-2">
                 <Label>Nome da empresa</Label>
                 <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Ex: T-Maint" />

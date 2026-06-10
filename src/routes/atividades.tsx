@@ -499,7 +499,7 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivi
   const exportOperational = async (includeValues: boolean) => {
     try {
       const { exportSingleReport } = await import("@/lib/pdf");
-      exportSingleReport(r, client, settings, { includeValues, sessions, technicians });
+      await exportSingleReport(r, client, settings, { includeValues, sessions, technicians });
       onClose();
     } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
   };
