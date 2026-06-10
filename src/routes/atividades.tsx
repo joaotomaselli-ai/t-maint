@@ -467,6 +467,9 @@ function Atividades() {
   );
 }
 
+import { useReactToPrint } from "react-to-print";
+import { OSReportPrint } from "@/components/reports/OSReportPrint";
+
 function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivity, technicians }: {
   state: PdfChoice;
   onClose: () => void;
@@ -475,6 +478,31 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivi
   sessionsByActivity: Map<string, ServiceSession[]>;
   technicians: Technician[];
 }) {
+  const [printProps, setPrintProps] = useState<{ includeValues: boolean; photos: { kind: string; url: string }[] } | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+  
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `OS-${state.report?.orderNumber || state.report?.id}`,
+    pageStyle: `
+      @page { size: A4; margin: 10mm; }
+      @media print { 
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+      }
+    `,
+    onAfterPrint: () => {
+      setPrintProps(null);
+      onClose();
+    }
+  });
+
+  useEffect(() => {
+    if (printProps) {
+      const timer = setTimeout(() => handlePrint(), 800); // give time for images to load
+      return () => clearTimeout(timer);
+    }
+  }, [printProps, handlePrint]);
+
   if (!state.report) {
     return <Dialog open={state.open} onOpenChange={onClose}><DialogContent /></Dialog>;
   }
@@ -484,33 +512,37 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivi
 
   const exportInformative = async () => {
     try {
-      const { exportPreventiveInformativeReport } = await import("@/lib/pdf");
-      await exportPreventiveInformativeReport(r, client, settings);
-      onClose();
-    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
+      toast.loading("Preparando relatório e fotos...", { id: "pdf-gen" });
+      const { listAttachments, getAttachmentUrl } = await import("@/lib/api");
+      const atts = await listAttachments(r.id);
+      const photos = await Promise.all(atts.map(async a => ({ kind: a.kind, url: await getAttachmentUrl(a.storagePath) })));
+      setPrintProps({ includeValues: false, photos });
+      toast.success("Pronto para imprimir!", { id: "pdf-gen" });
+    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF", { id: "pdf-gen" }); }
   };
   const exportInformativeWord = async () => {
     try {
+      toast.loading("Gerando Word...", { id: "word-gen" });
       const { exportPreventiveInformativeReportDocx } = await import("@/lib/docx-reports");
       await exportPreventiveInformativeReportDocx(r, client, settings);
+      toast.success("Documento Word gerado", { id: "word-gen" });
       onClose();
-    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar Word"); }
+    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar Word", { id: "word-gen" }); }
   };
-  const exportOperational = async (includeValues: boolean) => {
-    try {
-      const { exportSingleReport } = await import("@/lib/pdf");
-      await exportSingleReport(r, client, settings, { includeValues, sessions, technicians });
-      onClose();
-    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF"); }
+  const exportOperational = (includeValues: boolean) => {
+    toast.loading("Preparando relatório...", { id: "pdf-gen" });
+    setPrintProps({ includeValues, photos: [] });
+    setTimeout(() => toast.success("Pronto para imprimir!", { id: "pdf-gen" }), 500);
   };
   const exportOperationalWord = async (includeValues: boolean) => {
     try {
+      toast.loading("Gerando Word...", { id: "word-gen" });
       const { exportSingleReportDocx } = await import("@/lib/docx-reports");
       await exportSingleReportDocx(r, client, settings, { includeValues, sessions, technicians });
+      toast.success("Documento Word gerado", { id: "word-gen" });
       onClose();
-    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar Word"); }
+    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar Word", { id: "word-gen" }); }
   };
-
 
   return (
     <Dialog open={state.open} onOpenChange={onClose}>
@@ -551,6 +583,20 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivi
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
         </DialogFooter>
       </DialogContent>
+      <div className="hidden">
+        {printProps && (
+          <OSReportPrint 
+            ref={printRef}
+            report={r as ServiceReport}
+            client={client}
+            settings={settings}
+            sessions={sessions}
+            technicians={technicians}
+            includeValues={printProps.includeValues}
+            photos={printProps.photos}
+          />
+        )}
+      </div>
     </Dialog>
   );
 }
