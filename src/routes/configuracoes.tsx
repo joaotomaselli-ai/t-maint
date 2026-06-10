@@ -77,8 +77,18 @@ function Configuracoes() {
                 <Label>Logo da Empresa nos Relatórios</Label>
                 <div className="flex items-center gap-4">
                   {form.logoUrl && (
-                    <div className="h-16 w-32 rounded-md border flex items-center justify-center overflow-hidden bg-slate-50">
-                      <img src={form.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                    <div className="flex flex-col gap-2">
+                      <div className="h-16 w-32 rounded-md border flex items-center justify-center overflow-hidden bg-slate-50 relative group">
+                        <img src={form.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                      </div>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => setForm(prev => ({ ...prev, logoUrl: "" }))}
+                        className="w-full text-xs"
+                      >
+                        Remover Logo
+                      </Button>
                     </div>
                   )}
                   <div className="flex-1">
