@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Trash2, UserPlus, Mail, Pencil } from "lucide-react";
 import { format } from "date-fns";
@@ -24,7 +24,7 @@ import { format } from "date-fns";
 type EditTarget = {
   userId: string;
   email: string;
-  role: "admin" | "user";
+  role: "admin" | "user" | "technician";
   allowedFeatures: string[] | null;
 };
 
@@ -177,7 +177,7 @@ export function UsersManager({
                     setEditing({
                       userId: u.userId,
                       email: u.email,
-                      role: u.role as "admin" | "user",
+                      role: u.role as "admin" | "user" | "technician",
                       allowedFeatures: u.allowedFeatures,
                     });
                     setEditPwd("");
@@ -230,7 +230,10 @@ export function UsersManager({
 
       <Dialog open={!!editing} onOpenChange={(o) => { if (!o) { setEditing(null); setEditPwd(""); } }}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>Editar usuário</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Editar usuário</DialogTitle>
+            <DialogDescription className="sr-only">Edite as informações de acesso do usuário.</DialogDescription>
+          </DialogHeader>
           {editing && (
             <div className="grid gap-4">
               <div className="grid gap-1">
@@ -243,10 +246,11 @@ export function UsersManager({
               </div>
               <div className="grid gap-1">
                 <Label>Papel</Label>
-                <Select value={editing.role} onValueChange={(v: "admin" | "user") => setEditing({ ...editing, role: v })}>
+                <Select value={editing.role} onValueChange={(v: "admin" | "user" | "technician") => setEditing({ ...editing, role: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="technician">Técnico</SelectItem>
                     {allowRoleAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                   </SelectContent>
                 </Select>

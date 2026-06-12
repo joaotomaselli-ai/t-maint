@@ -421,7 +421,7 @@ export const updateSubUser = createServerFn({ method: "POST" })
         companyId: z.string().uuid().optional(),
         email: z.string().trim().email().optional(),
         password: z.string().min(6).max(128).optional(),
-        role: z.enum(["admin", "user"]).optional(),
+        role: z.enum(["admin", "user", "technician"]).optional(),
         allowedFeatures: z.array(z.string()).nullable().optional(),
       })
       .parse(d),
