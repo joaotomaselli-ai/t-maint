@@ -785,11 +785,21 @@ export const getCompanyProfileData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ companyId: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    // We use supabaseAdmin to bypass RLS, allowing technicians to read admin profiles.
+    // 1. Get the owner of the company
+    const { data: company, error: companyErr } = await supabaseAdmin
+      .from("companies")
+      .select("owner_user_id")
+      .eq("id", data.companyId)
+      .maybeSingle();
+      
+    if (companyErr) throw new Error(companyErr.message);
+    if (!company) return { companyName: "", technicianName: "" };
+
+    // 2. Get the profile of the owner to bypass RLS for technicians
     const { data: profile, error } = await supabaseAdmin
       .from("profiles")
       .select("*")
-      .eq("id", data.companyId)
+      .eq("id", company.owner_user_id)
       .maybeSingle();
       
     if (error) throw new Error(error.message);
