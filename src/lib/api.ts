@@ -689,8 +689,10 @@ export function technicianPayForReport(
     return { totalHours: 0, regularHours: 0, ovtWk: 0, ovtWe: 0, hoursValue: 0, kmValue: 0, km: 0, total: 0 };
   }
   const primaryMatches = (r.technician || "").trim().toLowerCase() === technician.name.trim().toLowerCase();
+  const acts = activityTechnicians.filter(at => at.activityId === r.id && at.technicianId === technician.id);
+  
   let totalHours = 0, regularHours = 0, ovtWk = 0, ovtWe = 0, hoursValue = 0, kmValue = 0, km = 0;
-  if (primaryMatches) {
+  if (primaryMatches && acts.length === 0) {
     const base = technicianTotals(r, technician);
     totalHours += base.totalHours; regularHours += base.regularHours;
     ovtWk += base.ovtWk; ovtWe += base.ovtWe;
@@ -698,7 +700,6 @@ export function technicianPayForReport(
     km += r.km || 0;
   }
   
-  const acts = activityTechnicians.filter(at => at.activityId === r.id && at.technicianId === technician.id);
   for (const at of acts) {
     const t = activityTechnicianTotals(r, at, technician);
     totalHours += t.totalHours; regularHours += t.regularHours;

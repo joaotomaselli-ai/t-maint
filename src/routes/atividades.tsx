@@ -722,7 +722,8 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
       return acc;
     }, { totalHours: 0, hoursValue: 0, kmValue: 0, total: 0, ovtWk: 0, ovtWe: 0 });
     
-    if (singleTechnician && (!isTechnician || !myTechId || singleTechnician.id === myTechId)) {
+    const primaryInActs = singleTechnician && actsForReport.some(at => at.technicianId === singleTechnician.id);
+    if (singleTechnician && !primaryInActs && (!isTechnician || !myTechId || singleTechnician.id === myTechId)) {
       base.totalHours += ttSingleBase.totalHours;
       base.hoursValue += ttSingleBase.hoursValue;
       base.kmValue += ttSingleBase.kmValue;
