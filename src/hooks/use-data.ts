@@ -11,6 +11,7 @@ import {
   type ClientPayment, type TechnicianPayment, type ActivityTechnician,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { useAccess } from "@/hooks/use-access";
 
 export function useAllActivityTechnicians() {
   const { user } = useAuth();
