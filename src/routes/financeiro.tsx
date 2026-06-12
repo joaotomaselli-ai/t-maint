@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   useClients, useReports, useTechnicians, useAllSessions,
-  useClientPayments, useTechnicianPayments,
+  useClientPayments, useTechnicianPayments, useAllActivityTechnicians,
 } from "@/hooks/use-data";
 import {
   reportTotalsWithSessions, technicianPayForReport, fmtCurrency, fmtHours,
@@ -319,6 +319,7 @@ function TechnicianFinance() {
   const { reports } = useReports();
   const { technicians } = useTechnicians();
   const { sessions } = useAllSessions();
+  const { activityTechnicians } = useAllActivityTechnicians();
   const { payments, markPaid, unmarkPaid } = useTechnicianPayments();
   const { isTechnician } = useAccess();
   const { user } = useAuth();
@@ -345,13 +346,14 @@ function TechnicianFinance() {
   const filtered = useMemo(() => {
     if (!technician) return [];
     const name = technician.name.trim().toLowerCase();
-    const activityIdsWithSession = new Set(
-      sessions.filter(s => s.technicianId === technician.id).map(s => s.activityId),
-    );
+    const activityIdsWithSessionOrAct = new Set([
+      ...sessions.filter(s => s.technicianId === technician.id).map(s => s.activityId),
+      ...activityTechnicians.filter(at => at.technicianId === technician.id).map(at => at.activityId),
+    ]);
     return reports
       .filter(r =>
         (r.technician || "").trim().toLowerCase() === name ||
-        activityIdsWithSession.has(r.id),
+        activityIdsWithSessionOrAct.has(r.id),
       )
       .filter(r => clientId === ALL || r.clientId === clientId)
       .filter(r => !from || r.date >= from)
@@ -364,19 +366,19 @@ function TechnicianFinance() {
         return statusFilter === "paid" ? paid : !paid;
       })
       .sort((a, b) => a.date.localeCompare(b.date));
-  }, [reports, technician, clientId, from, to, osFrom, osTo, statusFilter, sessions, payByKey]);
+  }, [reports, technician, clientId, from, to, osFrom, osTo, statusFilter, sessions, activityTechnicians, payByKey]);
 
   const totals = useMemo(() => {
     let total = 0, paid = 0, pending = 0, hours = 0;
     if (!technician) return { total, paid, pending, hours };
     for (const r of filtered) {
-      const t = technicianPayForReport(r, sessions, technician);
+      const t = technicianPayForReport(r, sessions, technician, activityTechnicians);
       total += t.total; hours += t.totalHours;
       if (payByKey.has(payKey(r.id, technician.id))) paid += t.total;
       else pending += t.total;
     }
     return { total, paid, pending, hours };
-  }, [filtered, sessions, technician, payByKey]);
+  }, [filtered, sessions, technician, activityTechnicians, payByKey]);
 
   const togglePaid = async (activityId: string, amount: number) => {
     if (!technician) return;
@@ -471,7 +473,7 @@ function TechnicianFinance() {
                       <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">Nenhuma OS encontrada</td></tr>
                     )}
                     {filtered.map(r => {
-                      const t = technicianPayForReport(r, sessions, technician);
+                      const t = technicianPayForReport(r, sessions, technician, activityTechnicians);
                       const paid = payByKey.has(payKey(r.id, technician.id));
                       return (
                         <tr key={r.id} className={paid ? "bg-success/5" : ""}>

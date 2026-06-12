@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
+import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { reportTotalsWithSessions, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useAccess } from "@/hooks/use-access";
@@ -180,6 +180,7 @@ function TechnicianReport() {
   const { reports } = useReports();
   const { settings } = useSettings();
   const { sessions } = useAllSessions();
+  const { activityTechnicians } = useAllActivityTechnicians();
   const { payments: techPays } = useTechnicianPayments();
   const { isTechnician } = useAccess();
   const { user } = useAuth();
@@ -197,32 +198,28 @@ function TechnicianReport() {
   const clientsById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
   const filterClient = clientId !== ALL_CLIENTS ? clients.find(c => c.id === clientId) : undefined;
 
-  // Match by technician name on the primary report OR by technicianId on any session of the report
   const filtered = useMemo(() => {
     if (!technician) return [];
     const name = technician.name.trim().toLowerCase();
-    const activityIdsWithSession = new Set(
-      sessions.filter(s => s.technicianId === technician.id).map(s => s.activityId),
-    );
-    return reports
-      .filter(r =>
-        (r.technician || "").trim().toLowerCase() === name ||
-        activityIdsWithSession.has(r.id),
-      )
-      .filter(r => clientId === ALL_CLIENTS || r.clientId === clientId)
-      .filter(r => !from || r.date >= from)
-      .filter(r => !to || r.date <= to)
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }, [reports, technician, clientId, from, to, sessions]);
+    return reports.filter(r =>
+      (r.technician || "").trim().toLowerCase() === name ||
+      sessions.some(s => s.activityId === r.id && s.technicianId === technician.id) ||
+      activityTechnicians.some(at => at.activityId === r.id && at.technicianId === technician.id)
+    )
+    .filter(r => clientId === ALL_CLIENTS || r.clientId === clientId)
+    .filter(r => !from || r.date >= from)
+    .filter(r => !to || r.date <= to)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  }, [reports, technician, clientId, from, to, sessions, activityTechnicians]);
 
   const totalsByReport = useMemo(() => {
     const map = new Map<string, ReturnType<typeof technicianPayForReport>>();
     if (!technician) return map;
     for (const r of filtered) {
-      map.set(r.id, technicianPayForReport(r, sessions, technician));
+      map.set(r.id, technicianPayForReport(r, sessions, technician, activityTechnicians));
     }
     return map;
-  }, [filtered, sessions, technician]);
+  }, [filtered, sessions, technician, activityTechnicians]);
 
   const totals = useMemo(() => {
     let hours = 0, ovtWk = 0, ovtWe = 0, km = 0, total = 0;

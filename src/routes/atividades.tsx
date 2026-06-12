@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
+import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
 import {
@@ -57,6 +57,7 @@ function Atividades() {
   const { reports, addReport, updateReport, deleteReport } = useReports();
   const { settings } = useSettings();
   const { sessions: allSessions } = useAllSessions();
+  const { activityTechnicians: allActivityTechnicians } = useAllActivityTechnicians();
   const { payments: clientPays } = useClientPayments();
   const { payments: techPays } = useTechnicianPayments();
   const paidByClient = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
@@ -92,14 +93,22 @@ function Atividades() {
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
   const techMap = useMemo(() => new Map(technicians.map(t => [t.id, t])), [technicians]);
   const sessionsByActivity = useMemo(() => {
-    const m = new Map<string, ServiceSession[]>();
+    const map = new Map<string, ServiceSession[]>();
     for (const s of allSessions) {
-      const arr = m.get(s.activityId) ?? [];
-      arr.push(s);
-      m.set(s.activityId, arr);
+      if (!map.has(s.activityId)) map.set(s.activityId, []);
+      map.get(s.activityId)!.push(s);
     }
-    return m;
+    return map;
   }, [allSessions]);
+
+  const actByActivity = useMemo(() => {
+    const map = new Map<string, ActivityTechnician[]>();
+    for (const a of allActivityTechnicians) {
+      if (!map.has(a.activityId)) map.set(a.activityId, []);
+      map.get(a.activityId)!.push(a);
+    }
+    return map;
+  }, [allActivityTechnicians]);
 
   const filtered = useMemo(() => {
     return [...reports]
@@ -196,7 +205,6 @@ function Atividades() {
       if (techs.length > 4) { toast.error("Máximo de 4 técnicos"); return; }
     }
 
-    // Validate additional work sessions: date + technician are required
     const allSessions = [
       ...editingExtras.sessions
         .filter(s => !editingExtras.removedSessionIds.has(s.id))
@@ -211,7 +219,6 @@ function Atividades() {
 
     try {
       let activityId = editing.id;
-      // For preventiva, mirror first technician name to legacy column for reports compat
       const firstTech = editingExtras.activityTechnicians[0];
       const techName = editing.type === "preventiva"
         ? (firstTech ? (techMap.get(firstTech.technicianId)?.name ?? "") : "")
@@ -230,18 +237,15 @@ function Atividades() {
       }
 
       if (editing.type === "preventiva" && activityId && user) {
-        // Replace technicians
         await replaceActivityTechnicians(user.id, activityId,
           editingExtras.activityTechnicians.filter(t => t.technicianId)
             .map((t, i) => ({ ...t, position: i + 1 })));
 
-        // Delete removed attachments
         for (const att of editingExtras.existingAttachments) {
           if (editingExtras.removedAttachmentIds.has(att.id)) {
             try { await deleteAttachment(att); } catch (e) { console.error(e); }
           }
         }
-        // Upload pending
         for (const p of editingExtras.pendingAttachments) {
           try { await uploadAttachment(user.id, activityId, p.kind, p.file); }
           catch (e: any) {
@@ -252,7 +256,6 @@ function Atividades() {
         }
       }
 
-      // Persist sessions (add / update / remove)
       if (activityId && user) {
         try {
           for (const id of editingExtras.removedSessionIds) {
@@ -289,13 +292,14 @@ function Atividades() {
   const totals = useMemo(() => {
     return filtered.reduce((acc, r) => {
       const sess = sessionsByActivity.get(r.id) ?? [];
+      const acts = actByActivity.get(r.id) ?? [];
       const t = isTechnician && myTechId
-        ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
+        ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
         : reportTotalsWithSessions(r, sess, clientMap.get(r.clientId));
       acc.hours += t.totalHours; acc.value += t.total; acc.km += t.km;
       return acc;
     }, { hours: 0, value: 0, km: 0 });
-  }, [filtered, clientMap, sessionsByActivity, isTechnician, myTechId, technicians]);
+  }, [filtered, clientMap, sessionsByActivity, actByActivity, isTechnician, myTechId, technicians]);
 
   return (
     <div className="space-y-6">
@@ -379,9 +383,10 @@ function Atividades() {
           {paginated.map(r => {
             const c = clientMap.get(r.clientId);
             const sess = sessionsByActivity.get(r.id) ?? [];
+            const acts = actByActivity.get(r.id) ?? [];
             const baseT = reportTotalsWithSessions(r, sess, c);
             const t = isTechnician && myTechId
-              ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
+              ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
               : baseT;
             return (
               <Card key={r.id} className="hover:shadow-elegant transition-shadow">
@@ -498,7 +503,7 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivi
 
   useEffect(() => {
     if (printProps) {
-      const timer = setTimeout(() => handlePrint(), 800); // give time for images to load
+      const timer = setTimeout(() => handlePrint(), 800);
       return () => clearTimeout(timer);
     }
   }, [printProps, handlePrint]);
@@ -645,11 +650,11 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
   const money = useMoney();
   const { user } = useAuth();
   const { isTechnician } = useAccess();
+  const { activityTechnicians: allActivityTechnicians } = useAllActivityTechnicians();
   const client = clients.find((c) => c.id === editing.clientId);
   const isPreventive = editing.type === "preventiva";
   const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
 
-  // Effective sessions = existing (minus removed, with edits applied) + new
   const effectiveSessions = useMemo<ServiceSession[]>(() => {
     const out: ServiceSession[] = [];
     for (const s of extras.sessions) {
@@ -662,12 +667,15 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
     return out;
   }, [extras.sessions, extras.editedSessions, extras.removedSessionIds, extras.newSessions]);
 
-  // Corretive apuração uses single technician + per-report overtime
+  const actsForReport = useMemo(() => {
+    if (editing.id) return allActivityTechnicians.filter(a => a.activityId === editing.id);
+    return extras.activityTechnicians;
+  }, [editing.id, allActivityTechnicians, extras.activityTechnicians]);
+
   const singleTechnician = technicians.find((tc) => tc.name === editing.technician);
   const t = reportTotalsWithSessions(editing as ServiceReport, effectiveSessions, client);
   const ttSingleBase = technicianTotals(editing as ServiceReport, singleTechnician);
 
-  // Sum session contributions per their assigned technician
   const sessionsTechTotal = useMemo(() => {
     return effectiveSessions.reduce((acc, s) => {
       if (isTechnician && myTechId && s.technicianId !== myTechId) return acc;
@@ -694,10 +702,8 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
     ovtWe: ttSingleBase.ovtWe + sessionsTechTotal.ovtWe,
   };
 
-  // Preventive apuração: sum across all attached technicians + sessions
-  const preventiveTechTotals = useMemo(() => {
-    if (!isPreventive) return null;
-    const base = extras.activityTechnicians.reduce((acc, at) => {
+  const combinedTechTotals = useMemo(() => {
+    const base = actsForReport.reduce((acc, at) => {
       if (isTechnician && myTechId && at.technicianId !== myTechId) return acc;
       const tech = technicians.find(t => t.id === at.technicianId);
       if (!tech) return acc;
@@ -715,6 +721,16 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
       acc.ovtWe += tt.ovtWe;
       return acc;
     }, { totalHours: 0, hoursValue: 0, kmValue: 0, total: 0, ovtWk: 0, ovtWe: 0 });
+    
+    if (singleTechnician && (!isTechnician || !myTechId || singleTechnician.id === myTechId)) {
+      base.totalHours += ttSingleBase.totalHours;
+      base.hoursValue += ttSingleBase.hoursValue;
+      base.kmValue += ttSingleBase.kmValue;
+      base.total += ttSingleBase.total;
+      base.ovtWk += ttSingleBase.ovtWk;
+      base.ovtWe += ttSingleBase.ovtWe;
+    }
+
     base.totalHours += sessionsTechTotal.totalHours;
     base.hoursValue += sessionsTechTotal.hoursValue;
     base.kmValue += sessionsTechTotal.kmValue;
@@ -722,10 +738,10 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
     base.ovtWk += sessionsTechTotal.ovtWk;
     base.ovtWe += sessionsTechTotal.ovtWe;
     return base;
-  }, [isPreventive, extras.activityTechnicians, technicians, editing, sessionsTechTotal, isTechnician, myTechId]);
+  }, [actsForReport, technicians, editing, sessionsTechTotal, isTechnician, myTechId, singleTechnician, ttSingleBase]);
 
-  const techTotalsForApur = isPreventive ? preventiveTechTotals! : ttSingle;
-  const showApur = client || (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) || effectiveSessions.length > 0;
+  const techTotalsForApur = combinedTechTotals;
+  const showApur = client || actsForReport.length > 0 || singleTechnician || effectiveSessions.length > 0;
   const profit = client && techTotalsForApur ? t.hoursValue - techTotalsForApur.hoursValue : 0;
 
   const addTechnician = () => {
@@ -751,9 +767,8 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
     }));
   };
 
-  // When switching to preventive, seed first technician from legacy field
   useEffect(() => {
-    if (isPreventive && extras.activityTechnicians.length === 0 && !editing.id) {
+    if (extras.activityTechnicians.length === 0 && !editing.id) {
       const t = technicians.find(t => t.name === editing.technician);
       if (t) {
         setExtras(prev => ({
@@ -775,7 +790,6 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
         }));
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPreventive, isTechnician, myTechId]);
 
   return (
@@ -972,7 +986,6 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
             </div>
           )}
 
-
           {showApur && techTotalsForApur && (
             <Card className="bg-primary/5 border-primary/20">
               <CardHeader className="pb-2"><CardTitle className="text-base">Apuração</CardTitle></CardHeader>
@@ -988,10 +1001,10 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                     </div>
                   </div>
                 )}
-                {(isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) && (
+                {(extras.activityTechnicians.length > 0 || singleTechnician) && (
                   <div className="pt-3 border-t border-primary/20">
                     <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                      A repassar para {isPreventive ? `${extras.activityTechnicians.length} técnico(s)` : "o técnico"}
+                      A repassar para {extras.activityTechnicians.length > 0 ? `${Math.max(extras.activityTechnicians.length, 1)} técnico(s)` : "o técnico"}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div><div className="text-muted-foreground text-xs">Horas totais</div><div className="font-semibold">{fmtHours(techTotalsForApur.totalHours)}</div></div>
@@ -1001,7 +1014,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                     </div>
                   </div>
                 )}
-                {!isTechnician && client && techTotalsForApur && (isPreventive ? extras.activityTechnicians.length > 0 : singleTechnician) && (
+                {!isTechnician && client && techTotalsForApur && (extras.activityTechnicians.length > 0 || singleTechnician) && (
                   <div className="pt-3 border-t border-primary/20 flex items-center justify-between">
                     <div className="text-xs font-semibold text-muted-foreground uppercase">Lucro em horas (receber − pagar)</div>
                     <div className={`font-bold text-lg ${profit >= 0 ? "text-success" : "text-destructive"}`}>{money(profit)}</div>

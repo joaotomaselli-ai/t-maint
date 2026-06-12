@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useClients, useReports, useTechnicians, useAllSessions } from "@/hooks/use-data";
+import { useClients, useReports, useTechnicians, useAllSessions, useAllActivityTechnicians } from "@/hooks/use-data";
 import { reportTotalsWithSessions, technicianPayForReport, fmtHours } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useAccess } from "@/hooks/use-access";
@@ -28,6 +28,7 @@ function CompanyDashboard() {
   const { reports } = useReports();
   const { technicians } = useTechnicians();
   const { sessions } = useAllSessions();
+  const { activityTechnicians } = useAllActivityTechnicians();
   const money = useMoney();
   const { isTechnician } = useAccess();
   const { user } = useAuth();
@@ -47,9 +48,10 @@ function CompanyDashboard() {
 
   const stats = monthReports.reduce((acc, r) => {
     const sess = sessions.filter(s => s.activityId === r.id);
+    const acts = activityTechnicians.filter(a => a.activityId === r.id);
     const c = clientMap.get(r.clientId);
     const t = isTechnician && myTechId
-      ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
+      ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
       : reportTotalsWithSessions(r, sess, c);
     acc.hours += t.totalHours;
     acc.value += t.total;
@@ -101,8 +103,9 @@ function CompanyDashboard() {
               {recent.map(r => {
                 const c = clientMap.get(r.clientId);
                 const sess = sessions.filter(s => s.activityId === r.id);
+                const acts = activityTechnicians.filter(a => a.activityId === r.id);
                 const t = isTechnician && myTechId
-                  ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId))
+                  ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
                   : reportTotalsWithSessions(r, sess, c);
                 const actualKm = "km" in t ? (t as any).km : (r.km || 0);
                 return (

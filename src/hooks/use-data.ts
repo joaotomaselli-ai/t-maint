@@ -4,13 +4,23 @@ import {
   listReports, createReport, updateReport, deleteReport,
   listTechnicians, createTechnician, updateTechnician, deleteTechnician,
   getProfile, upsertProfile,
-  listAllSessions,
+  listAllSessions, listAllActivityTechnicians,
   listClientPayments, upsertClientPayment, deleteClientPayment,
   listTechnicianPayments, upsertTechnicianPayment, deleteTechnicianPayment,
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
-  type ClientPayment, type TechnicianPayment,
+  type ClientPayment, type TechnicianPayment, type ActivityTechnician,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+
+export function useAllActivityTechnicians() {
+  const { user } = useAuth();
+  const q = useQuery({
+    queryKey: ["activity_technicians", user?.id],
+    queryFn: listAllActivityTechnicians,
+    enabled: !!user,
+  });
+  return { activityTechnicians: (q.data ?? []) as ActivityTechnician[], isLoading: q.isLoading };
+}
 
 export function useClients() {
   const { user } = useAuth();

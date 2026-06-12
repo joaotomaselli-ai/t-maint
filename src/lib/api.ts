@@ -335,6 +335,12 @@ export async function listActivityTechnicians(activityId: string): Promise<Activ
   return (data ?? []).map(fromActTech);
 }
 
+export async function listAllActivityTechnicians(): Promise<ActivityTechnician[]> {
+  const { data, error } = await supabase.from("activity_technicians").select("*");
+  if (error) throw error;
+  return (data ?? []).map(fromActTech);
+}
+
 export async function replaceActivityTechnicians(
   userId: string, activityId: string, rows: ActivityTechnician[]
 ): Promise<void> {
@@ -653,11 +659,31 @@ export function technicianTotalsWithSessions(
   return { totalHours, regularHours, ovtWk, ovtWe, hoursValue, kmValue, km, total: hoursValue + kmValue };
 }
 
-/** Pay-per-report for a technician: includes base row only if primary technician matches, plus any sessions assigned to them. */
+export function activityTechnicianTotals(r: ServiceReport, at: ActivityTechnician, technician?: Technician) {
+  const travelOut = diffHours(r.travelOutStart, r.travelOutEnd);
+  const service = diffHours(r.serviceStart, r.serviceEnd);
+  const travelBack = diffHours(r.travelBackStart, r.travelBackEnd);
+  const discount = Math.max(0, r.discountHours || 0);
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
+  const ovtWk = Math.max(0, at.overtimeWeekdayHours || 0);
+  const ovtWe = Math.max(0, at.overtimeWeekendHours || 0);
+  const specialTotal = Math.min(totalHours, ovtWk + ovtWe);
+  const regularHours = Math.max(0, totalHours - specialTotal);
+  const hourlyRate = technician?.isSalaried ? 0 : (technician?.hourlyRate ?? 0);
+  const kmRate = technician?.kmRate ?? 0;
+  const ovtWkRate = technician?.isSalaried ? 0 : (technician?.overtimeWeekdayRate ?? 0);
+  const ovtWeRate = technician?.isSalaried ? 0 : (technician?.overtimeWeekendRate ?? 0);
+  const hoursValue = regularHours * hourlyRate + ovtWk * ovtWkRate + ovtWe * ovtWeRate;
+  const kmValue = (r.km || 0) * kmRate;
+  return { totalHours, regularHours, discount, ovtWk, ovtWe, hoursValue, kmValue, total: hoursValue + kmValue };
+}
+
+/** Pay-per-report for a technician: includes base row only if primary technician matches, plus any sessions or activity-technicians assigned to them. */
 export function technicianPayForReport(
   r: ServiceReport,
   sessions: ServiceSession[],
   technician?: Technician,
+  activityTechnicians: ActivityTechnician[] = [],
 ) {
   if (!technician) {
     return { totalHours: 0, regularHours: 0, ovtWk: 0, ovtWe: 0, hoursValue: 0, kmValue: 0, km: 0, total: 0 };
@@ -671,6 +697,16 @@ export function technicianPayForReport(
     hoursValue += base.hoursValue; kmValue += base.kmValue;
     km += r.km || 0;
   }
+  
+  const acts = activityTechnicians.filter(at => at.activityId === r.id && at.technicianId === technician.id);
+  for (const at of acts) {
+    const t = activityTechnicianTotals(r, at, technician);
+    totalHours += t.totalHours; regularHours += t.regularHours;
+    ovtWk += t.ovtWk; ovtWe += t.ovtWe;
+    hoursValue += t.hoursValue; kmValue += t.kmValue;
+    km += r.km || 0;
+  }
+
   const extras = sessions.filter(s => s.activityId === r.id && s.technicianId === technician.id);
   for (const s of extras) {
     const t = sessionTechnicianTotals(s, technician);
