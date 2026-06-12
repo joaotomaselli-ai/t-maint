@@ -11,10 +11,11 @@ type OSReportPrintProps = {
   technicians?: Technician[];
   includeValues?: boolean;
   photos?: { kind: string; url: string }[];
+  technicianName?: string;
 };
 
 export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
-  report, client, settings, sessions = [], technicians = [], includeValues = false, photos = []
+  report, client, settings, sessions = [], technicians = [], includeValues = false, photos = [], technicianName
 }, ref) => {
   const isPreventive = report.type === "preventiva";
   const t = reportTotals(report, client);
@@ -176,11 +177,11 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
               <h4 className="text-md font-semibold text-slate-600 mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-slate-400"></span> Antes do Serviço
               </h4>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="flex flex-wrap gap-6">
                 {beforePhotos.map((p, i) => (
-                  <div key={i} className="rounded-lg overflow-hidden border border-slate-200 shadow-sm" style={{ pageBreakInside: 'avoid' }}>
-                    <div className="aspect-video w-full bg-slate-100">
-                      <img src={p.url} alt="Antes" className="w-full h-full object-contain" />
+                  <div key={i} className="w-[calc(50%-12px)] rounded-lg overflow-hidden border border-slate-200 shadow-sm" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                    <div className="aspect-video w-full bg-slate-100 flex items-center justify-center">
+                      <img src={p.url} alt="Antes" className="max-w-full max-h-full object-contain" />
                     </div>
                   </div>
                 ))}
@@ -193,11 +194,11 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
               <h4 className="text-md font-semibold text-[#003B73] mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#003B73]"></span> Depois do Serviço
               </h4>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="flex flex-wrap gap-6">
                 {afterPhotos.map((p, i) => (
-                  <div key={i} className="rounded-lg overflow-hidden border border-slate-200 shadow-sm" style={{ pageBreakInside: 'avoid' }}>
-                    <div className="aspect-video w-full bg-slate-100">
-                      <img src={p.url} alt="Depois" className="w-full h-full object-contain" />
+                  <div key={i} className="w-[calc(50%-12px)] rounded-lg overflow-hidden border border-slate-200 shadow-sm" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                    <div className="aspect-video w-full bg-slate-100 flex items-center justify-center">
+                      <img src={p.url} alt="Depois" className="max-w-full max-h-full object-contain" />
                     </div>
                   </div>
                 ))}
@@ -212,7 +213,7 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
         <div className="flex justify-between items-end">
           <div className="w-1/2 pr-8">
             <div className="border-b border-slate-400 w-full mb-2"></div>
-            <p className="text-xs text-center text-slate-500 uppercase tracking-wider">{report.technician || settings.technicianName || "Técnico Responsável"}</p>
+            <p className="text-xs text-center text-slate-500 uppercase tracking-wider">{report.technician || technicianName || settings.technicianName || "Técnico Responsável"}</p>
           </div>
           <div className="w-1/2 pl-8">
             <div className="border-b border-slate-400 w-full mb-2"></div>

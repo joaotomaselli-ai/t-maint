@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
+import { useClients, useReports, useSettings, useCompanySettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { reportTotalsWithSessions, technicianTotals, technicianPayForReport, fmtCurrency, fmtHours } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useAccess } from "@/hooks/use-access";
@@ -43,6 +43,7 @@ function ClientReport() {
   const { clients } = useClients();
   const { reports } = useReports();
   const { settings } = useSettings();
+  const { companySettings } = useCompanySettings();
   const { sessions } = useAllSessions();
   const { payments: clientPays } = useClientPayments();
   const paidSet = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
@@ -72,7 +73,7 @@ function ClientReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportClientReport } = await import("@/lib/pdf");
-      await exportClientReport(client, filtered, settings, { from, to }, sessions);
+      await exportClientReport(client, filtered, companySettings, { from, to }, sessions);
       toast.success("Relatório gerado");
     } catch (e) {
       console.error(e);
@@ -179,6 +180,7 @@ function TechnicianReport() {
   const { technicians } = useTechnicians();
   const { reports } = useReports();
   const { settings } = useSettings();
+  const { companySettings } = useCompanySettings();
   const { sessions } = useAllSessions();
   const { activityTechnicians } = useAllActivityTechnicians();
   const { payments: techPays } = useTechnicianPayments();
@@ -237,7 +239,7 @@ function TechnicianReport() {
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
     try {
       const { exportTechnicianReport } = await import("@/lib/pdf");
-      await exportTechnicianReport(technician, filtered, clientsById, settings, { from, to }, filterClient, sessions);
+      await exportTechnicianReport(technician, filtered, clientsById, companySettings, { from, to }, filterClient, sessions);
       toast.success("Relatório gerado");
     } catch (e) {
       console.error(e);

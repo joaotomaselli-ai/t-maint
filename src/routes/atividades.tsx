@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useClients, useReports, useSettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
+import { useClients, useReports, useSettings, useCompanySettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
 import {
@@ -56,6 +56,7 @@ function Atividades() {
   const { technicians } = useTechnicians();
   const { reports, addReport, updateReport, deleteReport } = useReports();
   const { settings } = useSettings();
+  const { companySettings } = useCompanySettings();
   const { sessions: allSessions } = useAllSessions();
   const { activityTechnicians: allActivityTechnicians } = useAllActivityTechnicians();
   const { payments: clientPays } = useClientPayments();
@@ -464,7 +465,7 @@ function Atividades() {
 
       <PdfChoiceDialog
         state={pdfChoice} onClose={() => setPdfChoice({ open: false })}
-        clientMap={clientMap} settings={settings}
+        clientMap={clientMap} settings={settings} companySettings={companySettings}
         sessionsByActivity={sessionsByActivity} technicians={technicians}
       />
 
@@ -475,11 +476,12 @@ function Atividades() {
 import { useReactToPrint } from "react-to-print";
 import { OSReportPrint } from "@/components/reports/OSReportPrint";
 
-function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivity, technicians }: {
+function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings, sessionsByActivity, technicians }: {
   state: PdfChoice;
   onClose: () => void;
   clientMap: Map<string, Client>;
   settings: any;
+  companySettings: any;
   sessionsByActivity: Map<string, ServiceSession[]>;
   technicians: Technician[];
 }) {
@@ -573,7 +575,8 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, sessionsByActivi
             ref={printRef}
             report={r as ServiceReport}
             client={client}
-            settings={settings}
+            settings={companySettings}
+            technicianName={settings.technicianName}
             sessions={sessions}
             technicians={technicians}
             includeValues={printProps.includeValues}

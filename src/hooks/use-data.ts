@@ -95,6 +95,17 @@ export function useSettings() {
   return { settings, isLoading: q.isLoading, saveSettings: save };
 }
 
+export function useCompanySettings() {
+  const { companyId } = useAccess();
+  const q = useQuery({
+    queryKey: ["profile", companyId],
+    queryFn: () => companyId ? getProfile(companyId) : Promise.resolve({ companyName: "", technicianName: "" }),
+    enabled: !!companyId,
+  });
+  const settings: Settings = q.data ?? { companyName: "", technicianName: "" };
+  return { companySettings: settings, isLoading: q.isLoading };
+}
+
 export function useTechnicians() {
   const { user } = useAuth();
   const qc = useQueryClient();
