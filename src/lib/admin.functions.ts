@@ -778,3 +778,31 @@ export const listAdminPayments = createServerFn({ method: "GET" })
     return { payments };
   });
 
+// ----------------------------------------------------------------------
+// ANYONE AUTHENTICATED: Get profile data for a specific company
+// ----------------------------------------------------------------------
+export const getCompanyProfileData = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ companyId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    // We use supabaseAdmin to bypass RLS, allowing technicians to read admin profiles.
+    const { data: profile, error } = await supabaseAdmin
+      .from("profiles")
+      .select("*")
+      .eq("id", data.companyId)
+      .maybeSingle();
+      
+    if (error) throw new Error(error.message);
+    if (!profile) return { companyName: "", technicianName: "" };
+    
+    return {
+      companyName: profile.company_name,
+      technicianName: profile.technician_name,
+      email: profile.email || "",
+      cnpj: profile.cnpj || "",
+      phone: profile.phone || "",
+      address: profile.address || "",
+      logoUrl: profile.logo_url || "",
+    };
+  });
+

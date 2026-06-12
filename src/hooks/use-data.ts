@@ -10,8 +10,10 @@ import {
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
   type ClientPayment, type TechnicianPayment, type ActivityTechnician,
 } from "@/lib/api";
+import { getCompanyProfileData } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
+import { useServerFn } from "@tanstack/react-start";
 
 export function useAllActivityTechnicians() {
   const { user } = useAuth();
@@ -98,9 +100,10 @@ export function useSettings() {
 
 export function useCompanySettings() {
   const { companyId } = useAccess();
+  const fetchProfile = useServerFn(getCompanyProfileData);
   const q = useQuery({
     queryKey: ["profile", companyId],
-    queryFn: () => companyId ? getProfile(companyId) : Promise.resolve({ companyName: "", technicianName: "" }),
+    queryFn: () => companyId ? fetchProfile({ data: { companyId } }) : Promise.resolve({ companyName: "", technicianName: "" }),
     enabled: !!companyId,
   });
   const settings: Settings = q.data ?? { companyName: "", technicianName: "" };
