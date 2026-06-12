@@ -53,6 +53,8 @@ function Tecnicos() {
       overtimeWeekendRate: editing.isSalaried ? 0 : (Number(editing.overtimeWeekendRate) || 0),
       monthlyFixedHours: editing.hasFixedHours ? (Number(editing.monthlyFixedHours) || 0) : null,
       isSalaried: !!editing.isSalaried,
+      userId: editing.userId,
+      hasLogin: editing.hasLogin,
     };
     try {
       if (editing.hasLogin && !editing.userId) {
@@ -115,6 +117,7 @@ function Tecnicos() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{editing.id ? "Editar técnico" : "Novo técnico"}</DialogTitle>
+              <DialogDescription className="sr-only">Preencha os dados do técnico abaixo.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">
               <div className="grid gap-2">
