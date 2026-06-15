@@ -126,7 +126,6 @@ function Configuracoes() {
               </div>
             </CardContent>
           </Card>
-          {isAdmin && <CompressOldImages />}
         </TabsContent>
 
         {canManageUsers && (

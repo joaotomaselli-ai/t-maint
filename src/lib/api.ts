@@ -253,6 +253,14 @@ export async function updateReport(r: ServiceReport): Promise<ServiceReport> {
   return fromReport(data);
 }
 export async function deleteReport(id: string): Promise<void> {
+  // First, fetch and delete all attachments from storage
+  const { data: attachments } = await supabase.from("activity_attachments").select("storage_path").eq("activity_id", id);
+  if (attachments && attachments.length > 0) {
+    const paths = attachments.map(a => a.storage_path);
+    await supabase.storage.from("activity-attachments").remove(paths);
+  }
+
+  // Then delete the report
   const { error } = await supabase.from("service_reports").delete().eq("id", id);
   if (error) throw error;
 }
