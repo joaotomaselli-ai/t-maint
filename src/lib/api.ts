@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "./image-compression";
 
 export type Client = {
   id: string;
@@ -274,12 +275,13 @@ export async function listAttachments(activityId: string): Promise<ActivityAttac
 export async function uploadAttachment(
   userId: string, activityId: string, kind: AttachmentKind, file: File
 ): Promise<ActivityAttachment> {
-  const nameParts = file.name.split(".");
+  const compressedFile = await compressImage(file);
+  const nameParts = compressedFile.name.split(".");
   const ext = nameParts.length > 1 ? (nameParts.pop() || "bin").toLowerCase() : "bin";
   const safeExt = ext.replace(/[^a-z0-9]/g, "").slice(0, 8) || "bin";
   const path = `${userId}/${activityId}/${kind}/${crypto.randomUUID()}.${safeExt}`;
   const up = await supabase.storage.from("activity-attachments")
-    .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+    .upload(path, compressedFile, { contentType: compressedFile.type || "application/octet-stream", upsert: false });
   if (up.error) throw up.error;
   const { data, error } = await supabase.from("activity_attachments")
     .insert({ user_id: userId, activity_id: activityId, kind, storage_path: path })

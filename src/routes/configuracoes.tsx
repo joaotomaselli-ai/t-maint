@@ -10,6 +10,7 @@ import { useSettings } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
 import { UsersManager } from "@/components/UsersManager";
+import { CompressOldImages } from "@/components/CompressOldImages";
 import { toast } from "sonner";
 import { LogOut, ImagePlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -125,6 +126,7 @@ function Configuracoes() {
               </div>
             </CardContent>
           </Card>
+          {isAdmin && <CompressOldImages />}
         </TabsContent>
 
         {canManageUsers && (
