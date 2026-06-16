@@ -177,15 +177,7 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
               <h4 className="text-md font-semibold text-slate-600 mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-slate-400"></span> Antes do Serviço
               </h4>
-              <div className="block after:content-[''] after:clear-both after:table">
-                {beforePhotos.map((p, i) => (
-                  <div key={i} className={`float-left w-[calc(50%-12px)] mb-6 rounded-lg overflow-hidden border border-slate-200 shadow-sm ${i % 2 === 0 ? 'mr-6' : ''}`} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-                    <div className="aspect-video w-full bg-slate-100 flex items-center justify-center">
-                      <img src={p.url} alt="Antes" className="max-w-full max-h-full object-contain" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {renderPhotoTable(beforePhotos, "Antes")}
             </div>
           )}
 
@@ -194,15 +186,7 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
               <h4 className="text-md font-semibold text-[#003B73] mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#003B73]"></span> Depois do Serviço
               </h4>
-              <div className="block after:content-[''] after:clear-both after:table">
-                {afterPhotos.map((p, i) => (
-                  <div key={i} className={`float-left w-[calc(50%-12px)] mb-6 rounded-lg overflow-hidden border border-slate-200 shadow-sm ${i % 2 === 0 ? 'mr-6' : ''}`} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-                    <div className="aspect-video w-full bg-slate-100 flex items-center justify-center">
-                      <img src={p.url} alt="Depois" className="max-w-full max-h-full object-contain" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {renderPhotoTable(afterPhotos, "Depois")}
             </div>
           )}
         </section>
