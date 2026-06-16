@@ -25,6 +25,33 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
   const afterPhotos = photos.filter(p => p.kind.includes('after'));
   const hasPhotos = beforePhotos.length > 0 || afterPhotos.length > 0;
 
+  const renderPhotoTable = (photosList: {url: string}[], altText: string) => {
+    const rows = [];
+    for (let i = 0; i < photosList.length; i += 2) {
+      rows.push(photosList.slice(i, i + 2));
+    }
+    return (
+      <table className="w-full" style={{ tableLayout: 'fixed' }}>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+              {row.map((p, i) => (
+                <td key={i} className={`w-1/2 align-top pb-6 ${i === 0 ? 'pr-3' : 'pl-3'}`}>
+                  <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+                    <div className="aspect-[4/3] w-full bg-slate-100 flex items-center justify-center p-1">
+                      <img src={p.url} alt={altText} className="max-w-full max-h-full object-contain rounded" />
+                    </div>
+                  </div>
+                </td>
+              ))}
+              {row.length === 1 && <td className="w-1/2"></td>}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  };
+
   return (
     <div ref={ref} className="bg-white text-slate-800 p-8 font-sans w-full max-w-[210mm] mx-auto" style={{ fontFamily: "'Inter', 'Helvetica', sans-serif" }}>
       {/* HEADER */}
