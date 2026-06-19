@@ -178,15 +178,15 @@ function Atividades() {
     setEditingExtras(emptyExtras());
     setOpen(true);
     try {
-      const sess = await listSessions(r.id);
-      setEditingExtras(prev => ({ ...prev, sessions: sess }));
+      const [sess, att] = await Promise.all([listSessions(r.id), listAttachments(r.id)]);
+      setEditingExtras(prev => ({ ...prev, sessions: sess, existingAttachments: att }));
     } catch (e) { console.error(e); }
     if (r.type === "preventiva") {
       try {
-        const [att, ats] = await Promise.all([listAttachments(r.id), listActivityTechnicians(r.id)]);
-        setEditingExtras(prev => ({ ...prev, existingAttachments: att, activityTechnicians: ats }));
+        const ats = await listActivityTechnicians(r.id);
+        setEditingExtras(prev => ({ ...prev, activityTechnicians: ats }));
       } catch (e: any) {
-        toast.error(e?.message ?? "Erro ao carregar anexos");
+        toast.error(e?.message ?? "Erro ao carregar técnicos");
       }
     }
   };
