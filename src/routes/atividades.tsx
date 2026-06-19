@@ -241,7 +241,9 @@ function Atividades() {
         await replaceActivityTechnicians(user.id, activityId,
           editingExtras.activityTechnicians.filter(t => t.technicianId)
             .map((t, i) => ({ ...t, position: i + 1 })));
+      }
 
+      if (activityId && user) {
         for (const att of editingExtras.existingAttachments) {
           if (editingExtras.removedAttachmentIds.has(att.id)) {
             try { await deleteAttachment(att); } catch (e) { console.error(e); }
@@ -255,9 +257,6 @@ function Atividades() {
             toast.error(`Falha ao enviar "${p.file.name}": ${msg}`);
           }
         }
-      }
-
-      if (activityId && user) {
         try {
           for (const id of editingExtras.removedSessionIds) {
             try { await deleteSession(id); } catch (e) { console.error(e); }
