@@ -17,7 +17,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/relatorios")({ component: Relatorios });
 
 function Relatorios() {
-  const { isTechnician } = useAccess();
+  const { isAdmin } = useAccess();
 
   return (
     <div className="space-y-6">
@@ -26,12 +26,12 @@ function Relatorios() {
         <p className="text-muted-foreground mt-1">Gere relatórios consolidados em PDF</p>
       </header>
 
-      <Tabs defaultValue={isTechnician ? "tecnicos" : "clientes"} className="space-y-4">
+      <Tabs defaultValue={!isAdmin ? "tecnicos" : "clientes"} className="space-y-4">
         <TabsList>
-          {!isTechnician && <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>}
           <TabsTrigger value="tecnicos" className="gap-2"><HardHat className="h-4 w-4" /> Técnicos</TabsTrigger>
         </TabsList>
-        {!isTechnician && <TabsContent value="clientes"><ClientReport /></TabsContent>}
+        {isAdmin && <TabsContent value="clientes"><ClientReport /></TabsContent>}
         <TabsContent value="tecnicos"><TechnicianReport /></TabsContent>
       </Tabs>
     </div>

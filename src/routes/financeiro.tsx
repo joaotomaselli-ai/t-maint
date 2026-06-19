@@ -29,7 +29,7 @@ export const Route = createFileRoute("/financeiro")({ component: Financeiro });
 function Financeiro() {
   const accessFn = useServerFn(getMyAccess);
   const { data: access } = useQuery({ queryKey: ["my-access"], queryFn: () => accessFn() });
-  const { isTechnician } = useAccess();
+  const { isTechnician, isAdmin } = useAccess();
 
   if (access?.isMaster) {
     return <MasterFinanceiro />;
@@ -42,12 +42,12 @@ function Financeiro() {
         <p className="text-muted-foreground mt-1">Controle de pagamentos recebidos dos clientes e pagos aos técnicos</p>
       </header>
 
-      <Tabs defaultValue={isTechnician ? "tecnicos" : "clientes"} className="space-y-4">
+      <Tabs defaultValue={!isAdmin ? "tecnicos" : "clientes"} className="space-y-4">
         <TabsList>
-          {!isTechnician && <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="clientes" className="gap-2"><Users className="h-4 w-4" /> Clientes</TabsTrigger>}
           <TabsTrigger value="tecnicos" className="gap-2"><HardHat className="h-4 w-4" /> Técnicos</TabsTrigger>
         </TabsList>
-        {!isTechnician && <TabsContent value="clientes"><ClientFinance /></TabsContent>}
+        {isAdmin && <TabsContent value="clientes"><ClientFinance /></TabsContent>}
         <TabsContent value="tecnicos"><TechnicianFinance /></TabsContent>
       </Tabs>
     </div>

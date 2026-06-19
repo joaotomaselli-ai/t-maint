@@ -65,7 +65,7 @@ function Atividades() {
   const paidByClient = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
   const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
   const { user } = useAuth();
-  const { isTechnician } = useAccess();
+  const { isTechnician, isAdmin } = useAccess();
   const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -550,13 +550,15 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
               </div>
             </div>
           )}
-          <div className="rounded-md border p-3 space-y-2">
-            <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — com valores" : "Completo — com valores"}</div>
-            <div className="text-xs text-muted-foreground">Inclui apuração de valores cobrados do cliente e pagos ao técnico</div>
-            <div className="flex gap-2">
-              <Button onClick={() => exportOperational(true)} size="sm" variant="outline" className="flex-1 w-full">Exportar / Imprimir PDF</Button>
+          {isAdmin && (
+            <div className="rounded-md border p-3 space-y-2">
+              <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — com valores" : "Completo — com valores"}</div>
+              <div className="text-xs text-muted-foreground">Inclui apuração de valores cobrados do cliente e pagos ao técnico</div>
+              <div className="flex gap-2">
+                <Button onClick={() => exportOperational(true)} size="sm" variant="outline" className="flex-1 w-full">Exportar / Imprimir PDF</Button>
+              </div>
             </div>
-          </div>
+          )}
           <div className="rounded-md border p-3 space-y-2">
             <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — sem valores" : "Sem valores"}</div>
             <div className="text-xs text-muted-foreground">Apenas informações técnicas, horas e KM</div>
@@ -652,7 +654,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
 }) {
   const money = useMoney();
   const { user } = useAuth();
-  const { isTechnician } = useAccess();
+  const { isTechnician, isAdmin } = useAccess();
   const { activityTechnicians: allActivityTechnicians } = useAllActivityTechnicians();
   const client = clients.find((c) => c.id === editing.clientId);
   const isPreventive = editing.type === "preventiva";
@@ -998,7 +1000,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
             <Card className="bg-primary/5 border-primary/20">
               <CardHeader className="pb-2"><CardTitle className="text-base">Apuração</CardTitle></CardHeader>
               <CardContent className="space-y-4 text-sm">
-                {!isTechnician && client && (
+                {isAdmin && client && (
                   <div>
                     <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">A receber do cliente</div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1022,7 +1024,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                     </div>
                   </div>
                 )}
-                {!isTechnician && client && techTotalsForApur && (extras.activityTechnicians.length > 0 || singleTechnician) && (
+                {isAdmin && client && techTotalsForApur && (extras.activityTechnicians.length > 0 || singleTechnician) && (
                   <div className="pt-3 border-t border-primary/20 flex items-center justify-between">
                     <div className="text-xs font-semibold text-muted-foreground uppercase">Lucro em horas (receber − pagar)</div>
                     <div className={`font-bold text-lg ${profit >= 0 ? "text-success" : "text-destructive"}`}>{money(profit)}</div>

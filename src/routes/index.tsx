@@ -30,7 +30,7 @@ function CompanyDashboard() {
   const { sessions } = useAllSessions();
   const { activityTechnicians } = useAllActivityTechnicians();
   const money = useMoney();
-  const { isTechnician } = useAccess();
+  const { isTechnician, isAdmin } = useAccess();
   const { user } = useAuth();
   
   const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
@@ -50,7 +50,7 @@ function CompanyDashboard() {
     const sess = sessions.filter(s => s.activityId === r.id);
     const acts = activityTechnicians.filter(a => a.activityId === r.id);
     const c = clientMap.get(r.clientId);
-    const t = isTechnician && myTechId
+    const t = !isAdmin
       ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
       : reportTotalsWithSessions(r, sess, c);
     acc.hours += t.totalHours;
@@ -77,9 +77,9 @@ function CompanyDashboard() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Wrench} label="Atendimentos no mês" value={String(monthReports.length)} accent="primary" />
-        {!isTechnician && <StatCard icon={Users} label="Clientes" value={String(clients.length)} accent="accent" />}
+        {isAdmin && <StatCard icon={Users} label="Clientes" value={String(clients.length)} accent="accent" />}
         <StatCard icon={Clock} label="Horas no mês" value={fmtHours(stats.hours)} accent="warning" />
-        <StatCard icon={DollarSign} label={isTechnician ? "Ganhos do mês" : "Faturamento do mês"} value={money(stats.value)} accent="success" />
+        <StatCard icon={DollarSign} label={!isAdmin ? "Ganhos do mês" : "Faturamento do mês"} value={money(stats.value)} accent="success" />
       </div>
 
       <Card>
@@ -94,7 +94,7 @@ function CompanyDashboard() {
               <p className="font-medium">Nenhuma OS registrada neste mês</p>
               <p className="text-sm mt-1">Cadastre seus clientes e comece a registrar atendimentos.</p>
               <div className="flex justify-center gap-2 mt-4">
-                {!isTechnician && <Link to="/clientes"><Button variant="outline" size="sm">Cadastrar cliente</Button></Link>}
+                {isAdmin && <Link to="/clientes"><Button variant="outline" size="sm">Cadastrar cliente</Button></Link>}
                 <Link to="/atividades"><Button size="sm">Ordem de Serviço</Button></Link>
               </div>
             </div>
@@ -104,7 +104,7 @@ function CompanyDashboard() {
                 const c = clientMap.get(r.clientId);
                 const sess = sessions.filter(s => s.activityId === r.id);
                 const acts = activityTechnicians.filter(a => a.activityId === r.id);
-                const t = isTechnician && myTechId
+                const t = !isAdmin
                   ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
                   : reportTotalsWithSessions(r, sess, c);
                 const actualKm = "km" in t ? (t as any).km : (r.km || 0);
