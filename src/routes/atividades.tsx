@@ -860,28 +860,32 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
           <div className="grid gap-2">
             <Label>{isPreventive ? "Descrição das Atividades Elétricas" : "Resumo dos serviços executados"}</Label>
             <BulletedTextarea rows={3} value={editing.summary} onChange={val => setEditing({ ...editing, summary: val })} />
-            {isPreventive && (
+            {isPreventive ? (
               <AttachmentBlocks
                 label="Atividades Elétricas"
                 extras={extras} setExtras={setExtras}
                 kinds={[["electrical_before", "Antes"], ["electrical_after", "Depois"]]}
               />
+            ) : (
+              <AttachmentBlocks
+                label="Evidências do Serviço executado"
+                extras={extras} setExtras={setExtras}
+                kinds={[["corretiva_before", "Antes"], ["corretiva_after", "Depois"]]}
+              />
             )}
           </div>
 
-          {isPreventive && (
-            <div className="grid gap-2">
-              <Label>Requisições para troca futura</Label>
-              <BulletedTextarea rows={2} value={editing.futureReplacements || ""}
-                onChange={val => setEditing({ ...editing, futureReplacements: val })}
-                placeholder="Itens / peças que precisarão ser substituídos no próximo atendimento" />
-              <AttachmentBlocks
-                label="Requisições para troca futura"
-                extras={extras} setExtras={setExtras}
-                kinds={[["future_replacements", "Anexos"]]}
-              />
-            </div>
-          )}
+          <div className="grid gap-2">
+            <Label>Requisições de Materiais / Troca futura</Label>
+            <BulletedTextarea rows={2} value={editing.futureReplacements || ""}
+              onChange={val => setEditing({ ...editing, futureReplacements: val })}
+              placeholder="Itens, materiais ou peças que precisarão ser substituídos no próximo atendimento" />
+            <AttachmentBlocks
+              label="Anexos de Requisição"
+              extras={extras} setExtras={setExtras}
+              kinds={[["future_replacements", "Anexos"]]}
+            />
+          </div>
 
           <section className="grid gap-4 rounded-lg border p-4 bg-muted/30">
             <div className="text-sm font-semibold">Horários</div>

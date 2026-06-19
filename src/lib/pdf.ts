@@ -230,7 +230,7 @@ export async function exportSingleReport(
   doc.text(sumLines, 14, y);
   y += Math.max(10, sumLines.length * 5);
 
-  if (isPreventive && r.futureReplacements) {
+  if (r.futureReplacements) {
     doc.setFont("helvetica", "bold");
     doc.text("Requisições para troca futura", 14, y);
     doc.setFont("helvetica", "normal");
@@ -503,8 +503,13 @@ export async function exportPreventiveInformativeReport(
     }
   };
 
-  await section("Atividades Mecânicas", r.description || "", "mechanical_before", "mechanical_after");
-  await section("Atividades Elétricas", r.summary || "", "electrical_before", "electrical_after");
+  if (isPreventive) {
+    await section("Atividades Mecânicas", r.description || "", "mechanical_before", "mechanical_after");
+    await section("Atividades Elétricas", r.summary || "", "electrical_before", "electrical_after");
+  } else {
+    await section("Descrição do serviço solicitado", r.description || "", "", "");
+    await section("Resumo e Evidências dos serviços executados", r.summary || "", "corretiva_before", "corretiva_after");
+  }
 
   if (r.futureReplacements) {
     ensureSpace(20);
