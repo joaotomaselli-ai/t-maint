@@ -487,6 +487,7 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
 }) {
   const [printProps, setPrintProps] = useState<{ includeValues: boolean; photos: { kind: string; url: string }[] } | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
+  const { isAdmin } = useAccess();
   
   const handlePrint = useReactToPrint({
     contentRef: printRef,
