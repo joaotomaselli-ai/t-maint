@@ -561,7 +561,7 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
             </div>
           )}
           <div className="rounded-md border p-3 space-y-2">
-            <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — sem valores" : "Sem valores"}</div>
+            <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — Relatório técnico" : "Relatório técnico"}</div>
             <div className="text-xs text-muted-foreground">Apenas informações técnicas, horas e KM</div>
             <div className="flex gap-2">
               <Button onClick={() => exportOperational(false)} size="sm" variant="outline" className="flex-1 w-full">Exportar / Imprimir PDF</Button>
