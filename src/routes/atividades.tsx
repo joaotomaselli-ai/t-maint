@@ -869,7 +869,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               <AttachmentBlocks
                 label="Evidências do Serviço executado"
                 extras={extras} setExtras={setExtras}
-                kinds={[["corretiva_before", "Antes"], ["corretiva_after", "Depois"]]}
+                kinds={[["mechanical_before", "Antes"], ["mechanical_after", "Depois"]]}
               />
             )}
           </div>

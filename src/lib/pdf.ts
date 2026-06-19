@@ -508,7 +508,7 @@ export async function exportPreventiveInformativeReport(
     await section("Atividades Elétricas", r.summary || "", "electrical_before", "electrical_after");
   } else {
     await section("Descrição do serviço solicitado", r.description || "", "", "");
-    await section("Resumo e Evidências dos serviços executados", r.summary || "", "corretiva_before", "corretiva_after");
+    await section("Resumo e Evidências dos serviços executados", r.summary || "", "mechanical_before", "mechanical_after");
   }
 
   if (r.futureReplacements) {
