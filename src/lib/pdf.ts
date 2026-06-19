@@ -543,6 +543,12 @@ export async function exportPreventiveInformativeReport(
 
   // Footer on last page
   const finalPH = doc.internal.pageSize.getHeight();
+  if (r.technicianSignature) {
+    try { doc.addImage(r.technicianSignature, "PNG", 21, finalPH - 50, 76, 16, undefined, "FAST"); } catch (e) {}
+  }
+  if (r.clientSignature) {
+    try { doc.addImage(r.clientSignature, "PNG", pageW - 90, finalPH - 50, 76, 16, undefined, "FAST"); } catch (e) {}
+  }
   doc.setDrawColor(180);
   doc.line(14, finalPH - 30, 90, finalPH - 30);
   doc.line(pageW - 90, finalPH - 30, pageW - 14, finalPH - 30);
@@ -551,7 +557,7 @@ export async function exportPreventiveInformativeReport(
   doc.text(`Técnico: ${r.technician || settings.technicianName || "—"}`, 14, finalPH - 25);
   doc.text(`Cliente: ${client?.name || "—"}`, pageW - 90, finalPH - 25);
 
-  doc.save(`preventiva-${r.orderNumber || r.id}-${client?.name?.replace(/\s+/g, "_") || "cliente"}.pdf`);
+  doc.save(`os-${r.orderNumber || r.id}-${client?.name?.replace(/\s+/g, "_") || "cliente"}.pdf`);
 }
 
 

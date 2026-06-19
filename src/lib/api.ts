@@ -53,6 +53,8 @@ export type ServiceReport = {
   overtimeWeekendHours: number;
   futureReplacements?: string;
   discountHours: number;
+  clientSignature?: string;
+  technicianSignature?: string;
   createdAt: string;
 };
 
@@ -154,6 +156,8 @@ const fromReport = (r: any): ServiceReport => ({
   overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
   futureReplacements: r.future_replacements ?? "",
   discountHours: Number(r.discount_hours ?? 0),
+  clientSignature: r.client_signature ?? "",
+  technicianSignature: r.technician_signature ?? "",
   createdAt: r.created_at,
 });
 
@@ -179,6 +183,8 @@ const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
   overtime_weekend_hours: r.overtimeWeekendHours ?? 0,
   future_replacements: r.futureReplacements ?? "",
   discount_hours: r.discountHours ?? 0,
+  client_signature: r.clientSignature ?? null,
+  technician_signature: r.technicianSignature ?? null,
 });
 
 const fromProfile = (r: any): Settings => ({

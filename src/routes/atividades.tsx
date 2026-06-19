@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { SignaturePad } from "@/components/ui/SignaturePad";
 import { useClients, useReports, useSettings, useCompanySettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
@@ -1030,6 +1031,22 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               </CardContent>
             </Card>
           )}
+
+          <section className="grid gap-4 rounded-lg border p-4 bg-slate-50 mt-4">
+            <div className="text-sm font-semibold">Assinaturas</div>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <SignaturePad 
+                label="Assinatura do Técnico"
+                value={editing.technicianSignature}
+                onChange={(val) => setEditing({ ...editing, technicianSignature: val })}
+              />
+              <SignaturePad 
+                label="Assinatura do Cliente"
+                value={editing.clientSignature}
+                onChange={(val) => setEditing({ ...editing, clientSignature: val })}
+              />
+            </div>
+          </section>
         </div>
 
         <DialogFooter>

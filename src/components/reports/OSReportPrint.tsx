@@ -222,11 +222,21 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
       {/* ASSINATURA / RODAPÉ */}
       <footer className="mt-20 pt-8 border-t border-slate-200" style={{ pageBreakInside: 'avoid' }}>
         <div className="flex justify-between items-end">
-          <div className="w-1/2 pr-8">
+          <div className="w-1/2 pr-8 flex flex-col items-center">
+            {report.technicianSignature ? (
+              <img src={report.technicianSignature} alt="Assinatura do Técnico" className="h-16 object-contain mb-2" />
+            ) : (
+              <div className="h-16 mb-2"></div>
+            )}
             <div className="border-b border-slate-400 w-full mb-2"></div>
             <p className="text-xs text-center text-slate-500 uppercase tracking-wider">{report.technician || technicianName || settings.technicianName || "Técnico Responsável"}</p>
           </div>
-          <div className="w-1/2 pl-8">
+          <div className="w-1/2 pl-8 flex flex-col items-center">
+            {report.clientSignature ? (
+              <img src={report.clientSignature} alt="Assinatura do Cliente" className="h-16 object-contain mb-2" />
+            ) : (
+              <div className="h-16 mb-2"></div>
+            )}
             <div className="border-b border-slate-400 w-full mb-2"></div>
             <p className="text-xs text-center text-slate-500 uppercase tracking-wider">Assinatura do Cliente ({client?.name || "Cliente"})</p>
           </div>
