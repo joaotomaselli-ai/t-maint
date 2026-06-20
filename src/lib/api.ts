@@ -743,3 +743,74 @@ export function fmtHours(n: number) {
   const m = Math.round((n - h) * 60);
   return `${h}h ${m.toString().padStart(2, "0")}m`;
 }
+
+// --- Requisitions API ---
+
+export type RequisitionStatus = "Aberta" | "Aguardando Cotação" | "Em Aprovação" | "Comprado" | "Fechada";
+
+export type Requisition = {
+  id: string;
+  activityId: string;
+  status: RequisitionStatus;
+  description: string;
+  createdAt: string;
+};
+
+export type RequisitionQuote = {
+  id: string;
+  requisitionId: string;
+  supplier: string;
+  value: number;
+  storagePath: string;
+  createdAt: string;
+};
+
+export async function listRequisitions(): Promise<Requisition[]> {
+  const { data, error } = await supabase.from("requisitions").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r: any) => ({
+    id: r.id, activityId: r.activity_id, status: r.status, description: r.description, createdAt: r.created_at
+  }));
+}
+
+export async function updateRequisition(id: string, status: RequisitionStatus): Promise<void> {
+  const { error } = await supabase.from("requisitions").update({ status }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function listQuotes(requisitionId: string): Promise<RequisitionQuote[]> {
+  const { data, error } = await supabase.from("requisition_quotes").select("*").eq("requisition_id", requisitionId).order("value", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((q: any) => ({
+    id: q.id, requisitionId: q.requisition_id, supplier: q.supplier, value: Number(q.value), storagePath: q.storage_path, createdAt: q.created_at
+  }));
+}
+
+export async function addQuote(q: Omit<RequisitionQuote, "id" | "createdAt">): Promise<RequisitionQuote> {
+  const { data, error } = await supabase.from("requisition_quotes").insert({
+    requisition_id: q.requisitionId, supplier: q.supplier, value: q.value, storage_path: q.storagePath
+  }).select().single();
+  if (error) throw error;
+  return { id: data.id, requisitionId: data.requisition_id, supplier: data.supplier, value: Number(data.value), storagePath: data.storage_path, createdAt: data.created_at };
+}
+
+export async function deleteQuote(id: string, storagePath: string): Promise<void> {
+  await supabase.storage.from("quotes").remove([storagePath]);
+  const { error } = await supabase.from("requisition_quotes").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function uploadQuoteFile(file: File, requisitionId: string): Promise<string> {
+  const ext = file.name.split('.').pop();
+  const path = `${requisitionId}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("quotes").upload(path, file);
+  if (error) throw error;
+  return path;
+}
+
+export async function getQuoteFileUrl(path: string): Promise<string> {
+  const { data } = await supabase.storage.from("quotes").createSignedUrl(path, 60 * 60);
+  if (!data) throw new Error("Could not get signed url");
+  return data.signedUrl;
+}
+

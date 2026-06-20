@@ -9,6 +9,8 @@ import {
   listTechnicianPayments, upsertTechnicianPayment, deleteTechnicianPayment,
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
   type ClientPayment, type TechnicianPayment, type ActivityTechnician,
+  listRequisitions, updateRequisition, listQuotes, addQuote, deleteQuote,
+  type Requisition, type RequisitionQuote, type RequisitionStatus,
 } from "@/lib/api";
 import { getCompanyProfileData } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
@@ -192,6 +194,56 @@ export function useTechnicianPayments() {
     unmarkPaid: useMutation({
       mutationFn: (v: { activityId: string; technicianId: string }) =>
         deleteTechnicianPayment(v.activityId, v.technicianId),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+// --- Requisitions Hooks ---
+
+export function useRequisitions() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const enabled = !!user;
+
+  const q = useQuery({
+    queryKey: ["requisitions", user?.id],
+    queryFn: () => listRequisitions(),
+    enabled,
+  });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["requisitions", user?.id] });
+
+  return {
+    requisitions: q.data ?? [],
+    isLoading: q.isLoading,
+    updateStatus: useMutation({
+      mutationFn: ({ id, status }: { id: string; status: RequisitionStatus }) => updateRequisition(id, status),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+export function useRequisitionQuotes(requisitionId?: string) {
+  const qc = useQueryClient();
+  
+  const q = useQuery({
+    queryKey: ["requisition_quotes", requisitionId],
+    queryFn: () => listQuotes(requisitionId!),
+    enabled: !!requisitionId,
+  });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["requisition_quotes", requisitionId] });
+
+  return {
+    quotes: q.data ?? [],
+    isLoading: q.isLoading,
+    addQuote: useMutation({
+      mutationFn: (quote: Omit<RequisitionQuote, "id" | "createdAt">) => addQuote(quote),
+      onSuccess: invalidate,
+    }),
+    deleteQuote: useMutation({
+      mutationFn: ({ id, storagePath }: { id: string; storagePath: string }) => deleteQuote(id, storagePath),
       onSuccess: invalidate,
     }),
   };

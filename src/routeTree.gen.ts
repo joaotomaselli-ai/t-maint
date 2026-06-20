@@ -17,6 +17,7 @@ import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as AtividadesRouteImport } from './routes/atividades'
+import { Route as RequisicoesRouteImport } from './routes/requisicoes'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TecnicosRoute = TecnicosRouteImport.update({
@@ -59,6 +60,11 @@ const AtividadesRoute = AtividadesRouteImport.update({
   path: '/atividades',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RequisicoesRoute = RequisicoesRouteImport.update({
+  id: '/requisicoes',
+  path: '/requisicoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
   '/relatorios': typeof RelatoriosRoute
+  '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
   '/relatorios': typeof RelatoriosRoute
+  '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
   '/relatorios': typeof RelatoriosRoute
+  '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
 }
 export interface FileRouteTypes {
@@ -144,6 +153,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MasterRoute: typeof MasterRoute
   RelatoriosRoute: typeof RelatoriosRoute
+  RequisicoesRoute: typeof RequisicoesRoute
   TecnicosRoute: typeof TecnicosRoute
 }
 
@@ -161,6 +171,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/relatorios'
       preLoaderRoute: typeof RelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requisicoes': {
+      id: '/requisicoes'
+      path: '/requisicoes'
+      fullPath: '/requisicoes'
+      preLoaderRoute: typeof RequisicoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/master': {
@@ -224,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MasterRoute: MasterRoute,
   RelatoriosRoute: RelatoriosRoute,
+  RequisicoesRoute: RequisicoesRoute,
   TecnicosRoute: TecnicosRoute,
 }
 export const routeTree = rootRouteImport
