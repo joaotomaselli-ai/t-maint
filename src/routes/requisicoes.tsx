@@ -265,7 +265,7 @@ function QuotesDialog({ req, open, onOpenChange, report }: { req: Requisition, o
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{q.supplier}</span>
-                        {i === 0 && <Badge variant="success" className="text-[10px] h-4">Mais barato</Badge>}
+                        {i === 0 && <Badge className="bg-green-500 hover:bg-green-600 text-[10px] h-4">Mais barato</Badge>}
                       </div>
                       <div className="text-lg font-bold text-primary mt-1">
                         {q.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}

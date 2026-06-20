@@ -106,6 +106,7 @@ function Atividades() {
   const actByActivity = useMemo(() => {
     const map = new Map<string, ActivityTechnician[]>();
     for (const a of allActivityTechnicians) {
+      if (!a.activityId) continue;
       if (!map.has(a.activityId)) map.set(a.activityId, []);
       map.get(a.activityId)!.push(a);
     }
@@ -602,7 +603,7 @@ type Extras = {
   removedSessionIds: Set<string>;
 };
 
-function BulletedTextarea({ value, onChange, ...props }: React.ComponentProps<typeof Textarea> & { value: string, onChange: (val: string) => void }) {
+function BulletedTextarea({ value, onChange, ...props }: Omit<React.ComponentProps<typeof Textarea>, "value" | "onChange"> & { value: string | undefined | null, onChange: (val: string) => void }) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
       const target = e.target as HTMLTextAreaElement;

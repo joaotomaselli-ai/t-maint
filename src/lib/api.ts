@@ -129,7 +129,7 @@ const toTechnicianRow = (t: Omit<Technician, "id">) => ({
   overtime_weekend_rate: t.overtimeWeekendRate ?? 0,
   is_salaried: t.isSalaried ?? false,
   monthly_fixed_hours: t.monthlyFixedHours ?? null,
-  user_id: t.userId ?? null,
+  user_id: t.userId ?? undefined,
   has_login: t.hasLogin ?? false,
 });
 
@@ -623,7 +623,7 @@ export function reportTotals(r: ServiceReport, client?: Client) {
   const isPreventive = r.type === "preventiva";
   const hoursValue = isPreventive ? 0 : totalHours * hourlyRate;
   const kmValue = isPreventive ? 0 : (r.km || 0) * kmRate;
-  return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, km: r.km || 0, total: hoursValue + kmValue };
 }
 
 export function technicianTotals(r: ServiceReport, technician?: Technician) {
@@ -766,7 +766,7 @@ export type RequisitionQuote = {
 };
 
 export async function listRequisitions(): Promise<Requisition[]> {
-  const { data, error } = await supabase.from("requisitions").select("*").order("created_at", { ascending: false });
+  const { data, error } = await (supabase as any).from("requisitions").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((r: any) => ({
     id: r.id, activityId: r.activity_id, status: r.status, description: r.description, createdAt: r.created_at
@@ -774,12 +774,12 @@ export async function listRequisitions(): Promise<Requisition[]> {
 }
 
 export async function updateRequisition(id: string, status: RequisitionStatus): Promise<void> {
-  const { error } = await supabase.from("requisitions").update({ status }).eq("id", id);
+  const { error } = await (supabase as any).from("requisitions").update({ status }).eq("id", id);
   if (error) throw error;
 }
 
 export async function listQuotes(requisitionId: string): Promise<RequisitionQuote[]> {
-  const { data, error } = await supabase.from("requisition_quotes").select("*").eq("requisition_id", requisitionId).order("value", { ascending: true });
+  const { data, error } = await (supabase as any).from("requisition_quotes").select("*").eq("requisition_id", requisitionId).order("value", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((q: any) => ({
     id: q.id, requisitionId: q.requisition_id, supplier: q.supplier, value: Number(q.value), storagePath: q.storage_path, createdAt: q.created_at
@@ -787,7 +787,7 @@ export async function listQuotes(requisitionId: string): Promise<RequisitionQuot
 }
 
 export async function addQuote(q: Omit<RequisitionQuote, "id" | "createdAt">): Promise<RequisitionQuote> {
-  const { data, error } = await supabase.from("requisition_quotes").insert({
+  const { data, error } = await (supabase as any).from("requisition_quotes").insert({
     requisition_id: q.requisitionId, supplier: q.supplier, value: q.value, storage_path: q.storagePath
   }).select().single();
   if (error) throw error;
@@ -796,7 +796,7 @@ export async function addQuote(q: Omit<RequisitionQuote, "id" | "createdAt">): P
 
 export async function deleteQuote(id: string, storagePath: string): Promise<void> {
   await supabase.storage.from("quotes").remove([storagePath]);
-  const { error } = await supabase.from("requisition_quotes").delete().eq("id", id);
+  const { error } = await (supabase as any).from("requisition_quotes").delete().eq("id", id);
   if (error) throw error;
 }
 

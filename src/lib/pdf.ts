@@ -392,6 +392,7 @@ export async function exportPreventiveInformativeReport(
 ) {
   const { listAttachments, getAttachmentUrl } = await import("./api");
   const atts = await listAttachments(r.id);
+  const isPreventive = r.type === "preventiva";
 
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
