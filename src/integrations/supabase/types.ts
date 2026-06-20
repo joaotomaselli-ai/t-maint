@@ -345,6 +345,7 @@ export type Database = {
       service_reports: {
         Row: {
           client_id: string
+          client_signature: string | null
           company_id: string
           created_at: string
           date: string
@@ -363,6 +364,7 @@ export type Database = {
           service_start: string
           summary: string
           technician: string
+          technician_signature: string | null
           travel_back_end: string
           travel_back_start: string
           travel_out_end: string
@@ -372,6 +374,7 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          client_signature?: string | null
           company_id?: string
           created_at?: string
           date: string
@@ -390,6 +393,7 @@ export type Database = {
           service_start?: string
           summary?: string
           technician?: string
+          technician_signature?: string | null
           travel_back_end?: string
           travel_back_start?: string
           travel_out_end?: string
@@ -399,6 +403,7 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          client_signature?: string | null
           company_id?: string
           created_at?: string
           date?: string
@@ -417,6 +422,7 @@ export type Database = {
           service_start?: string
           summary?: string
           technician?: string
+          technician_signature?: string | null
           travel_back_end?: string
           travel_back_start?: string
           travel_out_end?: string
@@ -576,6 +582,7 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          has_login: boolean
           hourly_rate: number
           id: string
           is_salaried: boolean
@@ -585,13 +592,12 @@ export type Database = {
           overtime_weekday_rate: number
           overtime_weekend_rate: number
           updated_at: string
-          updated_at: string
-          user_id: string | null
-          has_login: boolean
+          user_id: string
         }
         Insert: {
           company_id?: string
           created_at?: string
+          has_login?: boolean
           hourly_rate?: number
           id?: string
           is_salaried?: boolean
@@ -601,12 +607,12 @@ export type Database = {
           overtime_weekday_rate?: number
           overtime_weekend_rate?: number
           updated_at?: string
-          user_id?: string | null
-          has_login?: boolean
+          user_id: string
         }
         Update: {
           company_id?: string
           created_at?: string
+          has_login?: boolean
           hourly_rate?: number
           id?: string
           is_salaried?: boolean
@@ -616,8 +622,7 @@ export type Database = {
           overtime_weekday_rate?: number
           overtime_weekend_rate?: number
           updated_at?: string
-          user_id?: string | null
-          has_login?: boolean
+          user_id?: string
         }
         Relationships: []
       }
@@ -681,6 +686,10 @@ export type Database = {
         Returns: boolean
       }
       is_master: { Args: { _user_id: string }; Returns: boolean }
+      is_technician_on_activity: {
+        Args: { p_activity_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "master" | "admin" | "user" | "technician"

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TecnicosRouteImport } from './routes/tecnicos'
+import { Route as RequisicoesRouteImport } from './routes/requisicoes'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as MasterRouteImport } from './routes/master'
 import { Route as LoginRouteImport } from './routes/login'
@@ -17,12 +18,16 @@ import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as AtividadesRouteImport } from './routes/atividades'
-import { Route as RequisicoesRouteImport } from './routes/requisicoes'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TecnicosRoute = TecnicosRouteImport.update({
   id: '/tecnicos',
   path: '/tecnicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequisicoesRoute = RequisicoesRouteImport.update({
+  id: '/requisicoes',
+  path: '/requisicoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RelatoriosRoute = RelatoriosRouteImport.update({
@@ -58,11 +63,6 @@ const ClientesRoute = ClientesRouteImport.update({
 const AtividadesRoute = AtividadesRouteImport.update({
   id: '/atividades',
   path: '/atividades',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RequisicoesRoute = RequisicoesRouteImport.update({
-  id: '/requisicoes',
-  path: '/requisicoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -119,6 +119,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/master'
     | '/relatorios'
+    | '/requisicoes'
     | '/tecnicos'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -130,6 +131,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/master'
     | '/relatorios'
+    | '/requisicoes'
     | '/tecnicos'
   id:
     | '__root__'
@@ -141,6 +143,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/master'
     | '/relatorios'
+    | '/requisicoes'
     | '/tecnicos'
   fileRoutesById: FileRoutesById
 }
@@ -166,18 +169,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TecnicosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/relatorios': {
-      id: '/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof RelatoriosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/requisicoes': {
       id: '/requisicoes'
       path: '/requisicoes'
       fullPath: '/requisicoes'
       preLoaderRoute: typeof RequisicoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorios': {
+      id: '/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof RelatoriosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/master': {
