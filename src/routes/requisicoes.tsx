@@ -38,6 +38,9 @@ function AttachmentPreview({ path }: { path: string }) {
         <a href={url} target="_blank" rel="noreferrer" title="Abrir imagem" className="text-white hover:text-primary">
           <ExternalLink className="h-5 w-5" />
         </a>
+        <a href={url} download title="Baixar imagem" className="text-white hover:text-primary">
+          <Download className="h-5 w-5" />
+        </a>
       </div>
     </div>
   );
