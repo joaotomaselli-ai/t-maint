@@ -12,14 +12,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ShoppingCart, FileText, Trash2, ExternalLink, Paperclip, Wrench } from "lucide-react";
+import { ShoppingCart, FileText, Trash2, ExternalLink, Paperclip, Wrench, Download } from "lucide-react";
 import { toast } from "sonner";
-import { uploadQuoteFile, getQuoteFileUrl, type Requisition, type RequisitionStatus } from "@/lib/api";
+import { uploadQuoteFile, getQuoteFileUrl, listAttachments, getAttachmentUrl, type Requisition, type RequisitionStatus } from "@/lib/api";
 import { NumericFormat } from "react-number-format";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/requisicoes")({
   component: Requisicoes,
 });
+
+function AttachmentPreview({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getAttachmentUrl(path).then(setUrl).catch(console.error);
+  }, [path]);
+
+  if (!url) return <div className="w-24 h-24 bg-slate-100 animate-pulse rounded-md border flex-shrink-0" />;
+
+  return (
+    <div className="relative group w-24 h-24 rounded-md border overflow-hidden flex-shrink-0 bg-slate-50">
+      <img src={url} alt="Anexo" className="w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        <a href={url} target="_blank" rel="noreferrer" title="Abrir imagem" className="text-white hover:text-primary">
+          <ExternalLink className="h-5 w-5" />
+        </a>
+      </div>
+    </div>
+  );
+}
 
 const STATUS_COLORS: Record<RequisitionStatus, string> = {
   "Aberta": "bg-slate-500",
@@ -148,6 +171,13 @@ function Requisicoes() {
 
 function QuotesDialog({ req, open, onOpenChange, report }: { req: Requisition, open: boolean, onOpenChange: (v: boolean) => void, report?: any }) {
   const { quotes, isLoading, addQuote, deleteQuote } = useRequisitionQuotes(req.id);
+  const { data: attachments = [], isLoading: loadingAtts } = useQuery({
+    queryKey: ["attachments", req.activityId],
+    queryFn: () => listAttachments(req.activityId),
+    enabled: !!req.activityId,
+  });
+  const requisitionImages = attachments.filter(a => a.kind === "future_replacements");
+
   const [supplier, setSupplier] = useState("");
   const [value, setValue] = useState<number | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -207,6 +237,19 @@ function QuotesDialog({ req, open, onOpenChange, report }: { req: Requisition, o
         <div className="bg-slate-50 p-3 rounded-md text-sm whitespace-pre-wrap border my-2">
           {req.description}
         </div>
+
+        {requisitionImages.length > 0 && (
+          <div className="mt-4">
+            <h3 className="font-semibold text-sm mb-2 text-muted-foreground flex items-center gap-2">
+              <Paperclip className="h-4 w-4" /> Fotos Anexadas na OS
+            </h3>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {requisitionImages.map(att => (
+                <AttachmentPreview key={att.id} path={att.storagePath} />
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-6 mt-4">
           {/* Formulário de adição */}
