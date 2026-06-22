@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccess } from "@/hooks/use-access";
 import { useRequisitions, useRequisitionQuotes, useReports, useClients } from "@/hooks/use-data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { uploadQuoteFile, getQuoteFileUrl, listAttachments, getAttachmentUrl, type Requisition, type RequisitionStatus } from "@/lib/api";
 import { NumericFormat } from "react-number-format";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/requisicoes")({
   component: Requisicoes,
