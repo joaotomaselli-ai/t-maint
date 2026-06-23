@@ -33,10 +33,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!item.feature) return true;
     // Master: hide operational tabs (clientes, técnicos, atividades, relatórios)
     if (isMaster) return item.feature === "financeiro";
+    
+    // Only admins can see Clientes and Técnicos
+    if (item.feature === "clientes" || item.feature === "tecnicos") {
+      if (!isAdmin) return false;
+    }
+
     if (isTechnician) {
-      if (item.feature === "clientes" || item.feature === "tecnicos") return false;
       return true;
     }
+    
     if (isAdmin) return true;
     if (allowedFeatures === null) return true;
     return allowedFeatures.includes(item.feature);
