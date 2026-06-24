@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
+import { ClientReportPrint } from "@/components/reports/ClientReportPrint";
+import { TechnicianReportPrint } from "@/components/reports/TechnicianReportPrint";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,20 +71,24 @@ function ClientReport() {
     return acc;
   }, { hours: 0, km: 0, total: 0 }), [filtered, client, sessions]);
 
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Relatorio-Cliente-${client?.name?.replace(/\s+/g, "_")}`,
+    pageStyle: `
+      @page { size: A4; margin: 10mm; }
+      @media print { 
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+      }
+    `,
+  });
+
   const generate = async () => {
     if (!client) { toast.error("Selecione um cliente"); return; }
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
-    try {
-      const { exportClientReport } = await import("@/lib/pdf");
-      await exportClientReport(client, filtered, companySettings, { from, to }, sessions);
-      toast.success("Relatório gerado");
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao gerar PDF");
-    }
+    handlePrint();
   };
-
-
 
   return (
     <div className="space-y-6">
@@ -168,6 +175,19 @@ function ClientReport() {
           </CardContent>
         </Card>
       )}
+
+      {client && (
+        <div className="hidden">
+          <ClientReportPrint
+            ref={printRef}
+            client={client}
+            reports={filtered}
+            settings={companySettings}
+            sessions={sessions}
+            period={{ from, to }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -234,20 +254,24 @@ function TechnicianReport() {
     return { hours, ovtWk, ovtWe, km, total };
   }, [filtered, totalsByReport]);
 
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Relatorio-Tecnico-${technician?.name?.replace(/\s+/g, "_")}`,
+    pageStyle: `
+      @page { size: A4; margin: 10mm; }
+      @media print { 
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+      }
+    `,
+  });
+
   const generate = async () => {
     if (!technician) { toast.error("Selecione um técnico"); return; }
     if (filtered.length === 0) { toast.error("Nenhuma atividade no período"); return; }
-    try {
-      const { exportTechnicianReport } = await import("@/lib/pdf");
-      await exportTechnicianReport(technician, filtered, clientsById, companySettings, { from, to }, filterClient, sessions);
-      toast.success("Relatório gerado");
-    } catch (e) {
-      console.error(e);
-      toast.error("Erro ao gerar PDF");
-    }
+    handlePrint();
   };
-
-
   return (
     <div className="space-y-6">
       <Card>
@@ -359,6 +383,22 @@ function TechnicianReport() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {technician && (
+        <div className="hidden">
+          <TechnicianReportPrint
+            ref={printRef}
+            technician={technician}
+            reports={filtered}
+            clientsById={clientsById}
+            settings={companySettings}
+            sessions={sessions}
+            activityTechnicians={activityTechnicians}
+            period={{ from, to }}
+            filterClient={filterClient}
+          />
+        </div>
       )}
     </div>
   );

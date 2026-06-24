@@ -70,6 +70,7 @@ function Atividades() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
   const [editing, setEditing] = useState<Editing>(empty());
   const [editingExtras, setEditingExtras] = useState<{
     existingAttachments: ActivityAttachment[];
@@ -195,6 +196,7 @@ function Atividades() {
   };
 
   const save = async () => {
+    if (isSavingRef.current) return;
     if (!editing.clientId) { toast.error("Selecione o cliente"); return; }
     if (!editing.date) { toast.error("Informe a data"); return; }
     if (!editing.machine.trim()) { toast.error("Informe a máquina"); return; }
@@ -222,6 +224,7 @@ function Atividades() {
     }
 
     try {
+      isSavingRef.current = true;
       setIsSaving(true);
       let activityId = editing.id;
       const firstTech = editingExtras.activityTechnicians[0];
@@ -280,6 +283,7 @@ function Atividades() {
       toast.error(e?.message ?? "Erro ao salvar");
     } finally {
       setIsSaving(false);
+      isSavingRef.current = false;
     }
   };
 
