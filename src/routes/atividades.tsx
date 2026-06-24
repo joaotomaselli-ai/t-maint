@@ -69,6 +69,7 @@ function Atividades() {
   const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
   const [editingExtras, setEditingExtras] = useState<{
     existingAttachments: ActivityAttachment[];
@@ -221,6 +222,7 @@ function Atividades() {
     }
 
     try {
+      setIsSaving(true);
       let activityId = editing.id;
       const firstTech = editingExtras.activityTechnicians[0];
       const techName = editing.type === "preventiva"
@@ -276,6 +278,8 @@ function Atividades() {
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -462,6 +466,7 @@ function Atividades() {
         editing={editing} setEditing={setEditing}
         extras={editingExtras} setExtras={setEditingExtras}
         clients={clients} technicians={technicians} onSave={save}
+        isSaving={isSaving}
       />
 
       <PdfChoiceDialog
@@ -648,11 +653,11 @@ function BulletedTextarea({ value, onChange, ...props }: Omit<React.ComponentPro
   return <Textarea value={value} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleFocus} onBlur={handleBlur} {...props} />;
 }
 
-function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave }: {
+function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave, isSaving }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   editing: Editing; setEditing: (e: Editing) => void;
   extras: Extras; setExtras: React.Dispatch<React.SetStateAction<Extras>>;
-  clients: Client[]; technicians: Technician[]; onSave: () => void;
+  clients: Client[]; technicians: Technician[]; onSave: () => void; isSaving?: boolean;
 }) {
   const money = useMoney();
   const { user } = useAuth();
@@ -1055,7 +1060,9 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={onSave}>Salvar atividade</Button>
+          <Button disabled={isSaving} onClick={onSave}>
+            {isSaving ? "Salvando..." : "Salvar atividade"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
