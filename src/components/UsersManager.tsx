@@ -246,7 +246,15 @@ export function UsersManager({
               </div>
               <div className="grid gap-1">
                 <Label>Papel</Label>
-                <Select value={editing.role} onValueChange={(v: "admin" | "user" | "technician") => setEditing({ ...editing, role: v })}>
+                <Select value={editing.role} onValueChange={(v: "admin" | "user" | "technician") => {
+                  let newFeatures = editing.allowedFeatures;
+                  if (v === "technician" && newFeatures) {
+                    newFeatures = newFeatures.filter(f => f !== "clientes" && f !== "tecnicos");
+                  } else if (v === "technician" && !newFeatures) {
+                    newFeatures = ALL_FEATURES.map(x => x.key).filter(f => f !== "clientes" && f !== "tecnicos");
+                  }
+                  setEditing({ ...editing, role: v, allowedFeatures: newFeatures });
+                }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">Usuário</SelectItem>
@@ -260,10 +268,12 @@ export function UsersManager({
                 <div className="flex flex-wrap gap-3">
                   {ALL_FEATURES.map((f) => {
                     const list = editing.allowedFeatures ?? ALL_FEATURES.map((x) => x.key);
-                    const checked = list.includes(f.key);
+                    const isRestricted = editing.role === "technician" && (f.key === "clientes" || f.key === "tecnicos");
+                    const checked = isRestricted ? false : list.includes(f.key);
                     return (
-                      <label key={f.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <label key={f.key} className={`flex items-center gap-2 text-sm ${isRestricted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
                         <Checkbox
+                          disabled={isRestricted}
                           checked={checked}
                           onCheckedChange={() => setEditing({
                             ...editing,
