@@ -111,7 +111,7 @@ export function UsersManager({
             </div>
             <div className="grid gap-1">
               <Label>Usuário (Login)</Label>
-              <Input type="text" value={nu.username} onChange={(e) => setNu({ ...nu, username: e.target.value })} />
+              <Input type="text" value={nu.username} onChange={(e) => setNu({ ...nu, username: e.target.value.toLowerCase() })} className="normal-case" />
             </div>
             <div className="grid gap-1">
               <Label>Senha</Label>
@@ -219,7 +219,7 @@ export function UsersManager({
               </div>
               <div className="grid gap-1">
                 <Label>Usuário (Login)</Label>
-                <Input type="text" value={editing.username} onChange={(e) => setEditing({ ...editing, username: e.target.value })} />
+                <Input type="text" value={editing.username} onChange={(e) => setEditing({ ...editing, username: e.target.value.toLowerCase() })} className="normal-case" />
               </div>
               <div className="grid gap-1">
                 <Label>Nova senha (opcional)</Label>
