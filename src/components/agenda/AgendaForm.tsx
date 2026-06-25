@@ -192,13 +192,13 @@ export function AgendaForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{event ? "Editar" : "Novo"} Evento</DialogTitle>
           <DialogDescription>Agende uma tarefa ou compromisso.</DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 overflow-y-auto px-1">
           <div className="flex gap-4">
             <div className="flex-1 grid gap-2">
               <Label>Título</Label>

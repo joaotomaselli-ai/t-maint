@@ -86,8 +86,10 @@ export function AgendaWidget() {
             instDateZero.setHours(0,0,0,0);
             
             const isOverdue = instDateZero < today;
-            // Show overdue always. Show future if it's today or next 7 days.
-            if (isOverdue || (instDateZero >= today && instDateZero <= new Date(today.getTime() + 7 * 86400000))) {
+            const isCurrentViewMonth = isSameMonth(instDateZero, currentDate);
+            
+            // Show overdue always. Show future only if they belong to the currently viewed month.
+            if (isOverdue || isCurrentViewMonth) {
               pendingList.push({ event: ev, instanceDate: instDateZero, overdue: isOverdue });
             }
           }
@@ -232,14 +234,23 @@ export function AgendaWidget() {
             <div className="divide-y">
               {pendingTasks.map((pt, i) => {
                 const dateStr = format(pt.instanceDate, "yyyy-MM-dd");
+                const todayZero = new Date();
+                todayZero.setHours(0,0,0,0);
+                const isFuture = pt.instanceDate > todayZero;
+
                 return (
                   <div key={`${pt.event.id}-${dateStr}`} className={cn("p-4 flex gap-3 hover:bg-muted/30 transition-colors group", pt.overdue && "bg-red-50/40")}>
                     <button 
-                      className="mt-0.5 w-5 h-5 rounded border-2 border-muted-foreground/30 flex items-center justify-center hover:border-green-500 hover:bg-green-50 hover:text-green-600 transition-all shrink-0"
-                      onClick={() => markTask(pt.event.id, dateStr, true)}
-                      title="Marcar como concluída"
+                      className={cn("mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0",
+                        isFuture 
+                          ? "border-muted-foreground/20 cursor-not-allowed bg-muted/50" 
+                          : "border-muted-foreground/30 hover:border-green-500 hover:bg-green-50 hover:text-green-600"
+                      )}
+                      onClick={() => !isFuture && markTask(pt.event.id, dateStr, true)}
+                      title={isFuture ? "Não é possível concluir tarefas futuras" : "Marcar como concluída"}
+                      disabled={isFuture}
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100" />
+                      <CheckCircle2 className={cn("h-3.5 w-3.5", isFuture ? "text-muted-foreground/30" : "opacity-0 group-hover:opacity-100")} />
                     </button>
                     <div className="flex-1 min-w-0" onClick={() => handleEditEvent(pt.event)}>
                       <h4 className={cn("text-sm font-semibold truncate cursor-pointer hover:underline transition-colors", pt.overdue ? "text-red-700" : "text-foreground")}>
