@@ -40,6 +40,7 @@ export function AgendaForm({
   const [endTime, setEndTime] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [recurrence, setRecurrence] = useState("none");
+  const [weekDays, setWeekDays] = useState<string[]>([]);
   const [participants, setParticipants] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -72,7 +73,13 @@ export function AgendaForm({
           try {
             const rule = rrulestr(event.recurrenceRule);
             if (rule.options.freq === RRule.DAILY) setRecurrence("daily");
-            else if (rule.options.freq === RRule.WEEKLY) setRecurrence("weekly");
+            else if (rule.options.freq === RRule.WEEKLY) {
+              setRecurrence("weekly");
+              if (rule.options.byweekday) {
+                const map = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+                setWeekDays(rule.options.byweekday.map(n => typeof n === "number" ? map[n] : map[n.weekday]));
+              }
+            }
             else if (rule.options.freq === RRule.MONTHLY) setRecurrence("monthly");
             else setRecurrence("none");
           } catch {
@@ -123,6 +130,7 @@ export function AgendaForm({
       const rule = new RRule({
         freq: recurrence === "daily" ? RRule.DAILY : recurrence === "weekly" ? RRule.WEEKLY : RRule.MONTHLY,
         dtstart: d,
+        byweekday: recurrence === "weekly" && weekDays.length > 0 ? weekDays.map(w => (RRule as any)[w]) : undefined,
       });
       ruleStr = rule.toString();
     }
@@ -218,12 +226,12 @@ export function AgendaForm({
             <Label htmlFor="allday" className="cursor-pointer">O dia todo</Label>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4">
             <div className="grid gap-2">
               <Label>Início</Label>
               <div className="flex gap-2">
                 <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="flex-1" />
-                {!isAllDay && <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-24" />}
+                {!isAllDay && <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-24 shrink-0" />}
               </div>
             </div>
             {eventType === "appointment" && (
@@ -231,7 +239,7 @@ export function AgendaForm({
                 <Label>Fim</Label>
                 <div className="flex gap-2">
                   <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="flex-1" />
-                  {!isAllDay && <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-24" />}
+                  {!isAllDay && <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-24 shrink-0" />}
                 </div>
               </div>
             )}
@@ -248,6 +256,30 @@ export function AgendaForm({
                 <SelectItem value="monthly">Mensalmente</SelectItem>
               </SelectContent>
             </Select>
+            {recurrence === "weekly" && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {[
+                  { id: "MO", label: "S" },
+                  { id: "TU", label: "T" },
+                  { id: "WE", label: "Q" },
+                  { id: "TH", label: "Q" },
+                  { id: "FR", label: "S" },
+                  { id: "SA", label: "S" },
+                  { id: "SU", label: "D" },
+                ].map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => setWeekDays(prev => prev.includes(d.id) ? prev.filter(x => x !== d.id) : [...prev, d.id])}
+                    className={`w-8 h-8 rounded-full text-xs font-medium border flex items-center justify-center transition-colors ${
+                      weekDays.includes(d.id) ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {(isAdmin || isMaster) && (
