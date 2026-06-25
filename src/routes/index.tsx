@@ -11,6 +11,7 @@ import { MasterPanel } from "@/components/MasterPanel";
 import { Wrench, Users, Clock, DollarSign, Plus, TrendingUp, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AgendaWidget } from "@/components/agenda/AgendaWidget";
 
 export const Route = createFileRoute("/")({ component: Dashboard });
 
@@ -81,57 +82,7 @@ function CompanyDashboard() {
         <StatCard icon={Clock} label="Horas no mês" value={fmtHours(stats.hours)} accent="warning" />
         <StatCard icon={DollarSign} label={!isAdmin ? "Ganhos do mês" : "Faturamento do mês"} value={money(stats.value)} accent="success" />
       </div>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> OS recentes do mês</CardTitle>
-          <Link to="/atividades"><Button variant="ghost" size="sm">Ver todas</Button></Link>
-        </CardHeader>
-        <CardContent>
-          {recent.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Wrench className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">Nenhuma OS registrada neste mês</p>
-              <p className="text-sm mt-1">Cadastre seus clientes e comece a registrar atendimentos.</p>
-              <div className="flex justify-center gap-2 mt-4">
-                {isAdmin && <Link to="/clientes"><Button variant="outline" size="sm">Cadastrar cliente</Button></Link>}
-                <Link to="/atividades"><Button size="sm">Ordem de Serviço</Button></Link>
-              </div>
-            </div>
-          ) : (
-            <div className="divide-y">
-              {recent.map(r => {
-                const c = clientMap.get(r.clientId);
-                const sess = sessions.filter(s => s.activityId === r.id);
-                const acts = activityTechnicians.filter(a => a.activityId === r.id);
-                const t = !isAdmin
-                  ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
-                  : reportTotalsWithSessions(r, sess, c);
-                const actualKm = "km" in t ? (t as any).km : (r.km || 0);
-                return (
-                  <div key={r.id} className="py-3 flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium truncate">{c?.name || "Cliente removido"}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${r.type === "corretiva" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
-                          {r.type === "corretiva" ? "Corretiva" : "Preventiva"}
-                        </span>
-                      </div>
-                      <div className="text-sm text-muted-foreground truncate">
-                        {r.machine} · {format(new Date(r.date + "T00:00:00"), "dd 'de' MMM", { locale: ptBR })}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">{money(t.total)}</div>
-                      <div className="text-xs text-muted-foreground">{fmtHours(t.totalHours)} · {actualKm}km</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <AgendaWidget />
     </div>
   );
 }

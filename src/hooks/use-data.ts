@@ -13,9 +13,11 @@ import {
   type Requisition, type RequisitionQuote, type RequisitionStatus,
 } from "@/lib/api";
 import { getCompanyProfileData } from "@/lib/admin.functions";
+import { listAgendaEvents, createAgendaEvent, updateAgendaEvent, deleteAgendaEvent, toggleTaskCompletion } from "@/lib/agenda.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
 import { useServerFn } from "@tanstack/react-start";
+import type { AgendaEvent } from "@/lib/api";
 
 export function useAllActivityTechnicians() {
   const { user } = useAuth();
@@ -244,6 +246,47 @@ export function useRequisitionQuotes(requisitionId?: string) {
     }),
     deleteQuote: useMutation({
       mutationFn: ({ id, storagePath }: { id: string; storagePath: string }) => deleteQuote(id, storagePath),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+export function useAgendaEvents() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const enabled = !!user;
+  
+  const listEventsFn = useServerFn(listAgendaEvents);
+  const createFn = useServerFn(createAgendaEvent);
+  const updateFn = useServerFn(updateAgendaEvent);
+  const deleteFn = useServerFn(deleteAgendaEvent);
+  const toggleTaskFn = useServerFn(toggleTaskCompletion);
+
+  const q = useQuery({
+    queryKey: ["agenda_events", user?.id],
+    queryFn: () => listEventsFn({ data: {} }),
+    enabled,
+  });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["agenda_events", user?.id] });
+
+  return {
+    events: (q.data?.events ?? []) as AgendaEvent[],
+    isLoading: q.isLoading,
+    addEvent: useMutation({
+      mutationFn: (data: any) => createFn({ data }),
+      onSuccess: invalidate,
+    }),
+    updateEvent: useMutation({
+      mutationFn: (data: any) => updateFn({ data }),
+      onSuccess: invalidate,
+    }),
+    deleteEvent: useMutation({
+      mutationFn: (id: string) => deleteFn({ data: { id } }),
+      onSuccess: invalidate,
+    }),
+    toggleCompletion: useMutation({
+      mutationFn: (data: { eventId: string; dateStr: string; completed: boolean }) => toggleTaskFn({ data }),
       onSuccess: invalidate,
     }),
   };

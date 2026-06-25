@@ -87,6 +87,24 @@ export type Settings = {
   logoUrl?: string;
 };
 
+export type AgendaEventType = "task" | "appointment";
+
+export type AgendaEvent = {
+  id: string;
+  companyId: string;
+  title: string;
+  description: string;
+  eventType: AgendaEventType;
+  startDate: string | null;
+  endDate: string | null;
+  isAllDay: boolean;
+  recurrenceRule: string | null;
+  createdBy: string;
+  createdAt: string;
+  participants: string[];
+  completions: string[];
+};
+
 const fromClient = (r: any): Client => ({
   id: r.id, name: r.name,
   hourlyRate: Number(r.hourly_rate), kmRate: Number(r.km_rate),
