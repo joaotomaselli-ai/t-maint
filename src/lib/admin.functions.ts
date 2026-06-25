@@ -283,8 +283,9 @@ export const createSubUser = createServerFn({ method: "POST" })
     z
       .object({
         email: z.string().trim().email(),
+        username: z.string().trim().min(3).max(50),
         password: z.string().min(6).max(128),
-        role: z.enum(["admin", "user"]).default("user"),
+        role: z.enum(["admin", "user", "technician"]).default("user"),
         companyId: z.string().uuid().optional(),
         allowedFeatures: z.array(z.string()).nullable().optional(),
       })
@@ -323,11 +324,17 @@ export const createSubUser = createServerFn({ method: "POST" })
       .from("user_roles")
       .insert({
         user_id: newUserId,
+        username: data.username,
         role: data.role,
         company_id: targetCompany,
         allowed_features: data.allowedFeatures ?? null,
       });
-    if (re && !re.message.includes("duplicate")) throw new Error(re.message);
+    if (re) {
+      if (re.message.includes("unique") || re.message.includes("duplicate")) {
+        throw new Error("Este nome de usuário já está em uso.");
+      }
+      throw new Error(re.message);
+    }
 
     await supabaseAdmin.from("allowed_emails").upsert({
       email,
@@ -420,6 +427,7 @@ export const updateSubUser = createServerFn({ method: "POST" })
         targetUserId: z.string().uuid(),
         companyId: z.string().uuid().optional(),
         email: z.string().trim().email().optional(),
+        username: z.string().trim().min(3).max(50).optional(),
         password: z.string().min(6).max(128).optional(),
         role: z.enum(["admin", "user", "technician"]).optional(),
         allowedFeatures: z.array(z.string()).nullable().optional(),
@@ -461,6 +469,7 @@ export const updateSubUser = createServerFn({ method: "POST" })
 
     const patch: any = {};
     if (data.role) patch.role = data.role;
+    if (data.username) patch.username = data.username;
     if (data.allowedFeatures !== undefined) patch.allowed_features = data.allowedFeatures;
     if (Object.keys(patch).length > 0) {
       const { error } = await supabaseAdmin
@@ -468,7 +477,12 @@ export const updateSubUser = createServerFn({ method: "POST" })
         .update(patch)
         .eq("user_id", data.targetUserId)
         .eq("company_id", targetCompany);
-      if (error) throw new Error(error.message);
+      if (error) {
+        if (error.message.includes("unique") || error.message.includes("duplicate")) {
+          throw new Error("Este nome de usuário já está em uso.");
+        }
+        throw new Error(error.message);
+      }
     }
     return { ok: true };
   });
@@ -493,7 +507,7 @@ export const listCompanyUsers = createServerFn({ method: "POST" })
 
     const { data: members, error } = await supabaseAdmin
       .from("user_roles")
-      .select("id, user_id, role, allowed_features, created_at")
+      .select("id, user_id, role, username, allowed_features, created_at")
       .eq("company_id", targetCompany);
     if (error) throw new Error(error.message);
 
@@ -504,6 +518,7 @@ export const listCompanyUsers = createServerFn({ method: "POST" })
         id: m.id,
         userId: m.user_id,
         role: m.role,
+        username: m.username,
         email: u.user?.email ?? "",
         lastSignInAt: u.user?.last_sign_in_at ?? null,
         createdAt: m.created_at,

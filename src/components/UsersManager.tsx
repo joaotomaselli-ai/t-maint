@@ -5,8 +5,6 @@ import {
   createSubUser,
   listCompanyUsers,
   removeCompanyUser,
-  authorizeEmail,
-  listAuthorizedEmails,
   updateSubUser,
 } from "@/lib/admin.functions";
 import { ALL_FEATURES, type FeatureKey } from "@/lib/features";
@@ -18,12 +16,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Trash2, UserPlus, Mail, Pencil } from "lucide-react";
+import { Trash2, UserPlus, Pencil } from "lucide-react";
 import { format } from "date-fns";
 
 type EditTarget = {
   userId: string;
   email: string;
+  username: string;
   role: "admin" | "user" | "technician";
   allowedFeatures: string[] | null;
 };
@@ -37,42 +36,36 @@ export function UsersManager({
 }) {
   const qc = useQueryClient();
   const listUsersFn = useServerFn(listCompanyUsers);
-  const listEmailsFn = useServerFn(listAuthorizedEmails);
   const createUserFn = useServerFn(createSubUser);
   const removeUserFn = useServerFn(removeCompanyUser);
-  const authorizeFn = useServerFn(authorizeEmail);
   const updateFn = useServerFn(updateSubUser);
 
   const users = useQuery({
     queryKey: ["company-users", companyId],
     queryFn: () => listUsersFn({ data: { companyId } }),
   });
-  const emails = useQuery({
-    queryKey: ["allowed-emails", companyId],
-    queryFn: () => listEmailsFn({ data: { companyId } }),
-  });
 
-  const [nu, setNu] = useState<{ email: string; password: string; role: "admin" | "user" | "technician"; features: FeatureKey[] }>({
+  const [nu, setNu] = useState<{ email: string; username: string; password: string; role: "admin" | "user" | "technician"; features: FeatureKey[] }>({
     email: "",
+    username: "",
     password: "",
     role: "user",
     features: ALL_FEATURES.map((f) => f.key),
   });
-  const [ae, setAe] = useState<{ email: string; role: "admin" | "user" }>({ email: "", role: "user" });
+
   const [editing, setEditing] = useState<EditTarget | null>(null);
   const [editPwd, setEditPwd] = useState("");
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["company-users", companyId] });
-    qc.invalidateQueries({ queryKey: ["allowed-emails", companyId] });
     qc.invalidateQueries({ queryKey: ["all-users-grouped"] });
   };
 
   const addUser = useMutation({
-    mutationFn: () => createUserFn({ data: { email: nu.email, password: nu.password, role: nu.role, companyId, allowedFeatures: nu.features } }),
+    mutationFn: () => createUserFn({ data: { email: nu.email, username: nu.username, password: nu.password, role: nu.role, companyId, allowedFeatures: nu.features } }),
     onSuccess: () => {
       toast.success("Usuário criado");
-      setNu({ email: "", password: "", role: "user", features: ALL_FEATURES.map((f) => f.key) });
+      setNu({ email: "", username: "", password: "", role: "user", features: ALL_FEATURES.map((f) => f.key) });
       invalidate();
     },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
@@ -84,11 +77,6 @@ export function UsersManager({
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
-  const authorize = useMutation({
-    mutationFn: () => authorizeFn({ data: { ...ae, companyId } }),
-    onSuccess: () => { toast.success("E-mail autorizado"); setAe({ email: "", role: "user" }); invalidate(); },
-    onError: (e: any) => toast.error(e?.message ?? "Erro"),
-  });
 
   const saveEdit = useMutation({
     mutationFn: () => updateFn({
@@ -96,6 +84,7 @@ export function UsersManager({
         targetUserId: editing!.userId,
         companyId,
         email: editing!.email,
+        username: editing!.username,
         password: editPwd ? editPwd : undefined,
         role: editing!.role,
         allowedFeatures: editing!.allowedFeatures,
@@ -115,10 +104,14 @@ export function UsersManager({
           <CardTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5" /> Criar usuário</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="grid gap-3 sm:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-5">
             <div className="grid gap-1 sm:col-span-2">
               <Label>E-mail</Label>
               <Input type="email" value={nu.email} onChange={(e) => setNu({ ...nu, email: e.target.value })} />
+            </div>
+            <div className="grid gap-1">
+              <Label>Usuário (Login)</Label>
+              <Input type="text" value={nu.username} onChange={(e) => setNu({ ...nu, username: e.target.value })} />
             </div>
             <div className="grid gap-1">
               <Label>Senha</Label>
@@ -163,7 +156,7 @@ export function UsersManager({
             <p className="text-xs text-muted-foreground">Administradores têm acesso total automaticamente.</p>
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => addUser.mutate()} disabled={!nu.email || !nu.password || addUser.isPending}>Criar usuário</Button>
+            <Button onClick={() => addUser.mutate()} disabled={!nu.email || !nu.username || !nu.password || addUser.isPending}>Criar usuário</Button>
           </div>
         </CardContent>
       </Card>
@@ -175,7 +168,9 @@ export function UsersManager({
             {users.data?.users?.length ? users.data.users.map((u) => (
               <div key={u.id} className="flex items-center justify-between border rounded-md px-3 py-2 gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-sm truncate">{u.email}</div>
+                  <div className="font-medium text-sm truncate">
+                    {u.email} {u.username && <span className="text-muted-foreground ml-2">@{u.username}</span>}
+                  </div>
                   <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
                     <span className="capitalize">{u.role}</span>
                     {u.lastSignInAt && <span>Último login: {format(new Date(u.lastSignInAt), "dd/MM/yy HH:mm")}</span>}
@@ -189,6 +184,7 @@ export function UsersManager({
                     setEditing({
                       userId: u.userId,
                       email: u.email,
+                      username: u.username || "",
                       role: u.role as "admin" | "user" | "technician",
                       allowedFeatures: u.allowedFeatures,
                     });
@@ -208,37 +204,6 @@ export function UsersManager({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Autorizar e-mail Google</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-4">
-          <div className="grid gap-1 sm:col-span-2">
-            <Label>E-mail</Label>
-            <Input type="email" value={ae.email} onChange={(e) => setAe({ ...ae, email: e.target.value })} />
-          </div>
-          <div className="grid gap-1">
-            <Label>Papel</Label>
-            <Select value={ae.role} onValueChange={(v: "admin" | "user") => setAe({ ...ae, role: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">Usuário</SelectItem>
-                {allowRoleAdmin && <SelectItem value="admin">Administrador</SelectItem>}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-end justify-end">
-            <Button onClick={() => authorize.mutate()} disabled={!ae.email || authorize.isPending}>Autorizar</Button>
-          </div>
-          <div className="sm:col-span-4 space-y-1">
-            {emails.data?.emails?.map((e) => (
-              <div key={e.id} className="text-xs text-muted-foreground flex justify-between border-b py-1">
-                <span>{e.email}</span><span className="capitalize">{e.role}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       <Dialog open={!!editing} onOpenChange={(o) => { if (!o) { setEditing(null); setEditPwd(""); } }}>
         <DialogContent className="sm:max-w-lg">
@@ -251,6 +216,10 @@ export function UsersManager({
               <div className="grid gap-1">
                 <Label>E-mail</Label>
                 <Input type="email" value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} />
+              </div>
+              <div className="grid gap-1">
+                <Label>Usuário (Login)</Label>
+                <Input type="text" value={editing.username} onChange={(e) => setEditing({ ...editing, username: e.target.value })} />
               </div>
               <div className="grid gap-1">
                 <Label>Nova senha (opcional)</Label>
