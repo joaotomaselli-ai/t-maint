@@ -52,7 +52,7 @@ export function UsersManager({
     queryFn: () => listEmailsFn({ data: { companyId } }),
   });
 
-  const [nu, setNu] = useState<{ email: string; password: string; role: "admin" | "user"; features: FeatureKey[] }>({
+  const [nu, setNu] = useState<{ email: string; password: string; role: "admin" | "user" | "technician"; features: FeatureKey[] }>({
     email: "",
     password: "",
     role: "user",
@@ -126,10 +126,17 @@ export function UsersManager({
             </div>
             <div className="grid gap-1">
               <Label>Papel</Label>
-              <Select value={nu.role} onValueChange={(v: "admin" | "user") => setNu({ ...nu, role: v })}>
+              <Select value={nu.role} onValueChange={(v: "admin" | "user" | "technician") => {
+                let newFeatures = nu.features;
+                if (v === "technician") {
+                  newFeatures = newFeatures.filter(f => f !== "clientes" && f !== "tecnicos");
+                }
+                setNu({ ...nu, role: v, features: newFeatures });
+              }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="technician">Técnico</SelectItem>
                   {allowRoleAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                 </SelectContent>
               </Select>
@@ -138,15 +145,20 @@ export function UsersManager({
           <div className="grid gap-2">
             <Label>Funções disponíveis</Label>
             <div className="flex flex-wrap gap-3">
-              {ALL_FEATURES.map((f) => (
-                <label key={f.key} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <Checkbox
-                    checked={nu.features.includes(f.key)}
-                    onCheckedChange={() => setNu({ ...nu, features: toggleFeature(nu.features, f.key) })}
-                  />
-                  {f.label}
-                </label>
-              ))}
+              {ALL_FEATURES.map((f) => {
+                const isRestricted = nu.role === "technician" && (f.key === "clientes" || f.key === "tecnicos");
+                const checked = isRestricted ? false : nu.features.includes(f.key);
+                return (
+                  <label key={f.key} className={`flex items-center gap-2 text-sm ${isRestricted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
+                    <Checkbox
+                      disabled={isRestricted}
+                      checked={checked}
+                      onCheckedChange={() => setNu({ ...nu, features: toggleFeature(nu.features, f.key) })}
+                    />
+                    {f.label}
+                  </label>
+                );
+              })}
             </div>
             <p className="text-xs text-muted-foreground">Administradores têm acesso total automaticamente.</p>
           </div>
