@@ -493,6 +493,16 @@ export const updateSubUser = createServerFn({ method: "POST" })
     }
     if (!targetCompany) throw new Error("Empresa não definida.");
 
+    const { data: companyData } = await supabaseAdmin
+      .from("companies")
+      .select("owner_user_id")
+      .eq("id", targetCompany)
+      .single();
+    
+    if (companyData && companyData.owner_user_id === data.targetUserId && !isMaster && userId !== data.targetUserId) {
+      throw new Error("Apenas o master ou o próprio titular podem alterar o seu acesso.");
+    }
+
     if (data.email || data.password) {
       const upd: any = {};
       if (data.email) upd.email = data.email.toLowerCase();
@@ -640,9 +650,23 @@ export const removeCompanyUser = createServerFn({ method: "POST" })
       .eq("user_id", userId);
     const isMaster = roles?.some((r) => r.role === "master");
     const adminEntry = roles?.find((r) => r.role === "admin");
-    const targetCompany = data.companyId ?? adminEntry?.company_id ?? null;
+    let targetCompany = data.companyId ?? adminEntry?.company_id ?? null;
+    if (!targetCompany) {
+      const { data: tr } = await supabaseAdmin.from("user_roles").select("company_id").eq("user_id", data.targetUserId).maybeSingle();
+      targetCompany = tr?.company_id ?? null;
+    }
     if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
     if (!targetCompany) throw new Error("Empresa não definida.");
+
+    const { data: companyData } = await supabaseAdmin
+      .from("companies")
+      .select("owner_user_id")
+      .eq("id", targetCompany)
+      .single();
+
+    if (companyData && companyData.owner_user_id === data.targetUserId && !isMaster) {
+      throw new Error("Não é possível remover o titular da empresa.");
+    }
 
     await supabaseAdmin
       .from("user_roles")
