@@ -8,6 +8,7 @@ import {
   updateSubUser,
   removeCompanyUser,
   createSubUser,
+  updateCompany,
 } from "@/lib/admin.functions";
 import { ALL_FEATURES, type FeatureKey } from "@/lib/features";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,7 @@ export function MasterPanel() {
 
   const [newCo, setNewCo] = useState<{ name: string; adminEmail: string; adminPassword: string; subscriptionFee?: number }>({ name: "", adminEmail: "", adminPassword: "", subscriptionFee: 0 });
   const [editing, setEditing] = useState<EditTarget | null>(null);
+  const [editingCompany, setEditingCompany] = useState<{ id: string; name: string; fee: number } | null>(null);
   const [newSubUser, setNewSubUser] = useState<{ companyId: string; email: string; password: string; features: FeatureKey[] } | null>(null);
   const [editPwd, setEditPwd] = useState("");
 
@@ -57,6 +59,12 @@ export function MasterPanel() {
   const deleteCo = useMutation({
     mutationFn: (companyId: string) => deleteCoFn({ data: { companyId } }),
     onSuccess: () => { toast.success("Administrador excluído"); invalidate(); },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
+  const updateCo = useMutation({
+    mutationFn: () => updateCompany({ data: { companyId: editingCompany!.id, subscriptionFee: editingCompany!.fee } }),
+    onSuccess: () => { toast.success("Empresa atualizada"); setEditingCompany(null); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
@@ -140,10 +148,25 @@ export function MasterPanel() {
               <AccordionItem value={g.id} key={g.id}>
                 <AccordionTrigger>
                   <div className="flex flex-1 items-center justify-between pr-3">
-                    <div className="text-left">
+                    <div className="text-left flex-1 min-w-0">
                       <div className="font-semibold">{g.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Admin: {g.ownerEmail} · {g.members.length} usuários · Assinatura: R$ {g.subscriptionFee?.toFixed(2) ?? "0.00"}
+                      <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2">
+                        <span>Admin: {g.ownerEmail}</span>
+                        <span>· {g.members.length} usuários</span>
+                        <span className="flex items-center gap-1">
+                          · Assinatura: R$ {g.subscriptionFee?.toFixed(2) ?? "0.00"}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-5 w-5 ml-1" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCompany({ id: g.id, name: g.name, fee: g.subscriptionFee ?? 0 });
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -297,6 +320,33 @@ export function MasterPanel() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setNewSubUser(null)}>Cancelar</Button>
             <Button onClick={() => addUser.mutate()} disabled={addUser.isPending || !newSubUser?.email || !newSubUser?.password}>Criar usuário</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingCompany} onOpenChange={(o) => { if (!o) setEditingCompany(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Editar Empresa</DialogTitle></DialogHeader>
+          {editingCompany && (
+            <div className="grid gap-4">
+              <div className="grid gap-1">
+                <Label>Nome (somente leitura)</Label>
+                <Input value={editingCompany.name} disabled />
+              </div>
+              <div className="grid gap-1">
+                <Label>Valor da Assinatura (R$)</Label>
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  value={editingCompany.fee || ""} 
+                  onChange={(e) => setEditingCompany({ ...editingCompany, fee: parseFloat(e.target.value) || 0 })} 
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCompany(null)}>Cancelar</Button>
+            <Button onClick={() => updateCo.mutate()} disabled={updateCo.isPending}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

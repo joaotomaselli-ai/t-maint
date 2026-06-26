@@ -275,6 +275,40 @@ export const deleteCompany = createServerFn({ method: "POST" })
   });
 
 // ----------------------------------------------------------------------
+// MASTER: update a company
+// ----------------------------------------------------------------------
+export const updateCompany = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      companyId: z.string().uuid(),
+      subscriptionFee: z.number().min(0).optional(),
+    }).parse(d)
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { data: master } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("role", "master")
+      .maybeSingle();
+    if (!master) throw new Error("Apenas o master pode atualizar empresas.");
+
+    const patch: any = {};
+    if (data.subscriptionFee !== undefined) patch.subscription_fee = data.subscriptionFee;
+
+    if (Object.keys(patch).length > 0) {
+      const { error } = await supabaseAdmin
+        .from("companies")
+        .update(patch)
+        .eq("id", data.companyId);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+// ----------------------------------------------------------------------
 // ADMIN / MASTER: create a sub-user inside a company
 // ----------------------------------------------------------------------
 export const createSubUser = createServerFn({ method: "POST" })
