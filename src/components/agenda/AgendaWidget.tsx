@@ -186,7 +186,11 @@ export function AgendaWidget() {
                 <div className="flex flex-col gap-1 overflow-y-auto max-h-[75px] no-scrollbar">
                   {day.events.slice(0, 4).map((ev, i) => {
                     const isTask = ev.eventType === "task";
-                    const completed = isTask && ev.completions.includes(format(day.date, "yyyy-MM-dd"));
+                    const dateStr = format(day.date, "yyyy-MM-dd");
+                    const todayStr = format(new Date(), "yyyy-MM-dd");
+                    const isFuture = dateStr > todayStr;
+                    const completed = isTask && ev.completions.includes(dateStr);
+                    
                     return (
                       <div 
                         key={`${ev.id}-${i}`} 
@@ -198,8 +202,30 @@ export function AgendaWidget() {
                         )}
                         title={ev.title}
                       >
-                        {isTask && !completed && <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />}
-                        {isTask && completed && <CheckCircle2 className="h-3 w-3 shrink-0" />}
+                        {isTask && !completed && (
+                          <div 
+                            title={isFuture ? "Não é possível concluir tarefas futuras" : "Marcar como concluída"}
+                            className={cn("w-2.5 h-2.5 rounded-full border flex items-center justify-center shrink-0 transition-colors", 
+                              isFuture ? "border-orange-200 cursor-not-allowed opacity-50" : "border-orange-400 hover:bg-green-500 hover:border-green-500"
+                            )}
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              if (!isFuture) markTask(ev.id, dateStr, true);
+                            }}
+                          />
+                        )}
+                        {isTask && completed && (
+                          <CheckCircle2 
+                            title={isFuture ? "" : "Desmarcar tarefa (Reabrir)"}
+                            className={cn("h-3 w-3 shrink-0 transition-colors",
+                              isFuture ? "text-green-600/50 cursor-not-allowed" : "text-green-600 hover:text-red-500"
+                            )} 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              if (!isFuture) markTask(ev.id, dateStr, false); 
+                            }}
+                          />
+                        )}
                         <span className="truncate">{ev.title}</span>
                       </div>
                     );
