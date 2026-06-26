@@ -194,7 +194,7 @@ export const updateAgendaEvent = createServerFn({ method: "POST" })
     if (data.eventType !== undefined) patch.event_type = data.eventType;
     if (data.startDate !== undefined) patch.start_date = data.startDate;
     if (data.endDate !== undefined) patch.end_date = data.endDate;
-    if (data.isAllDay !== undefined) patch.isAllDay = data.isAllDay;
+    if (data.isAllDay !== undefined) patch.is_all_day = data.isAllDay;
     if (data.recurrenceRule !== undefined) patch.recurrence_rule = data.recurrenceRule;
 
     if (Object.keys(patch).length > 0) {
