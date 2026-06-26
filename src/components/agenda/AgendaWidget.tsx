@@ -55,14 +55,20 @@ export function AgendaWidget() {
         try {
           const rule = rrulestr(ev.recurrenceRule);
           
+          const utcStartDate = new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()));
+          const utcEndDate = new Date(Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59));
+          const utcToday = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59));
+          
+          let ruleInstances: Date[] = [];
           if (ev.eventType === "task") {
-            // Find instances from the beginning of the event until today + 30 days
-            const ruleInstances = rule.between(new Date(Math.min(evStart.getTime(), new Date(2020,0,1).getTime())), new Date(today.getTime() + 30 * 86400000), true);
-            instances = ruleInstances;
+            const minStart = new Date(Date.UTC(2020,0,1));
+            const maxEnd = new Date(utcToday.getTime() + 30 * 86400000);
+            ruleInstances = rule.between(minStart, maxEnd, true);
           } else {
-             // Just for this calendar view
-             instances = rule.between(startDate, endDate, true);
+             ruleInstances = rule.between(utcStartDate, utcEndDate, true);
           }
+          
+          instances = ruleInstances.map(d => new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()));
         } catch (e) {
           console.error("Invalid rrule", ev.recurrenceRule);
           if (evStart) instances = [evStart];

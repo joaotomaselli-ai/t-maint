@@ -118,18 +118,21 @@ export function AgendaForm({
     let endIso: string | null = null;
 
     if (startDate) {
-      startIso = isAllDay ? `${startDate}T00:00:00.000Z` : new Date(`${startDate}T${startTime || "00:00"}:00`).toISOString();
+      startIso = isAllDay ? new Date(`${startDate}T00:00:00`).toISOString() : new Date(`${startDate}T${startTime || "00:00"}:00`).toISOString();
     }
     if (endDate && eventType === "appointment") {
-      endIso = isAllDay ? `${endDate}T23:59:59.999Z` : new Date(`${endDate}T${endTime || "23:59"}:00`).toISOString();
+      endIso = isAllDay ? new Date(`${endDate}T23:59:59`).toISOString() : new Date(`${endDate}T${endTime || "23:59"}:00`).toISOString();
     }
 
     let ruleStr: string | null = null;
-    if (recurrence !== "none" && startIso) {
-      const d = new Date(startIso);
+    if (recurrence !== "none" && startDate) {
+      const parts = startDate.split("-").map(Number);
+      const timeParts = isAllDay ? [0, 0] : (startTime || "00:00").split(":").map(Number);
+      const dtstartUtc = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], timeParts[0], timeParts[1]));
+
       const rule = new RRule({
         freq: recurrence === "daily" ? RRule.DAILY : recurrence === "weekly" ? RRule.WEEKLY : RRule.MONTHLY,
-        dtstart: d,
+        dtstart: dtstartUtc,
         byweekday: recurrence === "weekly" && weekDays.length > 0 ? weekDays.map(w => (RRule as any)[w]) : undefined,
       });
       ruleStr = rule.toString();
