@@ -21,5 +21,6 @@ export function useAccess() {
     companyId: q.data?.companyId ?? null,
     companyName: q.data?.companyName ?? null,
     allowedFeatures: q.data?.allowedFeatures ?? null,
+    planType: q.data?.planType ?? "basic",
   };
 }

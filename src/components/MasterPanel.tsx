@@ -42,9 +42,9 @@ export function MasterPanel() {
 
   const groups = useQuery({ queryKey: ["all-users-grouped"], queryFn: () => listFn() });
 
-  const [newCo, setNewCo] = useState<{ name: string; adminEmail: string; adminPassword: string; subscriptionFee?: number }>({ name: "", adminEmail: "", adminPassword: "", subscriptionFee: 0 });
+  const [newCo, setNewCo] = useState<{ name: string; adminEmail: string; adminPassword: string; subscriptionFee?: number; planType: "basic"|"pro"|"elite"|"elite_pro" }>({ name: "", adminEmail: "", adminPassword: "", subscriptionFee: 97, planType: "basic" });
   const [editing, setEditing] = useState<EditTarget | null>(null);
-  const [editingCompany, setEditingCompany] = useState<{ id: string; name: string; fee: number } | null>(null);
+  const [editingCompany, setEditingCompany] = useState<{ id: string; name: string; fee: number; planType: "basic"|"pro"|"elite"|"elite_pro" } | null>(null);
   const [newSubUser, setNewSubUser] = useState<{ companyId: string; email: string; password: string; features: FeatureKey[] } | null>(null);
   const [editPwd, setEditPwd] = useState("");
 
@@ -52,7 +52,7 @@ export function MasterPanel() {
 
   const createCo = useMutation({
     mutationFn: () => createCoFn({ data: newCo }),
-    onSuccess: () => { toast.success("Administrador criado"); setNewCo({ name: "", adminEmail: "", adminPassword: "", subscriptionFee: 0 }); invalidate(); },
+    onSuccess: () => { toast.success("Administrador criado"); setNewCo({ name: "", adminEmail: "", adminPassword: "", subscriptionFee: 97, planType: "basic" }); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
@@ -63,7 +63,7 @@ export function MasterPanel() {
   });
 
   const updateCo = useMutation({
-    mutationFn: () => updateCompany({ data: { companyId: editingCompany!.id, subscriptionFee: editingCompany!.fee } }),
+    mutationFn: () => updateCompany({ data: { companyId: editingCompany!.id, subscriptionFee: editingCompany!.fee, planType: editingCompany!.planType } }),
     onSuccess: () => { toast.success("Empresa atualizada"); setEditingCompany(null); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
@@ -109,24 +109,42 @@ export function MasterPanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" /> Criar novo Administrador</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-4">
-          <div className="grid gap-1">
+        <CardContent className="grid gap-3 sm:grid-cols-5">
+          <div className="grid gap-1 sm:col-span-2">
             <Label>Nome da Empresa (Workspace)</Label>
             <Input value={newCo.name} onChange={(e) => setNewCo({ ...newCo, name: e.target.value })} />
           </div>
           <div className="grid gap-1 sm:col-span-1">
+            <Label>Plano</Label>
+            <Select value={newCo.planType} onValueChange={(v: any) => {
+              let fee = newCo.subscriptionFee;
+              if (v === "basic") fee = 97;
+              if (v === "pro") fee = 197;
+              if (v === "elite") fee = 397;
+              setNewCo({ ...newCo, planType: v, subscriptionFee: fee });
+            }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="basic">Básico</SelectItem>
+                <SelectItem value="pro">Pro</SelectItem>
+                <SelectItem value="elite">Elite</SelectItem>
+                <SelectItem value="elite_pro">Elite Pro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1 sm:col-span-2">
             <Label>Valor da Assinatura (R$)</Label>
             <Input type="number" step="0.01" value={newCo.subscriptionFee || ""} onChange={(e) => setNewCo({ ...newCo, subscriptionFee: parseFloat(e.target.value) })} />
           </div>
-          <div className="grid gap-1 sm:col-span-1">
+          <div className="grid gap-1 sm:col-span-3">
             <Label>E-mail do administrador</Label>
             <Input type="email" value={newCo.adminEmail} onChange={(e) => setNewCo({ ...newCo, adminEmail: e.target.value })} />
           </div>
-          <div className="grid gap-1 sm:col-span-1">
+          <div className="grid gap-1 sm:col-span-2">
             <Label>Senha</Label>
             <Input type="password" value={newCo.adminPassword} onChange={(e) => setNewCo({ ...newCo, adminPassword: e.target.value })} />
           </div>
-          <div className="sm:col-span-4 flex justify-end">
+          <div className="sm:col-span-5 flex justify-end mt-2">
             <Button onClick={() => createCo.mutate()} disabled={!newCo.name || !newCo.adminEmail || !newCo.adminPassword || createCo.isPending}>
               Criar Administrador
             </Button>
@@ -154,14 +172,15 @@ export function MasterPanel() {
                         <span>Admin: {g.ownerEmail}</span>
                         <span>· {g.members.length} usuários</span>
                         <span className="flex items-center gap-1">
-                          · Assinatura: R$ {g.subscriptionFee?.toFixed(2) ?? "0.00"}
+                          · {g.planType ? <span className="uppercase text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">{g.planType.replace("_", " ")}</span> : null}
+                          · R$ {g.subscriptionFee?.toFixed(2) ?? "0.00"}
                           <Button 
                             variant="ghost" 
                             size="icon" 
                             className="h-5 w-5 ml-1" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditingCompany({ id: g.id, name: g.name, fee: g.subscriptionFee ?? 0 });
+                              setEditingCompany({ id: g.id, name: g.name, fee: g.subscriptionFee ?? 0, planType: g.planType as any ?? "basic" });
                             }}
                           >
                             <Pencil className="h-3 w-3" />
@@ -332,6 +351,24 @@ export function MasterPanel() {
               <div className="grid gap-1">
                 <Label>Nome (somente leitura)</Label>
                 <Input value={editingCompany.name} disabled />
+              </div>
+              <div className="grid gap-1">
+                <Label>Plano</Label>
+                <Select value={editingCompany.planType} onValueChange={(v: any) => {
+                  let fee = editingCompany.fee;
+                  if (v === "basic") fee = 97;
+                  if (v === "pro") fee = 197;
+                  if (v === "elite") fee = 397;
+                  setEditingCompany({ ...editingCompany, planType: v, fee });
+                }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basic">Básico</SelectItem>
+                    <SelectItem value="pro">Pro</SelectItem>
+                    <SelectItem value="elite">Elite</SelectItem>
+                    <SelectItem value="elite_pro">Elite Pro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-1">
                 <Label>Valor da Assinatura (R$)</Label>

@@ -4,6 +4,25 @@ import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function checkUserLimit(companyId: string) {
+  const { data: company } = await supabaseAdmin.from("companies").select("plan_type").eq("id", companyId).single();
+  if (!company) throw new Error("Empresa não encontrada.");
+  
+  if (company.plan_type === "elite_pro") return;
+
+  const { count } = await supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true }).eq("company_id", companyId);
+  const currentCount = count ?? 0;
+  
+  let limit = 2; // basic
+  if (company.plan_type === "pro") limit = 5;
+  if (company.plan_type === "elite") limit = 15;
+
+  if (currentCount >= limit) {
+    const planName = company.plan_type === "basic" ? "Básico" : company.plan_type === "pro" ? "Pro" : "Elite";
+    throw new Error(`Limite de usuários atingido para o plano ${planName} (máx ${limit} usuários). Mude de plano para adicionar mais acessos.`);
+  }
+}
+
 // ----------------------------------------------------------------------
 // PUBLIC: sign in using either username or email + password.
 // Resolves username -> email server-side WITHOUT leaking the email,
@@ -106,13 +125,15 @@ export const getMyAccess = createServerFn({ method: "GET" })
       null;
     const allowedFeatures = (data?.[0]?.allowed_features as string[] | null) ?? null;
     let companyName: string | null = null;
+    let planType = "basic";
     if (companyId) {
       const { data: c } = await supabaseAdmin
         .from("companies")
-        .select("name")
+        .select("name, plan_type")
         .eq("id", companyId)
         .maybeSingle();
       companyName = c?.name ?? null;
+      planType = c?.plan_type ?? "basic";
     }
     return {
       userId,
@@ -122,6 +143,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
       companyId,
       companyName,
       allowedFeatures,
+      planType,
     };
   });
 
@@ -138,6 +160,7 @@ export const createCompany = createServerFn({ method: "POST" })
         adminPassword: z.string().min(6).max(128),
         adminName: z.string().trim().max(120).optional(),
         subscriptionFee: z.number().min(0).optional(),
+        planType: z.enum(["basic", "pro", "elite", "elite_pro"]).default("basic"),
       })
       .parse(d),
   )
@@ -177,7 +200,7 @@ export const createCompany = createServerFn({ method: "POST" })
 
     const { data: company, error: ce } = await supabaseAdmin
       .from("companies")
-      .insert({ name: data.name, owner_user_id: adminUserId, subscription_fee: data.subscriptionFee ?? 0 })
+      .insert({ name: data.name, owner_user_id: adminUserId, subscription_fee: data.subscriptionFee ?? 0, plan_type: data.planType })
       .select()
       .single();
     if (ce) throw new Error(ce.message);
@@ -214,7 +237,7 @@ export const listCompanies = createServerFn({ method: "GET" })
 
     const { data: companies, error } = await supabaseAdmin
       .from("companies")
-      .select("id, name, owner_user_id, created_at, subscription_fee")
+      .select("id, name, owner_user_id, created_at, subscription_fee, plan_type")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -232,6 +255,7 @@ export const listCompanies = createServerFn({ method: "GET" })
         usersCount: usersCount ?? 0,
         createdAt: c.created_at,
         subscriptionFee: c.subscription_fee,
+        planType: c.plan_type,
       });
     }
     return { companies: result };
@@ -283,6 +307,7 @@ export const updateCompany = createServerFn({ method: "POST" })
     z.object({
       companyId: z.string().uuid(),
       subscriptionFee: z.number().min(0).optional(),
+      planType: z.enum(["basic", "pro", "elite", "elite_pro"]).optional(),
     }).parse(d)
   )
   .handler(async ({ data, context }) => {
@@ -297,6 +322,7 @@ export const updateCompany = createServerFn({ method: "POST" })
 
     const patch: any = {};
     if (data.subscriptionFee !== undefined) patch.subscription_fee = data.subscriptionFee;
+    if (data.planType !== undefined) patch.plan_type = data.planType;
 
     if (Object.keys(patch).length > 0) {
       const { error } = await supabaseAdmin
@@ -336,6 +362,8 @@ export const createSubUser = createServerFn({ method: "POST" })
     const targetCompany = data.companyId ?? adminEntry?.company_id ?? null;
     if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
     if (!targetCompany) throw new Error("Empresa não definida.");
+
+    await checkUserLimit(targetCompany);
 
     const email = data.email.toLowerCase();
     let newUserId: string;
@@ -406,6 +434,8 @@ export const createTechnicianLogin = createServerFn({ method: "POST" })
     const targetCompany = data.companyId ?? adminEntry?.company_id ?? null;
     if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
     if (!targetCompany) throw new Error("Empresa não definida.");
+
+    await checkUserLimit(targetCompany);
 
     const email = data.email.toLowerCase();
     let newUserId: string;

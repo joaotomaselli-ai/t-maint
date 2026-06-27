@@ -31,7 +31,7 @@ function CompanyDashboard() {
   const { sessions } = useAllSessions();
   const { activityTechnicians } = useAllActivityTechnicians();
   const money = useMoney();
-  const { isTechnician, isAdmin } = useAccess();
+  const { isTechnician, isAdmin, planType } = useAccess();
   const { user } = useAuth();
   
   const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
@@ -82,7 +82,32 @@ function CompanyDashboard() {
         <StatCard icon={Clock} label="Horas no mês" value={fmtHours(stats.hours)} accent="warning" />
         <StatCard icon={DollarSign} label={!isAdmin ? "Ganhos do mês" : "Faturamento do mês"} value={money(stats.value)} accent="success" />
       </div>
-      <AgendaWidget />
+      {planType === "basic" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> OS Recentes do Mês</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recent.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma OS recente encontrada no mês.</p> : (
+              <div className="space-y-4">
+                {recent.map(r => (
+                  <div key={r.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
+                    <div>
+                      <p className="font-medium text-sm">OS #{r.activityNumber}</p>
+                      <p className="text-xs text-muted-foreground">{clientMap.get(r.clientId)?.name ?? 'Desconhecido'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm">{format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy")}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <AgendaWidget />
+      )}
     </div>
   );
 }
