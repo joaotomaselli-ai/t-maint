@@ -619,7 +619,7 @@ export const listAllUsersGrouped = createServerFn({ method: "GET" })
 
     const { data: companies } = await supabaseAdmin
       .from("companies")
-      .select("id, name, owner_user_id, created_at, subscription_fee")
+      .select("id, name, owner_user_id, created_at, subscription_fee, plan_type")
       .order("created_at", { ascending: false });
 
     const { data: allRoles } = await supabaseAdmin
@@ -651,6 +651,7 @@ export const listAllUsersGrouped = createServerFn({ method: "GET" })
         ownerEmail: userMap.get(c.owner_user_id)?.email ?? "Desconhecido",
         createdAt: c.created_at,
         subscriptionFee: c.subscription_fee,
+        planType: c.plan_type,
         members,
       };
     });
