@@ -17,11 +17,11 @@ export const Route = createFileRoute("/estoque")({
 
 function EstoquePage() {
   const { planType } = useAccess();
-  const { items, isLoading, upsertItem } = useInventory();
+  const { items, isLoading, upsertItem, createMovement } = useInventory();
   const navigate = useNavigate();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [newItem, setNewItem] = useState({ name: "", sku: "", minQuantity: "", unit: "Un", location: "" });
+  const [newItem, setNewItem] = useState({ name: "", sku: "", minQuantity: "", unit: "Un", location: "", initialQuantity: "", initialCost: "" });
 
   if (planType === "basic") {
     return (
@@ -42,17 +42,42 @@ function EstoquePage() {
       unit: newItem.unit,
       location: newItem.location || null,
       minQuantity: newItem.minQuantity ? Number(newItem.minQuantity) : null,
-      qrCodeValue: `EST-${Date.now()}` // Temporary, ideally would be the absolute URL for the scanner
+      qrCodeValue: `EST-${Date.now()}` // Temporary
     }, {
-      onSuccess: (data) => {
-        toast.success("Item criado!");
-        setIsAddOpen(false);
-        setNewItem({ name: "", sku: "", minQuantity: "", unit: "Un", location: "" });
+      onSuccess: async (data) => {
         // Update qr code value to point to its own page
         const url = `${window.location.origin}/estoque/${data.id}`;
-        upsertItem.mutate({ id: data.id, qrCodeValue: url });
+        await upsertItem.mutateAsync({ id: data.id, qrCodeValue: url });
+        
+        const initQty = Number(newItem.initialQuantity);
+        if (initQty > 0) {
+          try {
+            await createMovement.mutateAsync({
+              itemId: data.id,
+              type: "IN",
+              quantity: initQty,
+              unitCost: Number(newItem.initialCost) || 0,
+              reason: "Estoque Inicial",
+              activityId: null
+            });
+          } catch(e) {
+            console.error(e);
+          }
+        }
+        
+        toast.success("Item criado!");
+        setIsAddOpen(false);
+        setNewItem({ name: "", sku: "", minQuantity: "", unit: "Un", location: "", initialQuantity: "", initialCost: "" });
+        // Force reload items to show new quantity
+        window.location.reload(); 
       },
-      onError: (err: any) => toast.error(err.message)
+      onError: (err: any) => {
+        if (err?.code === "23505") {
+          toast.error("Já existe um material com este nome.");
+        } else {
+          toast.error(err.message);
+        }
+      }
     });
   };
 
@@ -149,7 +174,19 @@ function EstoquePage() {
               <Label>Estoque Mínimo (Opcional)</Label>
               <Input type="number" step="0.01" value={newItem.minQuantity} onChange={e => setNewItem({...newItem, minQuantity: e.target.value})} placeholder="Deixe em branco para ignorar" />
             </div>
-            <div className="flex justify-end gap-2">
+            
+            <div className="grid grid-cols-2 gap-4 mt-2 border-t pt-4">
+              <div className="grid gap-2">
+                <Label>Quantidade Inicial (Opcional)</Label>
+                <Input type="number" step="0.01" min="0" value={newItem.initialQuantity} onChange={e => setNewItem({...newItem, initialQuantity: e.target.value})} placeholder="0" />
+              </div>
+              <div className="grid gap-2">
+                <Label>Custo Unit. Inicial (R$)</Label>
+                <Input type="number" step="0.01" min="0" value={newItem.initialCost} onChange={e => setNewItem({...newItem, initialCost: e.target.value})} placeholder="0.00" disabled={!newItem.initialQuantity} />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancelar</Button>
               <Button type="submit" disabled={!newItem.name.trim() || upsertItem.isPending}>Salvar</Button>
             </div>

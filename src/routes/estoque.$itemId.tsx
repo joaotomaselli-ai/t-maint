@@ -44,6 +44,9 @@ function EstoqueItemPage() {
   const [isMoveOpen, setIsMoveOpen] = useState<"IN" | "OUT" | null>(null);
   const [moveData, setMoveData] = useState({ quantity: "", unitCost: "", reason: "", activityId: "none" });
 
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editData, setEditData] = useState({ name: "", sku: "", minQuantity: "", unit: "Un", location: "" });
+
   if (planType === "basic" || !item) {
     return (
       <div className="py-12 text-center">
@@ -85,6 +88,31 @@ function EstoqueItemPage() {
     });
   };
 
+  const handleEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editData.name.trim()) return;
+    upsertItem.mutate({
+      id: item.id,
+      name: editData.name,
+      sku: editData.sku || null,
+      unit: editData.unit,
+      location: editData.location || null,
+      minQuantity: editData.minQuantity ? Number(editData.minQuantity) : null,
+    }, {
+      onSuccess: () => {
+        toast.success("Item atualizado!");
+        setIsEditOpen(false);
+      },
+      onError: (err: any) => {
+        if (err?.code === "23505") {
+          toast.error("Já existe um material com este nome.");
+        } else {
+          toast.error(err.message);
+        }
+      }
+    });
+  };
+
   const printQrCode = () => {
     const printWindow = window.open('', '', 'width=600,height=600');
     if (!printWindow) return;
@@ -117,13 +145,27 @@ function EstoqueItemPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/estoque" })}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             {item.name}
             {isLow && <AlertTriangle className="h-5 w-5 text-destructive" title="Estoque Baixo" />}
           </h1>
           <p className="text-muted-foreground">{item.sku ? `SKU: ${item.sku}` : "Sem código"} • {item.location || "Sem local"}</p>
         </div>
+        {isAdmin && (
+          <Button variant="outline" size="sm" onClick={() => {
+            setEditData({
+              name: item.name,
+              sku: item.sku || "",
+              minQuantity: item.minQuantity != null ? String(item.minQuantity) : "",
+              unit: item.unit,
+              location: item.location || ""
+            });
+            setIsEditOpen(true);
+          }}>
+            <Edit className="h-4 w-4 mr-2" /> Editar
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -278,6 +320,42 @@ function EstoqueItemPage() {
               <Button type="submit" disabled={createMovement.isPending}>
                 Registrar {isMoveOpen === "IN" ? "Entrada" : "Saída"}
               </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Material</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4 pt-4">
+            <div className="grid gap-2">
+              <Label>Nome do Material *</Label>
+              <Input value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} required />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Código / SKU</Label>
+                <Input value={editData.sku} onChange={e => setEditData({...editData, sku: e.target.value})} />
+              </div>
+              <div className="grid gap-2">
+                <Label>Unidade de Medida *</Label>
+                <Input value={editData.unit} onChange={e => setEditData({...editData, unit: e.target.value})} required />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Localização (Corredor, Prateleira)</Label>
+              <Input value={editData.location} onChange={e => setEditData({...editData, location: e.target.value})} />
+            </div>
+            <div className="grid gap-2">
+              <Label>Estoque Mínimo (Opcional)</Label>
+              <Input type="number" step="0.01" value={editData.minQuantity} onChange={e => setEditData({...editData, minQuantity: e.target.value})} placeholder="Deixe em branco para ignorar" />
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={!editData.name.trim() || upsertItem.isPending}>Salvar</Button>
             </div>
           </form>
         </DialogContent>
