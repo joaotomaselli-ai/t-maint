@@ -19,6 +19,8 @@ import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as AtividadesRouteImport } from './routes/atividades'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EstoqueRouteImport } from './routes/estoque'
+import { Route as EstoqueItemIdRouteImport } from './routes/estoque.$itemId'
 
 const TecnicosRoute = TecnicosRouteImport.update({
   id: '/tecnicos',
@@ -70,7 +72,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-
+const EstoqueRoute = EstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EstoqueItemIdRoute = EstoqueItemIdRouteImport.update({
+  id: '/estoque/$itemId',
+  path: '/estoque/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/atividades': typeof AtividadesRoute
@@ -82,6 +93,8 @@ export interface FileRoutesByFullPath {
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
+  '/estoque': typeof EstoqueRoute
+  '/estoque/$itemId': typeof EstoqueItemIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +107,8 @@ export interface FileRoutesByTo {
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
+  '/estoque': typeof EstoqueRoute
+  '/estoque/$itemId': typeof EstoqueItemIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +122,8 @@ export interface FileRoutesById {
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
+  '/estoque': typeof EstoqueRoute
+  '/estoque/$itemId': typeof EstoqueItemIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +138,8 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
+    | '/estoque'
+    | '/estoque/$itemId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +152,8 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
+    | '/estoque'
+    | '/estoque/$itemId'
   id:
     | '__root__'
     | '/'
@@ -145,6 +166,8 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
+    | '/estoque'
+    | '/estoque/$itemId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +181,8 @@ export interface RootRouteChildren {
   RelatoriosRoute: typeof RelatoriosRoute
   RequisicoesRoute: typeof RequisicoesRoute
   TecnicosRoute: typeof TecnicosRoute
+  EstoqueRoute: typeof EstoqueRoute
+  EstoqueItemIdRoute: typeof EstoqueItemIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +257,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/estoque': {
+      id: '/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof EstoqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/estoque/$itemId': {
+      id: '/estoque/$itemId'
+      path: '/estoque/$itemId'
+      fullPath: '/estoque/$itemId'
+      preLoaderRoute: typeof EstoqueItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -246,6 +285,8 @@ const rootRouteChildren: RootRouteChildren = {
   RelatoriosRoute: RelatoriosRoute,
   RequisicoesRoute: RequisicoesRoute,
   TecnicosRoute: TecnicosRoute,
+  EstoqueRoute: EstoqueRoute,
+  EstoqueItemIdRoute: EstoqueItemIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
