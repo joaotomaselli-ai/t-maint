@@ -11,7 +11,7 @@ import { Plus, Package, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 
-export const Route = createFileRoute("/estoque")({
+export const Route = createFileRoute("/estoque/")({
   component: EstoquePage,
 });
 

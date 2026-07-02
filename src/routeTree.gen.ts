@@ -15,11 +15,11 @@ import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as MasterRouteImport } from './routes/master'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
-import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as AtividadesRouteImport } from './routes/atividades'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EstoqueIndexRouteImport } from './routes/estoque.index'
 import { Route as EstoqueItemIdRouteImport } from './routes/estoque.$itemId'
 
 const TecnicosRoute = TecnicosRouteImport.update({
@@ -52,11 +52,6 @@ const FinanceiroRoute = FinanceiroRouteImport.update({
   path: '/financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EstoqueRoute = EstoqueRouteImport.update({
-  id: '/estoque',
-  path: '/estoque',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
@@ -77,10 +72,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EstoqueIndexRoute = EstoqueIndexRouteImport.update({
+  id: '/estoque/',
+  path: '/estoque/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EstoqueItemIdRoute = EstoqueItemIdRouteImport.update({
-  id: '/$itemId',
-  path: '/$itemId',
-  getParentRoute: () => EstoqueRoute,
+  id: '/estoque/$itemId',
+  path: '/estoque/$itemId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -88,7 +88,6 @@ export interface FileRoutesByFullPath {
   '/atividades': typeof AtividadesRoute
   '/clientes': typeof ClientesRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/estoque': typeof EstoqueRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
@@ -96,13 +95,13 @@ export interface FileRoutesByFullPath {
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
+  '/estoque/': typeof EstoqueIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/atividades': typeof AtividadesRoute
   '/clientes': typeof ClientesRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/estoque': typeof EstoqueRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
@@ -110,6 +109,7 @@ export interface FileRoutesByTo {
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
+  '/estoque': typeof EstoqueIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,7 +117,6 @@ export interface FileRoutesById {
   '/atividades': typeof AtividadesRoute
   '/clientes': typeof ClientesRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/estoque': typeof EstoqueRouteWithChildren
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
@@ -125,6 +124,7 @@ export interface FileRoutesById {
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
+  '/estoque/': typeof EstoqueIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,7 +133,6 @@ export interface FileRouteTypes {
     | '/atividades'
     | '/clientes'
     | '/configuracoes'
-    | '/estoque'
     | '/financeiro'
     | '/login'
     | '/master'
@@ -141,13 +140,13 @@ export interface FileRouteTypes {
     | '/requisicoes'
     | '/tecnicos'
     | '/estoque/$itemId'
+    | '/estoque/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/atividades'
     | '/clientes'
     | '/configuracoes'
-    | '/estoque'
     | '/financeiro'
     | '/login'
     | '/master'
@@ -155,13 +154,13 @@ export interface FileRouteTypes {
     | '/requisicoes'
     | '/tecnicos'
     | '/estoque/$itemId'
+    | '/estoque'
   id:
     | '__root__'
     | '/'
     | '/atividades'
     | '/clientes'
     | '/configuracoes'
-    | '/estoque'
     | '/financeiro'
     | '/login'
     | '/master'
@@ -169,6 +168,7 @@ export interface FileRouteTypes {
     | '/requisicoes'
     | '/tecnicos'
     | '/estoque/$itemId'
+    | '/estoque/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -176,13 +176,14 @@ export interface RootRouteChildren {
   AtividadesRoute: typeof AtividadesRoute
   ClientesRoute: typeof ClientesRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
-  EstoqueRoute: typeof EstoqueRouteWithChildren
   FinanceiroRoute: typeof FinanceiroRoute
   LoginRoute: typeof LoginRoute
   MasterRoute: typeof MasterRoute
   RelatoriosRoute: typeof RelatoriosRoute
   RequisicoesRoute: typeof RequisicoesRoute
   TecnicosRoute: typeof TecnicosRoute
+  EstoqueItemIdRoute: typeof EstoqueItemIdRoute
+  EstoqueIndexRoute: typeof EstoqueIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -229,13 +230,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/estoque': {
-      id: '/estoque'
-      path: '/estoque'
-      fullPath: '/estoque'
-      preLoaderRoute: typeof EstoqueRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/configuracoes': {
       id: '/configuracoes'
       path: '/configuracoes'
@@ -264,39 +258,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/estoque/': {
+      id: '/estoque/'
+      path: '/estoque'
+      fullPath: '/estoque/'
+      preLoaderRoute: typeof EstoqueIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/estoque/$itemId': {
       id: '/estoque/$itemId'
-      path: '/$itemId'
+      path: '/estoque/$itemId'
       fullPath: '/estoque/$itemId'
       preLoaderRoute: typeof EstoqueItemIdRouteImport
-      parentRoute: typeof EstoqueRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface EstoqueRouteChildren {
-  EstoqueItemIdRoute: typeof EstoqueItemIdRoute
-}
-
-const EstoqueRouteChildren: EstoqueRouteChildren = {
-  EstoqueItemIdRoute: EstoqueItemIdRoute,
-}
-
-const EstoqueRouteWithChildren =
-  EstoqueRoute._addFileChildren(EstoqueRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtividadesRoute: AtividadesRoute,
   ClientesRoute: ClientesRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
-  EstoqueRoute: EstoqueRouteWithChildren,
   FinanceiroRoute: FinanceiroRoute,
   LoginRoute: LoginRoute,
   MasterRoute: MasterRoute,
   RelatoriosRoute: RelatoriosRoute,
   RequisicoesRoute: RequisicoesRoute,
   TecnicosRoute: TecnicosRoute,
+  EstoqueItemIdRoute: EstoqueItemIdRoute,
+  EstoqueIndexRoute: EstoqueIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
