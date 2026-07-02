@@ -768,7 +768,8 @@ export type RequisitionStatus = "Aberta" | "Aguardando Cotação" | "Em Aprovaç
 
 export type Requisition = {
   id: string;
-  activityId: string;
+  activityId?: string; // Optional agora para permitir avulsas
+  companyId: string;
   status: RequisitionStatus;
   description: string;
   createdAt: string;
@@ -787,8 +788,22 @@ export async function listRequisitions(): Promise<Requisition[]> {
   const { data, error } = await (supabase as any).from("requisitions").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((r: any) => ({
-    id: r.id, activityId: r.activity_id, status: r.status, description: r.description, createdAt: r.created_at
+    id: r.id, 
+    activityId: r.activity_id, 
+    companyId: r.company_id,
+    status: r.status, 
+    description: r.description, 
+    createdAt: r.created_at
   }));
+}
+
+export async function createAvulsaRequisition(description: string, companyId: string): Promise<void> {
+  const { error } = await (supabase as any).from("requisitions").insert({
+    company_id: companyId,
+    description,
+    status: "Aberta"
+  });
+  if (error) throw error;
 }
 
 export async function updateRequisition(id: string, status: RequisitionStatus): Promise<void> {

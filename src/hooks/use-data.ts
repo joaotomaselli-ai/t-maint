@@ -9,7 +9,7 @@ import {
   listTechnicianPayments, upsertTechnicianPayment, deleteTechnicianPayment,
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
   type ClientPayment, type TechnicianPayment, type ActivityTechnician,
-  listRequisitions, updateRequisition, listQuotes, addQuote, deleteQuote,
+  listRequisitions, updateRequisition, listQuotes, addQuote, deleteQuote, createAvulsaRequisition,
   type Requisition, type RequisitionQuote, type RequisitionStatus,
 } from "@/lib/api";
 import { getCompanyProfileData } from "@/lib/admin.functions";
@@ -207,6 +207,7 @@ export function useRequisitions() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const enabled = !!user;
+  const { companyId } = useAccess();
 
   const q = useQuery({
     queryKey: ["requisitions", user?.id],
@@ -221,6 +222,13 @@ export function useRequisitions() {
     isLoading: q.isLoading,
     updateStatus: useMutation({
       mutationFn: ({ id, status }: { id: string; status: RequisitionStatus }) => updateRequisition(id, status),
+      onSuccess: invalidate,
+    }),
+    createAvulsa: useMutation({
+      mutationFn: (description: string) => {
+        if (!companyId) throw new Error("Empresa não encontrada");
+        return createAvulsaRequisition(description, companyId);
+      },
       onSuccess: invalidate,
     }),
   };

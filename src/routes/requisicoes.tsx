@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ShoppingCart, FileText, Trash2, ExternalLink, Paperclip, Wrench, Download } from "lucide-react";
+import { ShoppingCart, FileText, Trash2, ExternalLink, Paperclip, Wrench, Download, Plus, Package } from "lucide-react";
 import { toast } from "sonner";
 import { uploadQuoteFile, getQuoteFileUrl, listAttachments, getAttachmentUrl, type Requisition, type RequisitionStatus } from "@/lib/api";
 import { NumericFormat } from "react-number-format";
@@ -60,6 +60,9 @@ function Requisicoes() {
   const { reports } = useReports();
   const { clients } = useClients();
   const [selectedReq, setSelectedReq] = useState<Requisition | null>(null);
+  const [isAvulsaOpen, setIsAvulsaOpen] = useState(false);
+  const [avulsaDesc, setAvulsaDesc] = useState("");
+  const { createAvulsa } = useRequisitions();
 
   if (!isAdmin) {
     return (
@@ -80,6 +83,18 @@ function Requisicoes() {
     });
   };
 
+  const handleCreateAvulsa = (e: React.FormEvent) => {
+    e.preventDefault();
+    createAvulsa.mutate(avulsaDesc, {
+      onSuccess: () => {
+        toast.success("Requisição avulsa criada com sucesso!");
+        setIsAvulsaOpen(false);
+        setAvulsaDesc("");
+      },
+      onError: (err: any) => toast.error(err?.message || "Erro ao criar")
+    });
+  };
+
   const RequisitionCard = ({ req }: { req: Requisition }) => {
     const report = reports.find(r => r.id === req.activityId);
     const client = clients.find(c => c.id === report?.clientId);
@@ -90,11 +105,20 @@ function Requisicoes() {
           <div className="flex justify-between items-start gap-4">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Wrench className="h-4 w-4 text-muted-foreground" />
-                OS {report?.orderNumber ?? "N/A"}
+                {req.activityId ? (
+                  <>
+                    <Wrench className="h-4 w-4 text-muted-foreground" />
+                    OS {report?.orderNumber ?? "N/A"}
+                  </>
+                ) : (
+                  <>
+                    <Package className="h-4 w-4 text-primary" />
+                    Uso Interno/Avulsa
+                  </>
+                )}
               </CardTitle>
               <CardDescription className="mt-1 font-medium text-foreground">
-                {client?.name ?? "Cliente desconhecido"}
+                {req.activityId ? (client?.name ?? "Cliente desconhecido") : "Estoque da Empresa"}
               </CardDescription>
               <div className="text-xs text-muted-foreground mt-1">
                 Criada em {format(new Date(req.createdAt), "dd 'de' MMM, yyyy", { locale: ptBR })}
@@ -133,9 +157,15 @@ function Requisicoes() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Requisições</h1>
-        <p className="text-muted-foreground mt-1">Controle de requisições de materiais e compras futuras.</p>
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Requisições</h1>
+          <p className="text-muted-foreground mt-1">Controle de requisições de materiais e compras futuras.</p>
+        </div>
+        <Button onClick={() => setIsAvulsaOpen(true)} className="gap-2 shrink-0">
+          <Plus className="h-4 w-4" />
+          Nova Requisição Avulsa
+        </Button>
       </header>
 
       <Tabs defaultValue="pendentes" className="space-y-4">
@@ -163,10 +193,39 @@ function Requisicoes() {
         <QuotesDialog 
           req={selectedReq} 
           open={!!selectedReq} 
-          onOpenChange={(v) => !v && setSelectedReq(null)} 
+          onOpenChange={(op) => !op && setSelectedReq(null)} 
           report={reports.find(r => r.id === selectedReq.activityId)}
         />
       )}
+
+      <Dialog open={isAvulsaOpen} onOpenChange={setIsAvulsaOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Requisição Avulsa</DialogTitle>
+            <DialogDescription>
+              Crie uma requisição sem vinculá-la a uma Ordem de Serviço, ideal para materiais de uso interno ou estoque.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateAvulsa} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Descrição / Lista de Materiais</Label>
+              <textarea 
+                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Ex: 5 caixas de papel A4, 2 toners pretos, materiais de limpeza..."
+                value={avulsaDesc}
+                onChange={e => setAvulsaDesc(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsAvulsaOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={!avulsaDesc.trim() || createAvulsa.isPending}>
+                {createAvulsa.isPending ? "Criando..." : "Criar Requisição"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
