@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useInventory } from "@/hooks/use-data";
 import { useAccess } from "@/hooks/use-access";
@@ -107,7 +107,8 @@ function EstoquePage() {
           {items.map(item => {
             const isLow = item.minQuantity != null && item.currentQuantity <= item.minQuantity;
             return (
-              <Card key={item.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate({ to: `/estoque/${item.id}` })}>
+              <Link key={item.id} to="/estoque/$itemId" params={{ itemId: item.id }} className="block focus:outline-none">
+                <Card className="cursor-pointer hover:border-primary/50 transition-colors h-full">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start gap-4">
                     <div className="space-y-1 flex-1">
@@ -140,6 +141,7 @@ function EstoquePage() {
                   </div>
                 </CardContent>
               </Card>
+            </Link>
             );
           })}
         </div>
