@@ -10,7 +10,10 @@ import {
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
   type ClientPayment, type TechnicianPayment, type ActivityTechnician,
   listRequisitions, updateRequisition, listQuotes, addQuote, deleteQuote, createAvulsaRequisition,
+  listInventoryItems, upsertInventoryItem, deleteInventoryItem,
+  listInventoryMovements, createInventoryMovement,
   type Requisition, type RequisitionQuote, type RequisitionStatus,
+  type InventoryItem, type InventoryMovement,
 } from "@/lib/api";
 import { getCompanyProfileData } from "@/lib/admin.functions";
 import { listAgendaEvents, createAgendaEvent, updateAgendaEvent, deleteAgendaEvent, toggleTaskCompletion } from "@/lib/agenda.functions";
@@ -297,5 +300,40 @@ export function useAgendaEvents() {
       mutationFn: (data: { eventId: string; dateStr: string; completed: boolean }) => toggleTaskFn({ data }),
       onSuccess: invalidate,
     }),
+  };
+}
+
+export function useInventory() {
+  const { user } = useAuth();
+  const { companyId } = useAccess();
+  const qc = useQueryClient();
+  const enabled = !!user && !!companyId;
+
+  const itemsQuery = useQuery({
+    queryKey: ["inventory_items", companyId],
+    queryFn: () => listInventoryItems(companyId!),
+    enabled,
+  });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["inventory_items", companyId] });
+  };
+
+  return {
+    items: itemsQuery.data ?? [],
+    isLoading: itemsQuery.isLoading,
+    upsertItem: useMutation({
+      mutationFn: (item: Partial<InventoryItem>) => upsertInventoryItem({ ...item, companyId: companyId! }),
+      onSuccess: invalidate,
+    }),
+    deleteItem: useMutation({
+      mutationFn: (id: string) => deleteInventoryItem(id),
+      onSuccess: invalidate,
+    }),
+    createMovement: useMutation({
+      mutationFn: (movement: Omit<InventoryMovement, "id" | "createdAt" | "totalCost" | "companyId" | "userId">) => 
+        createInventoryMovement({ ...movement, companyId: companyId!, userId: user!.id }),
+      onSuccess: invalidate,
+    })
   };
 }

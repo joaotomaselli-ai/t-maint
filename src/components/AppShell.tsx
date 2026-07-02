@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff, ShoppingCart } from "lucide-react";
+import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff, ShoppingCart, Package } from "lucide-react";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,6 +18,7 @@ const ALL_NAV: NavItem[] = [
   { to: "/relatorios", label: "Relatórios", icon: FileText, feature: "relatorios" },
   { to: "/financeiro", label: "Financeiro", icon: DollarSign, feature: "financeiro" },
   { to: "/requisicoes", label: "Requisições", icon: ShoppingCart, adminOnly: true },
+  { to: "/estoque", label: "Estoque", icon: Package, adminOnly: true, proOnly: true },
   { to: "/configuracoes", label: "Configurações", icon: SettingsIcon },
 ];
 
@@ -26,10 +27,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const moneyHidden = useMoneyHidden();
-  const { isMaster, isAdmin, isTechnician, allowedFeatures } = useAccess();
+  const { isMaster, isAdmin, isTechnician, allowedFeatures, planType } = useAccess();
 
-  const nav: NavItem[] = ALL_NAV.filter((item) => {
+  const nav: NavItem[] = ALL_NAV.filter((item: any) => {
     if (item.adminOnly && !isAdmin) return false;
+    if (item.proOnly && planType === "basic") return false;
     if (!item.feature) return true;
     // Master: hide operational tabs (clientes, técnicos, atividades, relatórios)
     if (isMaster) return item.feature === "financeiro";

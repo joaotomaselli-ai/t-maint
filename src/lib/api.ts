@@ -847,3 +847,125 @@ export async function getQuoteFileUrl(path: string): Promise<string> {
   return data.signedUrl;
 }
 
+// --- Inventory API ---
+
+export type InventoryItem = {
+  id: string;
+  companyId: string;
+  name: string;
+  sku: string | null;
+  description: string | null;
+  location: string | null;
+  unit: string;
+  minQuantity: number | null;
+  currentQuantity: number;
+  averageCost: number;
+  qrCodeValue: string | null;
+  createdAt: string;
+};
+
+export type InventoryMovement = {
+  id: string;
+  companyId: string;
+  itemId: string;
+  type: "IN" | "OUT";
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
+  activityId: string | null;
+  userId: string;
+  reason: string | null;
+  createdAt: string;
+};
+
+export async function listInventoryItems(companyId: string): Promise<InventoryItem[]> {
+  const { data, error } = await (supabase as any).from("inventory_items").select("*").eq("company_id", companyId).order("name");
+  if (error) throw error;
+  return (data ?? []).map((i: any) => ({
+    id: i.id, companyId: i.company_id, name: i.name, sku: i.sku, description: i.description,
+    location: i.location, unit: i.unit, minQuantity: i.min_quantity != null ? Number(i.min_quantity) : null,
+    currentQuantity: Number(i.current_quantity), averageCost: Number(i.average_cost),
+    qrCodeValue: i.qr_code_value, createdAt: i.created_at
+  }));
+}
+
+export async function upsertInventoryItem(item: Partial<InventoryItem> & { companyId: string }): Promise<InventoryItem> {
+  const payload = {
+    ...(item.id ? { id: item.id } : {}),
+    company_id: item.companyId,
+    name: item.name,
+    sku: item.sku,
+    description: item.description,
+    location: item.location,
+    unit: item.unit || "Un",
+    min_quantity: item.minQuantity,
+    current_quantity: item.currentQuantity || 0,
+    average_cost: item.averageCost || 0,
+    qr_code_value: item.qrCodeValue
+  };
+  const { data, error } = await (supabase as any).from("inventory_items").upsert(payload).select().single();
+  if (error) throw error;
+  return {
+    id: data.id, companyId: data.company_id, name: data.name, sku: data.sku, description: data.description,
+    location: data.location, unit: data.unit, minQuantity: data.min_quantity != null ? Number(data.min_quantity) : null,
+    currentQuantity: Number(data.current_quantity), averageCost: Number(data.average_cost),
+    qrCodeValue: data.qr_code_value, createdAt: data.created_at
+  };
+}
+
+export async function deleteInventoryItem(id: string): Promise<void> {
+  const { error } = await (supabase as any).from("inventory_items").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function listInventoryMovements(itemId: string): Promise<InventoryMovement[]> {
+  const { data, error } = await (supabase as any).from("inventory_movements").select("*").eq("item_id", itemId).order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((m: any) => ({
+    id: m.id, companyId: m.company_id, itemId: m.item_id, type: m.type, quantity: Number(m.quantity),
+    unitCost: Number(m.unit_cost), totalCost: Number(m.total_cost), activityId: m.activity_id,
+    userId: m.user_id, reason: m.reason, createdAt: m.created_at
+  }));
+}
+
+export async function createInventoryMovement(movement: Omit<InventoryMovement, "id" | "createdAt" | "totalCost">): Promise<void> {
+  const total_cost = movement.quantity * movement.unitCost;
+  
+  // 1. Insert Movement
+  const { error: moveError } = await (supabase as any).from("inventory_movements").insert({
+    company_id: movement.companyId,
+    item_id: movement.itemId,
+    type: movement.type,
+    quantity: movement.quantity,
+    unit_cost: movement.unitCost,
+    total_cost,
+    activity_id: movement.activityId,
+    user_id: movement.userId,
+    reason: movement.reason
+  });
+  if (moveError) throw moveError;
+
+  // 2. Update Item Quantity & Average Cost
+  const { data: item } = await (supabase as any).from("inventory_items").select("current_quantity, average_cost").eq("id", movement.itemId).single();
+  if (item) {
+    let newQty = Number(item.current_quantity);
+    let newCost = Number(item.average_cost);
+    
+    if (movement.type === "IN") {
+      const currentTotalVal = newQty * newCost;
+      const incomingVal = movement.quantity * movement.unitCost;
+      newQty += movement.quantity;
+      if (newQty > 0) {
+        newCost = (currentTotalVal + incomingVal) / newQty;
+      }
+    } else {
+      newQty = Math.max(0, newQty - movement.quantity);
+      // OUT doesn't change average cost
+    }
+    
+    await (supabase as any).from("inventory_items").update({
+      current_quantity: newQty,
+      average_cost: newCost
+    }).eq("id", movement.itemId);
+  }
+}
