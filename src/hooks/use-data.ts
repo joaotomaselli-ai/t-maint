@@ -9,7 +9,7 @@ import {
   listTechnicianPayments, upsertTechnicianPayment, deleteTechnicianPayment,
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
   type ClientPayment, type TechnicianPayment, type ActivityTechnician,
-  listRequisitions, updateRequisition, listQuotes, addQuote, deleteQuote, createAvulsaRequisition,
+  listRequisitions, updateRequisition, listQuotes, addQuote, deleteQuote, createAvulsaRequisition, deleteRequisition,
   listInventoryItems, upsertInventoryItem, deleteInventoryItem,
   listInventoryMovements, createInventoryMovement,
   type Requisition, type RequisitionQuote, type RequisitionStatus,
@@ -232,6 +232,10 @@ export function useRequisitions() {
         if (!companyId) throw new Error("Empresa não encontrada");
         return createAvulsaRequisition(description, companyId);
       },
+      onSuccess: invalidate,
+    }),
+    deleteReq: useMutation({
+      mutationFn: (id: string) => deleteRequisition(id),
       onSuccess: invalidate,
     }),
   };

@@ -811,6 +811,11 @@ export async function updateRequisition(id: string, status: RequisitionStatus): 
   if (error) throw error;
 }
 
+export async function deleteRequisition(id: string): Promise<void> {
+  const { error } = await (supabase as any).from("requisitions").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function listQuotes(requisitionId: string): Promise<RequisitionQuote[]> {
   const { data, error } = await (supabase as any).from("requisition_quotes").select("*").eq("requisition_id", requisitionId).order("value", { ascending: true });
   if (error) throw error;

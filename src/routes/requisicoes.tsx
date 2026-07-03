@@ -56,13 +56,12 @@ const STATUS_COLORS: Record<RequisitionStatus, string> = {
 
 function Requisicoes() {
   const { isAdmin } = useAccess();
-  const { requisitions, updateStatus } = useRequisitions();
+  const { requisitions, updateStatus, createAvulsa, deleteReq } = useRequisitions();
   const { reports } = useReports();
   const { clients } = useClients();
   const [selectedReq, setSelectedReq] = useState<Requisition | null>(null);
   const [isAvulsaOpen, setIsAvulsaOpen] = useState(false);
   const [avulsaDesc, setAvulsaDesc] = useState("");
-  const { createAvulsa } = useRequisitions();
 
   if (!isAdmin) {
     return (
@@ -95,6 +94,15 @@ function Requisicoes() {
     });
   };
 
+  const handleDelete = (id: string) => {
+    if (confirm("Tem certeza que deseja excluir esta requisição?")) {
+      deleteReq.mutate(id, {
+        onSuccess: () => toast.success("Requisição excluída!"),
+        onError: (err: any) => toast.error(err?.message || "Erro ao excluir"),
+      });
+    }
+  };
+
   const RequisitionCard = ({ req }: { req: Requisition }) => {
     const report = reports.find(r => r.id === req.activityId);
     const client = clients.find(c => c.id === report?.clientId);
@@ -124,22 +132,27 @@ function Requisicoes() {
                 Criada em {format(new Date(req.createdAt), "dd 'de' MMM, yyyy", { locale: ptBR })}
               </div>
             </div>
-            <Select 
-              value={req.status} 
-              onValueChange={(val) => handleStatusChange(req.id, val as RequisitionStatus)}
-            >
-              <SelectTrigger className="w-[180px] h-8 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${STATUS_COLORS[req.status]}`} />
-                  <SelectValue />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(STATUS_COLORS).map(s => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select 
+                value={req.status} 
+                onValueChange={(val) => handleStatusChange(req.id, val as RequisitionStatus)}
+              >
+                <SelectTrigger className="w-[180px] h-8 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${STATUS_COLORS[req.status]}`} />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(STATUS_COLORS).map(s => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(req.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4">
