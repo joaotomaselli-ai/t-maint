@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useInventory, useReports, useAuth } from "@/hooks/use-data";
+import { useQuery } from "@tanstack/react-query";
+import { listInventoryMovements } from "@/lib/api";
 import { useAccess } from "@/hooks/use-access";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,12 +28,6 @@ function EstoqueItemPage() {
   const { reports } = useReports();
   
   const item = useMemo(() => items.find(i => i.id === itemId), [items, itemId]);
-  
-  // Fake query for now, since we need a hook to fetch movements by item ID. 
-  // Let's implement that in useInventory, but for now we'll assume we have it or we fetch it.
-  // Actually, we added listInventoryMovements to api.ts, so let's import it via useQuery here.
-  const { useQuery } = require("@tanstack/react-query");
-  const { listInventoryMovements } = require("@/lib/api");
   
   const movQuery = useQuery({
     queryKey: ["inventory_movements", itemId],
