@@ -110,8 +110,8 @@ function Requisicoes() {
     return (
       <Card className="flex flex-col">
         <CardHeader className="pb-3">
-          <div className="flex justify-between items-start gap-4">
-            <div>
+          <div className="flex flex-wrap justify-between items-start gap-3">
+            <div className="min-w-[150px] flex-1">
               <CardTitle className="text-lg flex items-center gap-2">
                 {req.activityId ? (
                   <>
@@ -132,12 +132,12 @@ function Requisicoes() {
                 Criada em {format(new Date(req.createdAt), "dd 'de' MMM, yyyy", { locale: ptBR })}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 shrink-0">
               <Select 
                 value={req.status} 
                 onValueChange={(val) => handleStatusChange(req.id, val as RequisitionStatus)}
               >
-                <SelectTrigger className="w-[180px] h-8 text-xs">
+                <SelectTrigger className="w-[140px] h-8 text-xs">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${STATUS_COLORS[req.status]}`} />
                     <SelectValue />
