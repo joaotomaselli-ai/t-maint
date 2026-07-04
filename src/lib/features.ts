@@ -4,6 +4,8 @@ export const ALL_FEATURES = [
   { key: "atividades", label: "Ordem de Serviço", path: "/atividades" },
   { key: "relatorios", label: "Relatórios", path: "/relatorios" },
   { key: "financeiro", label: "Financeiro", path: "/financeiro" },
+  { key: "requisicoes", label: "Requisições", path: "/requisicoes" },
+  { key: "estoque", label: "Estoque", path: "/estoque" },
 ] as const;
 
 export type FeatureKey = (typeof ALL_FEATURES)[number]["key"];
