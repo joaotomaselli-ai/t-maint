@@ -420,6 +420,7 @@ export const createTechnicianLogin = createServerFn({ method: "POST" })
         password: z.string().min(6).max(128),
         technicianId: z.string().uuid(),
         companyId: z.string().uuid().optional(),
+        allowedFeatures: z.array(z.string()).nullable().optional(),
       })
       .parse(d),
   )
@@ -460,6 +461,7 @@ export const createTechnicianLogin = createServerFn({ method: "POST" })
         user_id: newUserId,
         role: "technician",
         company_id: targetCompany,
+        allowed_features: data.allowedFeatures ?? null,
       });
     if (re && !re.message.includes("duplicate")) throw new Error(re.message);
 

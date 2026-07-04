@@ -17,8 +17,8 @@ const ALL_NAV: NavItem[] = [
   { to: "/atividades", label: "Ordem de Serviço", icon: Wrench, feature: "atividades" },
   { to: "/relatorios", label: "Relatórios", icon: FileText, feature: "relatorios" },
   { to: "/financeiro", label: "Financeiro", icon: DollarSign, feature: "financeiro" },
-  { to: "/requisicoes", label: "Requisições", icon: ShoppingCart, adminOnly: true },
-  { to: "/estoque", label: "Estoque", icon: Package, adminOnly: true, proOnly: true },
+  { to: "/requisicoes", label: "Requisições", icon: ShoppingCart, feature: "requisicoes" },
+  { to: "/estoque", label: "Estoque", icon: Package, feature: "estoque", proOnly: true },
   { to: "/configuracoes", label: "Configurações", icon: SettingsIcon },
 ];
 
@@ -42,7 +42,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     if (isTechnician) {
-      return true;
+      if (item.feature === "atividades" || item.feature === "relatorios") return true;
+      return allowedFeatures?.includes(item.feature) ?? false;
     }
     
     if (isAdmin) return true;

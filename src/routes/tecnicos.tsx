@@ -9,19 +9,19 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useTechnicians } from "@/hooks/use-data";
 import { fmtCurrency, type Technician } from "@/lib/api";
 import { useServerFn } from "@tanstack/react-start";
-import { createTechnicianLogin } from "@/lib/admin.functions";
+import { createTechnicianLogin, updateSubUser } from "@/lib/admin.functions";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { Plus, Pencil, Trash2, HardHat } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tecnicos")({ component: Tecnicos });
 
-type Editing = Omit<Technician, "id"> & { id?: string; hasFixedHours?: boolean; loginEmail?: string; loginPassword?: string };
+type Editing = Omit<Technician, "id"> & { id?: string; hasFixedHours?: boolean; loginEmail?: string; loginPassword?: string; allowedFeatures?: string[] };
 const empty = (): Editing => ({
   name: "", hourlyRate: 0, kmRate: 0,
   overtimeWeekdayRate: 0, overtimeWeekendRate: 0,
   monthlyFixedHours: null, hasFixedHours: false, isSalaried: false,
-  hasLogin: false, loginEmail: "", loginPassword: "",
+  hasLogin: false, loginEmail: "", loginPassword: "", allowedFeatures: [],
 });
 
 function Tecnicos() {
@@ -30,10 +30,11 @@ function Tecnicos() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
   const createLogin = useServerFn(createTechnicianLogin);
+  const updateFeatures = useServerFn(updateSubUser);
 
   const startNew = () => { setEditing(empty()); setOpen(true); };
   const startEdit = (t: Technician) => {
-    setEditing({ ...t, hasFixedHours: t.monthlyFixedHours != null });
+    setEditing({ ...t, hasFixedHours: t.monthlyFixedHours != null, allowedFeatures: t.allowedFeatures || [] });
     setOpen(true);
   };
 
@@ -80,11 +81,19 @@ function Tecnicos() {
             email: editing.loginEmail,
             password: editing.loginPassword,
             technicianId: techId,
+            allowedFeatures: editing.allowedFeatures ?? [],
           }
         });
         toast.success("Acesso ao sistema criado com sucesso!");
         // We might want to refresh technicians here to grab the new user_id, 
         // but react-query invalidation from useTechnicians should cover it eventually or next render.
+      } else if (techId && editing.hasLogin && editing.userId) {
+        await updateFeatures({
+          data: {
+            targetUserId: editing.userId,
+            allowedFeatures: editing.allowedFeatures ?? [],
+          }
+        });
       }
 
       setOpen(false);
@@ -188,7 +197,7 @@ function Tecnicos() {
                   />
                 </div>
                 {editing.hasLogin && !editing.userId && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="grid gap-2">
                       <Label>E-mail de acesso</Label>
                       <Input type="email" value={editing.loginEmail || ""} onChange={e => setEditing({ ...editing, loginEmail: e.target.value })} placeholder="tecnico@email.com" />
@@ -200,7 +209,36 @@ function Tecnicos() {
                   </div>
                 )}
                 {editing.userId && (
-                  <div className="text-xs text-success">Login ativo e configurado.</div>
+                  <div className="text-xs text-success mb-4">Login ativo e configurado.</div>
+                )}
+                {editing.hasLogin && (
+                  <div className="pt-3 border-t">
+                    <Label className="text-sm font-semibold mb-3 block">Permissões Adicionais</Label>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="perm-req"
+                          checked={editing.allowedFeatures?.includes("requisicoes") ?? false}
+                          onCheckedChange={(checked) => {
+                            const current = editing.allowedFeatures ?? [];
+                            setEditing({ ...editing, allowedFeatures: checked ? [...current, "requisicoes"] : current.filter(f => f !== "requisicoes") });
+                          }}
+                        />
+                        <Label htmlFor="perm-req" className="text-sm">Acesso a aba Requisições</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="perm-est"
+                          checked={editing.allowedFeatures?.includes("estoque") ?? false}
+                          onCheckedChange={(checked) => {
+                            const current = editing.allowedFeatures ?? [];
+                            setEditing({ ...editing, allowedFeatures: checked ? [...current, "estoque"] : current.filter(f => f !== "estoque") });
+                          }}
+                        />
+                        <Label htmlFor="perm-est" className="text-sm">Acesso a aba Estoque</Label>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

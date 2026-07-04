@@ -26,6 +26,7 @@ export type Technician = {
   monthlyFixedHours?: number | null;
   userId?: string | null;
   hasLogin?: boolean;
+  allowedFeatures?: string[];
 };
 
 export type ServiceType = "corretiva" | "preventiva";
@@ -240,7 +241,24 @@ export async function deleteClient(id: string): Promise<void> {
 export async function listTechnicians(): Promise<Technician[]> {
   const { data, error } = await supabase.from("technicians").select("*").order("name");
   if (error) throw error;
-  return (data ?? []).map(fromTechnician);
+  
+  const techs = (data ?? []).map(fromTechnician);
+  const userIds = techs.filter(t => t.userId).map(t => t.userId);
+  
+  if (userIds.length > 0) {
+    const { data: rolesData } = await supabase.from("user_roles").select("user_id, allowed_features").in("user_id", userIds);
+    if (rolesData) {
+      for (const t of techs) {
+        if (t.userId) {
+          const role = rolesData.find(r => r.user_id === t.userId);
+          if (role && role.allowed_features) {
+            t.allowedFeatures = role.allowed_features;
+          }
+        }
+      }
+    }
+  }
+  return techs;
 }
 export async function createTechnician(t: Omit<Technician, "id">, userId: string): Promise<Technician> {
   const { data, error } = await supabase.from("technicians")
