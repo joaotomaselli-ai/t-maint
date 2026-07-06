@@ -7,8 +7,9 @@ import {
   listAllSessions, listAllActivityTechnicians,
   listClientPayments, upsertClientPayment, deleteClientPayment,
   listTechnicianPayments, upsertTechnicianPayment, deleteTechnicianPayment,
+  listPreventivePayments, upsertPreventivePayment, deletePreventivePayment,
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
-  type ClientPayment, type TechnicianPayment, type ActivityTechnician,
+  type ClientPayment, type TechnicianPayment, type ActivityTechnician, type PreventivePayment,
   listRequisitions, updateRequisition, listQuotes, addQuote, deleteQuote, createAvulsaRequisition, deleteRequisition,
   listInventoryItems, upsertInventoryItem, deleteInventoryItem,
   listInventoryMovements, createInventoryMovement,
@@ -339,5 +340,30 @@ export function useInventory() {
         createInventoryMovement({ ...movement, companyId: companyId!, userId: user!.id }),
       onSuccess: invalidate,
     })
+  };
+}
+
+export function usePreventivePayments() {
+  const { companyId } = useAccess();
+  const qc = useQueryClient();
+  const enabled = !!companyId;
+  const q = useQuery({
+    queryKey: ["preventive_payments", companyId],
+    queryFn: listPreventivePayments,
+    enabled,
+  });
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["preventive_payments", companyId] });
+  return {
+    payments: q.data ?? [],
+    isLoading: q.isLoading,
+    upsertPayment: useMutation({
+      mutationFn: ({ clientId, referenceMonth, amount, note }: { clientId: string, referenceMonth: string, amount: number, note?: string }) => 
+        upsertPreventivePayment(companyId!, clientId, referenceMonth, amount, note),
+      onSuccess: invalidate,
+    }),
+    deletePayment: useMutation({
+      mutationFn: (id: string) => deletePreventivePayment(id),
+      onSuccess: invalidate,
+    }),
   };
 }

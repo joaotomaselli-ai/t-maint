@@ -56,6 +56,9 @@ export type ServiceReport = {
   discountHours: number;
   clientSignature?: string;
   technicianSignature?: string;
+  isPackage?: boolean;
+  packageValue?: number | null;
+  packageContractFile?: string | null;
   createdAt: string;
 };
 
@@ -177,6 +180,9 @@ const fromReport = (r: any): ServiceReport => ({
   discountHours: Number(r.discount_hours ?? 0),
   clientSignature: r.client_signature ?? "",
   technicianSignature: r.technician_signature ?? "",
+  isPackage: Boolean(r.is_package),
+  packageValue: r.package_value == null ? null : Number(r.package_value),
+  packageContractFile: r.package_contract_file ?? null,
   createdAt: r.created_at,
 });
 
@@ -204,6 +210,9 @@ const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
   discount_hours: r.discountHours ?? 0,
   client_signature: r.clientSignature ?? null,
   technician_signature: r.technicianSignature ?? null,
+  is_package: r.isPackage ?? false,
+  package_value: r.packageValue ?? null,
+  package_contract_file: r.packageContractFile ?? null,
 });
 
 const fromProfile = (r: any): Settings => ({
@@ -588,14 +597,55 @@ export async function deleteTechnicianPayment(activityId: string, technicianId: 
   if (error) throw error;
 }
 
-export function sessionClientTotals(s: ServiceSession, client?: Client, isPreventive?: boolean) {
+export type PreventivePayment = {
+  id: string;
+  clientId: string;
+  referenceMonth: string;
+  amount: number;
+  paidAt: string;
+  note?: string;
+};
+
+const fromPreventivePay = (r: any): PreventivePayment => ({
+  id: r.id,
+  clientId: r.client_id,
+  referenceMonth: r.reference_month,
+  amount: Number(r.amount),
+  paidAt: r.paid_at,
+  note: r.note || "",
+});
+
+export async function listPreventivePayments(): Promise<PreventivePayment[]> {
+  const { data, error } = await supabase.from("preventive_payments").select("*");
+  if (error) throw error;
+  return (data ?? []).map(fromPreventivePay);
+}
+
+export async function upsertPreventivePayment(
+  companyId: string, clientId: string, referenceMonth: string, amount: number, note?: string
+): Promise<PreventivePayment> {
+  const { data, error } = await supabase.from("preventive_payments")
+    .upsert(
+      { company_id: companyId, client_id: clientId, reference_month: referenceMonth, amount, note: note || null, paid_at: new Date().toISOString() },
+      { onConflict: "company_id,client_id,reference_month" }
+    ).select().single();
+  if (error) throw error;
+  return fromPreventivePay(data);
+}
+
+export async function deletePreventivePayment(id: string): Promise<void> {
+  const { error } = await supabase.from("preventive_payments").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export function sessionClientTotals(s: ServiceSession, client?: Client, isPreventive?: boolean, isPackage?: boolean) {
   const travelOut = diffHours(s.travelOutStart, s.travelOutEnd);
   const service = diffHours(s.serviceStart, s.serviceEnd);
   const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
   const discount = Math.max(0, s.discountHours || 0);
   const totalHours = Math.max(0, travelOut + service + travelBack - discount);
-  const hoursValue = isPreventive ? 0 : totalHours * (client?.hourlyRate ?? 0);
-  const kmValue = isPreventive ? 0 : (s.km || 0) * (client?.kmRate ?? 0);
+  const hoursValue = (isPreventive || isPackage) ? 0 : totalHours * (client?.hourlyRate ?? 0);
+  const kmValue = (isPreventive || isPackage) ? 0 : (s.km || 0) * (client?.kmRate ?? 0);
   return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
@@ -626,13 +676,14 @@ export function reportTotalsWithSessions(r: ServiceReport, sessions: ServiceSess
   let service = base.service;
   let travelOut = base.travelOut;
   let travelBack = base.travelBack;
-  let hoursValue = base.hoursValue;
+  let hoursValue = base.hoursValue; // For packages, base already sets this to packageValue
   let kmValue = base.kmValue;
   let km = r.km || 0;
   for (const s of extras) {
-    const t = sessionClientTotals(s, client, r.type === "preventiva");
+    const t = sessionClientTotals(s, client, r.type === "preventiva", r.isPackage);
     totalHours += t.totalHours; service += t.service;
     travelOut += t.travelOut; travelBack += t.travelBack;
+    // We only add session money if it's NOT a package and NOT a preventive
     hoursValue += t.hoursValue; kmValue += t.kmValue;
     km += s.km || 0;
   }
@@ -657,8 +708,19 @@ export function reportTotals(r: ServiceReport, client?: Client) {
   const hourlyRate = client?.hourlyRate ?? 0;
   const kmRate = client?.kmRate ?? 0;
   const isPreventive = r.type === "preventiva";
-  const hoursValue = isPreventive ? 0 : totalHours * hourlyRate;
-  const kmValue = isPreventive ? 0 : (r.km || 0) * kmRate;
+  const isPackage = r.isPackage;
+  
+  let hoursValue = 0;
+  let kmValue = 0;
+  
+  if (isPackage) {
+    hoursValue = r.packageValue ?? 0;
+    kmValue = 0; // KM is included in the package
+  } else if (!isPreventive) {
+    hoursValue = totalHours * hourlyRate;
+    kmValue = (r.km || 0) * kmRate;
+  }
+
   return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, km: r.km || 0, total: hoursValue + kmValue };
 }
 

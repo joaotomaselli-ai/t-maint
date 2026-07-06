@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { SignaturePad } from "@/components/ui/SignaturePad";
 import { useClients, useReports, useSettings, useCompanySettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,6 +45,8 @@ const empty = (technician = ""): Editing => ({
   overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
   futureReplacements: "",
   discountHours: 0,
+  isPackage: false,
+  packageValue: null,
 });
 
 type PdfChoice = {
@@ -857,6 +860,34 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               </Select>
             </div>
           </section>
+
+          {isAdmin && (
+            <div className="grid gap-4 rounded-lg border p-4 bg-muted/20">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={editing.isPackage || false}
+                  onCheckedChange={(c) => setEditing({ ...editing, isPackage: c, packageValue: c ? (editing.packageValue || 0) : null })}
+                  id="is-package-switch"
+                />
+                <Label htmlFor="is-package-switch" className="cursor-pointer font-semibold">
+                  Pacote de Serviço (Corretiva Programada / Valor Fechado)
+                </Label>
+              </div>
+              {editing.isPackage && (
+                <div className="grid gap-4 sm:grid-cols-2 mt-2">
+                  <div className="grid gap-2">
+                    <Label>Valor do Pacote (R$)</Label>
+                    <Input
+                      type="number" step="0.01" min="0"
+                      value={editing.packageValue || ""}
+                      onChange={(e) => setEditing({ ...editing, packageValue: parseFloat(e.target.value) || 0 })}
+                      placeholder="Ex: 5000.00"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid gap-2">
             <Label>{isPreventive ? "Descrição de Atividades Mecânicas" : "Descrição do serviço solicitado / problema"}</Label>

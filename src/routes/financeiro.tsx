@@ -13,12 +13,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   useClients, useReports, useTechnicians, useAllSessions,
   useClientPayments, useTechnicianPayments, useAllActivityTechnicians,
+  usePreventivePayments
 } from "@/hooks/use-data";
 import {
   reportTotalsWithSessions, technicianPayForReport, fmtCurrency, fmtHours,
 } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
-import { Users, HardHat, CheckCircle2, Circle, DollarSign } from "lucide-react";
+import { Search, Loader2, CheckCircle2, Users, HardHat, Circle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useAccess } from "@/hooks/use-access";
@@ -217,8 +218,14 @@ function ClientFinance() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <Tabs defaultValue="faturamento" className="space-y-6">
+      <TabsList className="w-full justify-start border-b rounded-none px-0 bg-transparent h-auto p-0">
+        <TabsTrigger value="faturamento" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-2 pt-2 px-4">Faturamento de OS</TabsTrigger>
+        <TabsTrigger value="contratos" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-2 pt-2 px-4">Contratos Mensais</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="faturamento" className="space-y-6 mt-4">
+        <Card>
         <CardHeader><CardTitle>Filtros</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <div className="grid gap-2 lg:col-span-2">
@@ -309,6 +316,102 @@ function ClientFinance() {
           </div>
         </CardContent>
       </Card>
+      </TabsContent>
+
+      <TabsContent value="contratos" className="mt-4">
+        <ContratosMensaisFinance clients={clients} />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function ContratosMensaisFinance({ clients }: { clients: any[] }) {
+  const money = useMoney();
+  const { payments, upsertPayment, deletePayment } = usePreventivePayments();
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
+
+  const preventiveClients = useMemo(() => clients.filter(c => c.hasPreventiveContract), [clients]);
+  
+  const paymentByClient = useMemo(() => {
+    const map = new Map();
+    for (const p of payments) {
+      if (p.referenceMonth === month) {
+        map.set(p.clientId, p);
+      }
+    }
+    return map;
+  }, [payments, month]);
+
+  const togglePayment = async (clientId: string, amount: number) => {
+    try {
+      const existing = paymentByClient.get(clientId);
+      if (existing) {
+        await deletePayment.mutateAsync(existing.id);
+        toast.success("Pagamento removido");
+      } else {
+        await upsertPayment.mutateAsync({ clientId, referenceMonth: month, amount });
+        toast.success("Mensalidade recebida");
+      }
+    } catch (e) {
+      toast.error("Erro ao atualizar");
+    }
+  };
+
+  const totalExpected = preventiveClients.reduce((acc, c) => acc + (c.preventiveContractValue || 0), 0);
+  const totalPaid = preventiveClients.reduce((acc, c) => acc + (paymentByClient.has(c.id) ? (c.preventiveContractValue || 0) : 0), 0);
+  
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle>Filtro de Mensalidades</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid gap-2 max-w-sm">
+            <Label>Mês de Referência</Label>
+            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Previsto Mensal</CardTitle></CardHeader>
+          <CardContent><div className="text-2xl font-bold">{money(totalExpected)}</div></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Recebido</CardTitle></CardHeader>
+          <CardContent><div className="text-2xl font-bold text-success">{money(totalPaid)}</div></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Pendente</CardTitle></CardHeader>
+          <CardContent><div className="text-2xl font-bold text-destructive">{money(totalExpected - totalPaid)}</div></CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {preventiveClients.length === 0 ? (
+          <div className="text-sm text-muted-foreground col-span-full">Nenhum cliente com contrato preventivo cadastrado.</div>
+        ) : (
+          preventiveClients.map(c => {
+            const isPaid = paymentByClient.has(c.id);
+            const value = c.preventiveContractValue || 0;
+            return (
+              <Card key={c.id}>
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">{c.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-xl font-bold">{money(value)}</div>
+                  <div className="flex items-center gap-2 border p-3 rounded-md cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => togglePayment(c.id, value)}>
+                    <Checkbox checked={isPaid} onCheckedChange={() => togglePayment(c.id, value)} />
+                    <Label className="cursor-pointer">{isPaid ? "Recebido neste mês" : "Marcar como recebido"}</Label>
+                    {isPaid && <CheckCircle2 className="w-4 h-4 text-success ml-auto" />}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
