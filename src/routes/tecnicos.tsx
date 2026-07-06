@@ -128,7 +128,7 @@ function Tecnicos() {
               <DialogTitle>{editing.id ? "Editar técnico" : "Novo técnico"}</DialogTitle>
               <DialogDescription className="sr-only">Preencha os dados do técnico abaixo.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-2">
+            <div className="grid gap-4 py-2 max-h-[60vh] overflow-y-auto px-2">
               <div className="grid gap-2">
                 <Label>Nome do técnico *</Label>
                 <Input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="Ex: João Silva" />

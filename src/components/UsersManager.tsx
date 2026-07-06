@@ -212,7 +212,7 @@ export function UsersManager({
             <DialogDescription className="sr-only">Edite as informações de acesso do usuário.</DialogDescription>
           </DialogHeader>
           {editing && (
-            <div className="grid gap-4">
+            <div className="grid gap-4 max-h-[60vh] overflow-y-auto px-2">
               <div className="grid gap-1">
                 <Label>E-mail</Label>
                 <Input type="email" value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} />
