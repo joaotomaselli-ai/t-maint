@@ -560,11 +560,11 @@ export async function listClientPayments(): Promise<ClientPayment[]> {
   return (data ?? []).map(fromClientPay);
 }
 export async function upsertClientPayment(
-  userId: string, activityId: string, amount: number, note?: string
+  companyId: string, userId: string, activityId: string, amount: number, note?: string
 ): Promise<ClientPayment> {
   const { data, error } = await supabase.from("client_payments")
     .upsert(
-      { user_id: userId, activity_id: activityId, amount, note: note || null, paid_at: new Date().toISOString() },
+      { company_id: companyId, user_id: userId, activity_id: activityId, amount, note: note || null, paid_at: new Date().toISOString() },
       { onConflict: "user_id,activity_id" }
     ).select().single();
   if (error) throw error;
@@ -581,11 +581,11 @@ export async function listTechnicianPayments(): Promise<TechnicianPayment[]> {
   return (data ?? []).map(fromTechPay);
 }
 export async function upsertTechnicianPayment(
-  userId: string, activityId: string, technicianId: string, amount: number, note?: string
+  companyId: string, userId: string, activityId: string, technicianId: string, amount: number, note?: string
 ): Promise<TechnicianPayment> {
   const { data, error } = await supabase.from("technician_payments")
     .upsert(
-      { user_id: userId, activity_id: activityId, technician_id: technicianId, amount, note: note || null, paid_at: new Date().toISOString() },
+      { company_id: companyId, user_id: userId, activity_id: activityId, technician_id: technicianId, amount, note: note || null, paid_at: new Date().toISOString() },
       { onConflict: "user_id,activity_id,technician_id" }
     ).select().single();
   if (error) throw error;

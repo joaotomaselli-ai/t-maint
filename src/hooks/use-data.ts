@@ -158,6 +158,7 @@ export function useAllSessions() {
 
 export function useClientPayments() {
   const { user } = useAuth();
+  const { companyId } = useAccess();
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["client_payments", user?.id],
@@ -170,7 +171,7 @@ export function useClientPayments() {
     isLoading: q.isLoading,
     markPaid: useMutation({
       mutationFn: (v: { activityId: string; amount: number; note?: string }) =>
-        upsertClientPayment(user!.id, v.activityId, v.amount, v.note),
+        upsertClientPayment(companyId!, user!.id, v.activityId, v.amount, v.note),
       onSuccess: invalidate,
     }),
     unmarkPaid: useMutation({
@@ -182,6 +183,7 @@ export function useClientPayments() {
 
 export function useTechnicianPayments() {
   const { user } = useAuth();
+  const { companyId } = useAccess();
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["technician_payments", user?.id],
@@ -194,7 +196,7 @@ export function useTechnicianPayments() {
     isLoading: q.isLoading,
     markPaid: useMutation({
       mutationFn: (v: { activityId: string; technicianId: string; amount: number; note?: string }) =>
-        upsertTechnicianPayment(user!.id, v.activityId, v.technicianId, v.amount, v.note),
+        upsertTechnicianPayment(companyId!, user!.id, v.activityId, v.technicianId, v.amount, v.note),
       onSuccess: invalidate,
     }),
     unmarkPaid: useMutation({
