@@ -565,7 +565,7 @@ export async function upsertClientPayment(
   const { data, error } = await supabase.from("client_payments")
     .upsert(
       { company_id: companyId, user_id: userId, activity_id: activityId, amount, note: note || null, paid_at: new Date().toISOString() },
-      { onConflict: "user_id,activity_id" }
+      { onConflict: "company_id,activity_id" }
     ).select().single();
   if (error) throw error;
   return fromClientPay(data);
@@ -586,7 +586,7 @@ export async function upsertTechnicianPayment(
   const { data, error } = await supabase.from("technician_payments")
     .upsert(
       { company_id: companyId, user_id: userId, activity_id: activityId, technician_id: technicianId, amount, note: note || null, paid_at: new Date().toISOString() },
-      { onConflict: "user_id,activity_id,technician_id" }
+      { onConflict: "company_id,activity_id,technician_id" }
     ).select().single();
   if (error) throw error;
   return fromTechPay(data);
