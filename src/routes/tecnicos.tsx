@@ -11,7 +11,7 @@ import { fmtCurrency, type Technician } from "@/lib/api";
 import { useServerFn } from "@tanstack/react-start";
 import { createTechnicianLogin, updateSubUser } from "@/lib/admin.functions";
 import { useMoney } from "@/hooks/use-money-visibility";
-import { Plus, Pencil, Trash2, HardHat } from "lucide-react";
+import { Plus, Pencil, Trash2, HardHat, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tecnicos")({ component: Tecnicos });
@@ -244,7 +244,10 @@ function Tecnicos() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button onClick={save} disabled={addTechnician.isPending || updateTechnician.isPending}>Salvar</Button>
+              <Button onClick={save} disabled={addTechnician.isPending || updateTechnician.isPending}>
+                {(addTechnician.isPending || updateTechnician.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {(addTechnician.isPending || updateTechnician.isPending) ? "Salvando..." : "Salvar"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
