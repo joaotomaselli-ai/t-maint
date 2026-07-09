@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   useClients, useReports, useTechnicians, useAllSessions,
   useClientPayments, useTechnicianPayments, useAllActivityTechnicians,
-  usePreventivePayments
+  usePreventivePayments, useTechnicianMonthlyClosures
 } from "@/hooks/use-data";
 import {
   reportTotalsWithSessions, technicianPayForReport, fmtCurrency, fmtHours,
@@ -417,6 +417,31 @@ function ContratosMensaisFinance({ clients }: { clients: any[] }) {
 }
 
 function TechnicianFinance() {
+  const { technicians } = useTechnicians();
+  const { user } = useAuth();
+  const { isTechnician } = useAccess();
+  
+  const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
+  const myTech = technicians.find(t => t.id === myTechId);
+
+  if (isTechnician && myTech) {
+    if (myTech.monthlyFixedHours) return <TechnicianMonthlyTab />;
+    return <TechnicianOsTab />;
+  }
+
+  return (
+    <Tabs defaultValue="os" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="os" className="gap-2">Faturamento por OS</TabsTrigger>
+        <TabsTrigger value="monthly" className="gap-2">Fechamento Mensal</TabsTrigger>
+      </TabsList>
+      <TabsContent value="os"><TechnicianOsTab /></TabsContent>
+      <TabsContent value="monthly"><TechnicianMonthlyTab /></TabsContent>
+    </Tabs>
+  );
+}
+
+function TechnicianOsTab() {
   const money = useMoney();
   const { clients } = useClients();
   const { reports } = useReports();
@@ -509,7 +534,7 @@ function TechnicianFinance() {
             <Select disabled={isTechnician} value={effectiveTechnicianId} onValueChange={setTechnicianId}>
               <SelectTrigger><SelectValue placeholder="Selecione um técnico" /></SelectTrigger>
               <SelectContent>
-                {technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                {technicians.filter(t => !t.monthlyFixedHours).map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -610,6 +635,144 @@ function TechnicianFinance() {
           </Card>
         </>
       )}
+    </div>
+  );
+}
+
+function TechnicianMonthlyTab() {
+  const money = useMoney();
+  const { technicians } = useTechnicians();
+  const { reports } = useReports();
+  const { sessions } = useAllSessions();
+  const { activityTechnicians } = useAllActivityTechnicians();
+  const { closures, saveClosure, deleteClosure } = useTechnicianMonthlyClosures();
+  const { isTechnician } = useAccess();
+  const { user } = useAuth();
+  
+  const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
+  
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7)); // YYYY-MM
+
+  const fixedTechs = useMemo(() => {
+    let list = technicians.filter(t => t.monthlyFixedHours && t.monthlyFixedHours > 0);
+    if (isTechnician && myTechId) {
+      list = list.filter(t => t.id === myTechId);
+    }
+    return list;
+  }, [technicians, isTechnician, myTechId]);
+
+  const closuresMap = useMemo(() => {
+    const map = new Map<string, typeof closures[0]>();
+    for (const c of closures) {
+      if (c.referenceMonth === month) map.set(c.technicianId, c);
+    }
+    return map;
+  }, [closures, month]);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-4"><CardTitle>Mês de Referência</CardTitle></CardHeader>
+        <CardContent>
+          <div className="max-w-xs">
+            <Input type="month" value={month} onChange={e => setMonth(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {fixedTechs.length === 0 ? (
+          <div className="text-sm text-muted-foreground col-span-full p-4 border rounded-md text-center">
+            Nenhum técnico com carga fixa mensal encontrado.
+          </div>
+        ) : (
+          fixedTechs.map(tech => {
+            const closure = closuresMap.get(tech.id);
+            const isPaid = !!closure;
+
+            let hoursAmount = 0, kmAmount = 0, extraAmount = 0, normalHours = 0;
+            const monthPrefix = month;
+            
+            const name = tech.name.trim().toLowerCase();
+            const activityIdsWithSessionOrAct = new Set([
+              ...sessions.filter(s => s.technicianId === tech.id).map(s => s.activityId),
+              ...activityTechnicians.filter(at => at.technicianId === tech.id).map(at => at.activityId),
+            ]);
+            
+            const monthReports = reports.filter(r => r.date.startsWith(monthPrefix) && (
+              (r.technician || "").trim().toLowerCase() === name || activityIdsWithSessionOrAct.has(r.id)
+            ));
+
+            for (const r of monthReports) {
+              const t = technicianPayForReport(r, sessions, tech, activityTechnicians);
+              normalHours += t.totalHours;
+              hoursAmount += t.totalHours * (tech.hourlyRate || 0);
+              kmAmount += t.km * (tech.kmRate || 0);
+              extraAmount += (t.ovtWk * (tech.overtimeWeekdayRate || 0)) + (t.ovtWe * (tech.overtimeWeekendRate || 0));
+            }
+
+            const fixed = tech.monthlyFixedHours || 0;
+            const complementHours = Math.max(0, fixed - normalHours);
+            const complementAmount = complementHours * (tech.hourlyRate || 0);
+            
+            const totalAmount = hoursAmount + kmAmount + extraAmount + complementAmount;
+
+            const handleToggle = () => {
+              if (isPaid) {
+                if (window.confirm("Deseja reabrir este mês?")) {
+                  deleteClosure.mutate(closure.id);
+                }
+              } else {
+                saveClosure.mutate({
+                  technicianId: tech.id,
+                  referenceMonth: month,
+                  hoursAmount,
+                  kmAmount,
+                  extraAmount,
+                  complementAmount,
+                  totalAmount,
+                });
+              }
+            };
+
+            return (
+              <Card key={tech.id} className={isPaid ? "border-success/50 bg-success/5" : ""}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center justify-between">
+                    {tech.name}
+                    {isPaid && <CheckCircle2 className="w-5 h-5 text-success" />}
+                  </CardTitle>
+                  <div className="text-xs text-muted-foreground">Carga Fixa: {fixed}h/mês</div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm space-y-2">
+                    <div className="flex justify-between"><span>Horas ({fmtHours(normalHours)}):</span> <span>{money(hoursAmount)}</span></div>
+                    {complementAmount > 0 && (
+                      <div className="flex justify-between text-warning font-medium"><span>Complemento ({fmtHours(complementHours)}):</span> <span>{money(complementAmount)}</span></div>
+                    )}
+                    <div className="flex justify-between"><span>Horas Extras:</span> <span>{money(extraAmount)}</span></div>
+                    <div className="flex justify-between border-b pb-2"><span>KMs:</span> <span>{money(kmAmount)}</span></div>
+                    <div className="flex justify-between font-bold pt-1 text-base"><span>Total Final:</span> <span>{money(totalAmount)}</span></div>
+                  </div>
+                  
+                  {!isTechnician && (
+                    <Button 
+                      variant={isPaid ? "outline" : "default"} 
+                      className="w-full" 
+                      onClick={handleToggle}
+                      disabled={saveClosure.isPending || deleteClosure.isPending}
+                    >
+                      {isPaid ? "Reabrir Mês" : "Fechar Mês e Pagar"}
+                    </Button>
+                  )}
+                  {isTechnician && isPaid && <div className="text-center text-sm font-bold text-success p-2 bg-success/10 rounded-md">Mês fechado e pago!</div>}
+                  {isTechnician && !isPaid && <div className="text-center text-sm text-muted-foreground p-2 border border-dashed rounded-md">Aguardando fechamento</div>}
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

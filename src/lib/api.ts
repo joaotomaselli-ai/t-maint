@@ -528,6 +528,76 @@ export async function deleteSession(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export type TechnicianMonthlyClosure = {
+  id: string;
+  companyId: string;
+  technicianId: string;
+  referenceMonth: string;
+  hoursAmount: number;
+  kmAmount: number;
+  extraAmount: number;
+  complementAmount: number;
+  totalAmount: number;
+  paidAt: string;
+  note?: string;
+};
+
+const fromTechClosure = (r: any): TechnicianMonthlyClosure => ({
+  id: r.id,
+  companyId: r.company_id,
+  technicianId: r.technician_id,
+  referenceMonth: r.reference_month,
+  hoursAmount: Number(r.hours_amount),
+  kmAmount: Number(r.km_amount),
+  extraAmount: Number(r.extra_amount),
+  complementAmount: Number(r.complement_amount),
+  totalAmount: Number(r.total_amount),
+  paidAt: r.paid_at,
+  note: r.note || "",
+});
+
+export async function listTechnicianMonthlyClosures(): Promise<TechnicianMonthlyClosure[]> {
+  const { data, error } = await supabase.from("technician_monthly_closures").select("*");
+  if (error) throw error;
+  return (data ?? []).map(fromTechClosure);
+}
+
+export async function upsertTechnicianMonthlyClosure(
+  companyId: string, 
+  technicianId: string, 
+  referenceMonth: string, 
+  hoursAmount: number,
+  kmAmount: number,
+  extraAmount: number,
+  complementAmount: number,
+  totalAmount: number,
+  note?: string
+): Promise<TechnicianMonthlyClosure> {
+  const { data, error } = await supabase.from("technician_monthly_closures")
+    .upsert(
+      { 
+        company_id: companyId, 
+        technician_id: technicianId, 
+        reference_month: referenceMonth, 
+        hours_amount: hoursAmount,
+        km_amount: kmAmount,
+        extra_amount: extraAmount,
+        complement_amount: complementAmount,
+        total_amount: totalAmount,
+        note: note || null, 
+        paid_at: new Date().toISOString() 
+      },
+      { onConflict: "company_id,technician_id,reference_month" }
+    ).select().single();
+  if (error) throw error;
+  return fromTechClosure(data);
+}
+
+export async function deleteTechnicianMonthlyClosure(id: string): Promise<void> {
+  const { error } = await supabase.from("technician_monthly_closures").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ===== Payments =====
 export type ClientPayment = {
   id: string;

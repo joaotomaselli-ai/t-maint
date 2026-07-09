@@ -8,8 +8,10 @@ import {
   listClientPayments, upsertClientPayment, deleteClientPayment,
   listTechnicianPayments, upsertTechnicianPayment, deleteTechnicianPayment,
   listPreventivePayments, upsertPreventivePayment, deletePreventivePayment,
+  listTechnicianMonthlyClosures, upsertTechnicianMonthlyClosure, deleteTechnicianMonthlyClosure,
   type Client, type ServiceReport, type Settings, type Technician, type ServiceSession,
   type ClientPayment, type TechnicianPayment, type ActivityTechnician, type PreventivePayment,
+  type TechnicianMonthlyClosure,
   listRequisitions, updateRequisition, listQuotes, addQuote, deleteQuote, createAvulsaRequisition, deleteRequisition,
   listInventoryItems, upsertInventoryItem, deleteInventoryItem,
   listInventoryMovements, createInventoryMovement,
@@ -342,6 +344,41 @@ export function useInventory() {
         createInventoryMovement({ ...movement, companyId: companyId!, userId: user!.id }),
       onSuccess: invalidate,
     })
+  };
+}
+
+export function useTechnicianMonthlyClosures() {
+  const { companyId } = useAccess();
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["technician_monthly_closures", companyId],
+    queryFn: listTechnicianMonthlyClosures,
+    enabled: !!companyId,
+  });
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["technician_monthly_closures", companyId] });
+  return {
+    closures: (q.data ?? []) as TechnicianMonthlyClosure[],
+    isLoading: q.isLoading,
+    saveClosure: useMutation({
+      mutationFn: (v: {
+        technicianId: string;
+        referenceMonth: string;
+        hoursAmount: number;
+        kmAmount: number;
+        extraAmount: number;
+        complementAmount: number;
+        totalAmount: number;
+        note?: string;
+      }) => upsertTechnicianMonthlyClosure(
+        companyId!, v.technicianId, v.referenceMonth, 
+        v.hoursAmount, v.kmAmount, v.extraAmount, v.complementAmount, v.totalAmount, v.note
+      ),
+      onSuccess: invalidate,
+    }),
+    deleteClosure: useMutation({
+      mutationFn: (id: string) => deleteTechnicianMonthlyClosure(id),
+      onSuccess: invalidate,
+    }),
   };
 }
 
