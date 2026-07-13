@@ -340,8 +340,8 @@ export function useInventory() {
       onSuccess: invalidate,
     }),
     createMovement: useMutation({
-      mutationFn: (movement: Omit<InventoryMovement, "id" | "createdAt" | "totalCost" | "companyId" | "userId">) => 
-        createInventoryMovement({ ...movement, companyId: companyId!, userId: user!.id }),
+      mutationFn: (movement: Omit<InventoryMovement, "id" | "createdAt" | "totalCost" | "companyId" | "userId"> & { skipItemUpdate?: boolean }) => 
+        createInventoryMovement({ ...movement, companyId: companyId!, userId: user!.id }, movement.skipItemUpdate),
       onSuccess: invalidate,
     })
   };

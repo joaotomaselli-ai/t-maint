@@ -41,36 +41,39 @@ function EstoquePage() {
     
     setIsSaving(true);
     try {
+      const initQty = Number(newItem.initialQuantity) || 0;
+      const initCost = Number(newItem.initialCost) || 0;
+
       const data = await upsertItem.mutateAsync({
         name: newItem.name,
         sku: newItem.sku || null,
         unit: newItem.unit,
         location: newItem.location || null,
         minQuantity: newItem.minQuantity ? Number(newItem.minQuantity) : null,
-        qrCodeValue: `EST-${Date.now()}` // Temporary
+        qrCodeValue: `EST-${Date.now()}`,
+        currentQuantity: initQty,
+        averageCost: initCost
       });
 
-      // Update qr code value to point to its own page
-      // We pass the other required fields to avoid overwriting them with defaults if they were just set.
-      // Actually, since upsertInventoryItem overwrites fields, passing just id and qrCodeValue sets others to null/0.
-      // The current_quantity is 0 anyway, so we just pass name and unit so the DB doesn't complain about nulls.
       const url = `${window.location.origin}/estoque/${data.id}`;
       await upsertItem.mutateAsync({ 
         id: data.id, 
         name: data.name,
         unit: data.unit,
-        qrCodeValue: url 
+        qrCodeValue: url,
+        currentQuantity: initQty,
+        averageCost: initCost
       });
       
-      const initQty = Number(newItem.initialQuantity);
       if (initQty > 0) {
         await createMovement.mutateAsync({
           itemId: data.id,
           type: "IN",
           quantity: initQty,
-          unitCost: Number(newItem.initialCost) || 0,
+          unitCost: initCost,
           reason: "Estoque Inicial",
-          activityId: null
+          activityId: null,
+          skipItemUpdate: true
         });
       }
       

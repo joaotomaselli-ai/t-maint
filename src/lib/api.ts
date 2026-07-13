@@ -1083,7 +1083,7 @@ export async function listInventoryMovements(itemId: string): Promise<InventoryM
   }));
 }
 
-export async function createInventoryMovement(movement: Omit<InventoryMovement, "id" | "createdAt" | "totalCost">): Promise<void> {
+export async function createInventoryMovement(movement: Omit<InventoryMovement, "id" | "createdAt" | "totalCost">, skipItemUpdate = false): Promise<void> {
   const total_cost = movement.quantity * movement.unitCost;
   
   // 1. Insert Movement
@@ -1099,6 +1099,8 @@ export async function createInventoryMovement(movement: Omit<InventoryMovement, 
     reason: movement.reason
   });
   if (moveError) throw moveError;
+
+  if (skipItemUpdate) return;
 
   // 2. Update Item Quantity & Average Cost
   const { data: item } = await (supabase as any).from("inventory_items").select("current_quantity, average_cost").eq("id", movement.itemId).single();
