@@ -9,7 +9,7 @@ import { useClients } from "@/hooks/use-data";
 import { fmtCurrency, uploadClientContract, getAttachmentUrl, type Client } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { useMoney } from "@/hooks/use-money-visibility";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Users , Loader2} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/clientes")({ component: Clientes });
@@ -194,7 +194,10 @@ function Clientes() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button onClick={save} disabled={addClient.isPending || updateClient.isPending}>Salvar</Button>
+              <Button onClick={save} disabled={addClient.isPending || updateClient.isPending}>
+                {(addClient.isPending || updateClient.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {(addClient.isPending || updateClient.isPending) ? "Salvando..." : "Salvar"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

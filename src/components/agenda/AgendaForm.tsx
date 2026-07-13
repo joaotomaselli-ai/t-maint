@@ -310,7 +310,7 @@ export function AgendaForm({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancelar</Button>
             <Button onClick={handleSave} disabled={isSaving || !title}>
               {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Salvar
+              {isSaving ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </DialogFooter>

@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Building2, Plus, Trash2, Pencil } from "lucide-react";
+import { Building2, Plus, Trash2, Pencil , Loader2} from "lucide-react";
 import { format } from "date-fns";
 
 type EditTarget = {
@@ -299,7 +299,10 @@ export function MasterPanel() {
           )}
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setEditing(null); setEditPwd(""); }}>Cancelar</Button>
-            <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending}>Salvar</Button>
+            <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending}>
+              {saveEdit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {saveEdit.isPending ? "Salvando..." : "Salvar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -383,7 +386,10 @@ export function MasterPanel() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingCompany(null)}>Cancelar</Button>
-            <Button onClick={() => updateCo.mutate()} disabled={updateCo.isPending}>Salvar</Button>
+            <Button onClick={() => updateCo.mutate()} disabled={updateCo.isPending}>
+              {updateCo.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {updateCo.isPending ? "Salvando..." : "Salvar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

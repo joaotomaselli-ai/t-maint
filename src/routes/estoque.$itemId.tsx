@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Printer, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Printer, Edit, Trash2 , Loader2} from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -351,7 +351,10 @@ function EstoqueItemPage() {
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={!editData.name.trim() || upsertItem.isPending}>Salvar</Button>
+              <Button type="submit" disabled={!editData.name.trim() || upsertItem.isPending}>
+                {upsertItem.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {upsertItem.isPending ? "Salvando..." : "Salvar"}
+              </Button>
             </div>
           </form>
         </DialogContent>

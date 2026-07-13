@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Plus, Package, AlertTriangle } from "lucide-react";
+import { Plus, Package, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -33,52 +33,59 @@ function EstoquePage() {
     );
   }
 
-  const handleCreate = (e: React.FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItem.name.trim()) return;
-    upsertItem.mutate({
-      name: newItem.name,
-      sku: newItem.sku || null,
-      unit: newItem.unit,
-      location: newItem.location || null,
-      minQuantity: newItem.minQuantity ? Number(newItem.minQuantity) : null,
-      qrCodeValue: `EST-${Date.now()}` // Temporary
-    }, {
-      onSuccess: async (data) => {
-        // Update qr code value to point to its own page
-        const url = `${window.location.origin}/estoque/${data.id}`;
-        await upsertItem.mutateAsync({ id: data.id, qrCodeValue: url });
-        
-        const initQty = Number(newItem.initialQuantity);
-        if (initQty > 0) {
-          try {
-            await createMovement.mutateAsync({
-              itemId: data.id,
-              type: "IN",
-              quantity: initQty,
-              unitCost: Number(newItem.initialCost) || 0,
-              reason: "Estoque Inicial",
-              activityId: null
-            });
-          } catch(e) {
-            console.error(e);
-          }
-        }
-        
-        toast.success("Item criado!");
-        setIsAddOpen(false);
-        setNewItem({ name: "", sku: "", minQuantity: "", unit: "Un", location: "", initialQuantity: "", initialCost: "" });
-        // Force reload items to show new quantity
-        window.location.reload(); 
-      },
-      onError: (err: any) => {
-        if (err?.code === "23505") {
-          toast.error("Já existe um material com este nome.");
-        } else {
-          toast.error(err.message);
-        }
+    
+    setIsSaving(true);
+    try {
+      const data = await upsertItem.mutateAsync({
+        name: newItem.name,
+        sku: newItem.sku || null,
+        unit: newItem.unit,
+        location: newItem.location || null,
+        minQuantity: newItem.minQuantity ? Number(newItem.minQuantity) : null,
+        qrCodeValue: `EST-${Date.now()}` // Temporary
+      });
+
+      // Update qr code value to point to its own page
+      // We pass the other required fields to avoid overwriting them with defaults if they were just set.
+      // Actually, since upsertInventoryItem overwrites fields, passing just id and qrCodeValue sets others to null/0.
+      // The current_quantity is 0 anyway, so we just pass name and unit so the DB doesn't complain about nulls.
+      const url = `${window.location.origin}/estoque/${data.id}`;
+      await upsertItem.mutateAsync({ 
+        id: data.id, 
+        name: data.name,
+        unit: data.unit,
+        qrCodeValue: url 
+      });
+      
+      const initQty = Number(newItem.initialQuantity);
+      if (initQty > 0) {
+        await createMovement.mutateAsync({
+          itemId: data.id,
+          type: "IN",
+          quantity: initQty,
+          unitCost: Number(newItem.initialCost) || 0,
+          reason: "Estoque Inicial",
+          activityId: null
+        });
       }
-    });
+      
+      toast.success("Item criado!");
+      setIsAddOpen(false);
+      setNewItem({ name: "", sku: "", minQuantity: "", unit: "Un", location: "", initialQuantity: "", initialCost: "" });
+    } catch (err: any) {
+      if (err?.code === "23505") {
+        toast.error("Já existe um material com este nome.");
+      } else {
+        toast.error(err.message || "Erro ao criar item");
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -190,7 +197,10 @@ function EstoquePage() {
 
             <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={!newItem.name.trim() || upsertItem.isPending}>Salvar</Button>
+              <Button type="submit" disabled={!newItem.name.trim() || isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving ? "Salvando..." : "Salvar"}
+              </Button>
             </div>
           </form>
         </DialogContent>

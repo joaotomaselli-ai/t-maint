@@ -122,7 +122,10 @@ function Configuracoes() {
                 <Textarea rows={2} value={form.address || ""} onChange={e => setForm({ ...form, address: e.target.value })} />
               </div>
               <div className="flex justify-end">
-                <Button onClick={save} size="lg" disabled={saveSettings.isPending}>Salvar configurações</Button>
+                <Button onClick={save} size="lg" disabled={saveSettings.isPending}>
+                  {saveSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {saveSettings.isPending ? "Salvando..." : "Salvar configurações"}
+                </Button>
               </div>
             </CardContent>
           </Card>

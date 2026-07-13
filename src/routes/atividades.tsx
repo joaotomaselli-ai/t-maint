@@ -23,7 +23,7 @@ import {
   type ServiceSession,
 } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
-import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus } from "lucide-react";
+import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus , Loader2} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -1096,6 +1096,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button disabled={isSaving} onClick={onSave}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSaving ? "Salvando..." : "Salvar atividade"}
           </Button>
         </DialogFooter>

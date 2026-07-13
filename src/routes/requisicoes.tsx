@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ShoppingCart, FileText, Trash2, ExternalLink, Paperclip, Wrench, Download, Plus, Package } from "lucide-react";
+import { ShoppingCart, FileText, Trash2, ExternalLink, Paperclip, Wrench, Download, Plus, Package , Loader2} from "lucide-react";
 import { toast } from "sonner";
 import { uploadQuoteFile, getQuoteFileUrl, listAttachments, getAttachmentUrl, type Requisition, type RequisitionStatus } from "@/lib/api";
 import { NumericFormat } from "react-number-format";
@@ -360,6 +360,7 @@ function QuotesDialog({ req, open, onOpenChange, report }: { req: Requisition, o
                 />
               </div>
               <Button type="submit" className="w-full" disabled={uploading || !supplier || value === null || !file}>
+                {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {uploading ? "Enviando..." : "Salvar Orçamento"}
               </Button>
             </form>

@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Trash2, UserPlus, Pencil } from "lucide-react";
+import { Trash2, UserPlus, Pencil , Loader2} from "lucide-react";
 import { format } from "date-fns";
 
 type EditTarget = {
@@ -271,7 +271,10 @@ export function UsersManager({
           )}
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setEditing(null); setEditPwd(""); }}>Cancelar</Button>
-            <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending}>Salvar</Button>
+            <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending}>
+              {saveEdit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {saveEdit.isPending ? "Salvando..." : "Salvar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
