@@ -47,9 +47,21 @@ function LoginPage() {
 
   const google = async () => {
     setBusy(true);
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (res.error) { toast.error("Erro no login com Google"); setBusy(false); return; }
-    // After redirect back, an auth state change will fire; we check authorization there.
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/login`,
+        },
+      });
+      if (error) {
+        toast.error(error.message || "Erro ao conectar com Google. Verifique a configuração no Supabase.");
+        setBusy(false);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Erro no login com Google");
+      setBusy(false);
+    }
   };
 
   // After login succeeds (Google or password), verify the e-mail is whitelisted.
