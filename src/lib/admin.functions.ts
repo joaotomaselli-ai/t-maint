@@ -176,8 +176,13 @@ export const createCompany = createServerFn({ method: "POST" })
 
     const adminEmail = data.adminEmail.toLowerCase();
 
-    // Create the user (or find existing)
-    let adminUserId: string;
+    // Check if user already exists
+    const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existingUser = list.data?.users.find((u) => u.email?.toLowerCase() === adminEmail);
+    if (existingUser) {
+      throw new Error("Este e-mail já está sendo utilizado por um usuário no sistema (ex: conta Master ou Admin existente). Por favor, informe um e-mail diferente.");
+    }
+
     const created = await supabaseAdmin.auth.admin.createUser({
       email: adminEmail,
       password: data.adminPassword,
@@ -188,15 +193,9 @@ export const createCompany = createServerFn({ method: "POST" })
       },
     });
     if (created.error) {
-      // try to find an existing user with this email
-      const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      const found = list.data?.users.find((u) => u.email?.toLowerCase() === adminEmail);
-      if (!found) throw new Error(created.error.message);
-      adminUserId = found.id;
-      await supabaseAdmin.auth.admin.updateUserById(found.id, { password: data.adminPassword });
-    } else {
-      adminUserId = created.data.user!.id;
+      throw new Error(`Erro ao criar conta de administrador: ${created.error.message}`);
     }
+    const adminUserId = created.data.user!.id;
 
     const { data: company, error: ce } = await supabaseAdmin
       .from("companies")
@@ -366,21 +365,19 @@ export const createSubUser = createServerFn({ method: "POST" })
     await checkUserLimit(targetCompany);
 
     const email = data.email.toLowerCase();
-    let newUserId: string;
+    const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existingUser = list.data?.users.find((u) => u.email?.toLowerCase() === email);
+    if (existingUser) {
+      throw new Error("Este e-mail já está sendo utilizado por outro usuário no sistema.");
+    }
+
     const created = await supabaseAdmin.auth.admin.createUser({
       email,
       password: data.password,
       email_confirm: true,
     });
-    if (created.error) {
-      const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      const found = list.data?.users.find((u) => u.email?.toLowerCase() === email);
-      if (!found) throw new Error(created.error.message);
-      newUserId = found.id;
-      await supabaseAdmin.auth.admin.updateUserById(found.id, { password: data.password });
-    } else {
-      newUserId = created.data.user!.id;
-    }
+    if (created.error) throw new Error(created.error.message);
+    const newUserId = created.data.user!.id;
 
     const { error: re } = await supabaseAdmin
       .from("user_roles")
@@ -439,21 +436,19 @@ export const createTechnicianLogin = createServerFn({ method: "POST" })
     await checkUserLimit(targetCompany);
 
     const email = data.email.toLowerCase();
-    let newUserId: string;
+    const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existingUser = list.data?.users.find((u) => u.email?.toLowerCase() === email);
+    if (existingUser) {
+      throw new Error("Este e-mail já está sendo utilizado por outro usuário no sistema.");
+    }
+
     const created = await supabaseAdmin.auth.admin.createUser({
       email,
       password: data.password,
       email_confirm: true,
     });
-    if (created.error) {
-      const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      const found = list.data?.users.find((u) => u.email?.toLowerCase() === email);
-      if (!found) throw new Error(created.error.message);
-      newUserId = found.id;
-      await supabaseAdmin.auth.admin.updateUserById(found.id, { password: data.password });
-    } else {
-      newUserId = created.data.user!.id;
-    }
+    if (created.error) throw new Error(created.error.message);
+    const newUserId = created.data.user!.id;
 
     const { error: re } = await supabaseAdmin
       .from("user_roles")
@@ -510,6 +505,17 @@ export const updateSubUser = createServerFn({ method: "POST" })
     const adminEntry = roles?.find((r) => r.role === "admin");
     if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
 
+    // Protect Master account from being edited via sub-user updates
+    const { data: targetMasterRole } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", data.targetUserId)
+      .eq("role", "master")
+      .maybeSingle();
+    if (targetMasterRole) {
+      throw new Error("A conta de Master não pode ser editada nesta tela.");
+    }
+
     // discover the company of the target if not provided
     let targetCompany = data.companyId ?? null;
     if (!targetCompany) {
@@ -533,6 +539,15 @@ export const updateSubUser = createServerFn({ method: "POST" })
     
     if (companyData && companyData.owner_user_id === data.targetUserId && !isMaster && userId !== data.targetUserId) {
       throw new Error("Apenas o master ou o próprio titular podem alterar o seu acesso.");
+    }
+
+    if (data.email) {
+      const newEmail = data.email.toLowerCase();
+      const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const taken = list.data?.users.find((u) => u.email?.toLowerCase() === newEmail && u.id !== data.targetUserId);
+      if (taken) {
+        throw new Error("Este e-mail já pertence a outra conta no sistema.");
+      }
     }
 
     if (data.email || data.password) {
