@@ -240,7 +240,7 @@ export async function exportSingleReport(
     y += Math.max(10, lines.length * 5);
   }
 
-  const t = reportTotals(r, client);
+  const t = reportTotalsWithSessions(r, sessions, client);
   autoTable(doc, {
     startY: y + 4,
     head: [["Viagem de ida", "Serviço", "Viagem de volta", "KM"]],
@@ -256,20 +256,26 @@ export async function exportSingleReport(
 
   if (includeValues) {
     y = (doc as any).lastAutoTable.finalY + 6;
+    const bodyRows: (string[])[] = [
+      ["Horas totais", fmtHours(t.totalHours)],
+      r.isPackage 
+        ? ["Pacote de Serviço (Valor Fechado)", fmtCurrency(t.hoursValue)]
+        : [`Horas × ${fmtCurrency(client?.hourlyRate ?? 0)}`, fmtCurrency(t.hoursValue)],
+    ];
+    if (!r.isPackage) {
+      bodyRows.push([`${t.km} km × ${fmtCurrency(client?.kmRate ?? 0)}`, fmtCurrency(t.kmValue)]);
+    }
+    bodyRows.push(["TOTAL", fmtCurrency(t.total)]);
+
     autoTable(doc, {
       startY: y,
       head: [["Apuração", "Valor"]],
-      body: [
-        ["Horas totais", fmtHours(t.totalHours)],
-        [`Horas × ${fmtCurrency(client?.hourlyRate ?? 0)}`, fmtCurrency(t.hoursValue)],
-        [`${r.km} km × ${fmtCurrency(client?.kmRate ?? 0)}`, fmtCurrency(t.kmValue)],
-        ["TOTAL", fmtCurrency(t.total)],
-      ],
+      body: bodyRows,
       styles: { fontSize: 10, cellPadding: 3 },
       headStyles: { fillColor: [40, 60, 110], textColor: 255 },
       columnStyles: { 1: { halign: "right", fontStyle: "bold" } },
       didParseCell: (data) => {
-        if (data.row.index === 3 && data.section === "body") {
+        if (data.row.index === bodyRows.length - 1 && data.section === "body") {
           data.cell.styles.fillColor = [40, 60, 110];
           data.cell.styles.textColor = 255;
         }

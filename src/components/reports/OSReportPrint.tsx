@@ -18,7 +18,7 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
   report, client, settings, sessions = [], technicians = [], includeValues = false, photos = [], technicianName
 }, ref) => {
   const isPreventive = report.type === "preventiva";
-  const t = reportTotals(report, client);
+  const t = reportTotalsWithSessions(report, sessions, client);
   const techByName = new Map(technicians.map(tt => [tt.id, tt.name]));
   
   const beforePhotos = photos.filter(p => p.kind.includes('before'));
@@ -179,13 +179,17 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
               <span className="font-bold text-slate-800">{fmtHours(t.totalHours)}</span>
             </div>
             <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
-              <span className="text-slate-600">Apuração de Horas ({fmtCurrency(client?.hourlyRate ?? 0)}/h):</span>
+              <span className="text-slate-600">
+                {report.isPackage ? "Pacote de Serviço (Valor Fechado):" : `Apuração de Horas (${fmtCurrency(client?.hourlyRate ?? 0)}/h):`}
+              </span>
               <span className="font-medium text-slate-800">{fmtCurrency(t.hoursValue)}</span>
             </div>
-            <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
-              <span className="text-slate-600">Apuração de Deslocamento ({t.km} km × {fmtCurrency(client?.kmRate ?? 0)}):</span>
-              <span className="font-medium text-slate-800">{fmtCurrency(t.kmValue)}</span>
-            </div>
+            {!report.isPackage && (
+              <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
+                <span className="text-slate-600">Apuração de Deslocamento ({t.km} km × {fmtCurrency(client?.kmRate ?? 0)}):</span>
+                <span className="font-medium text-slate-800">{fmtCurrency(t.kmValue)}</span>
+              </div>
+            )}
             <div className="px-4 py-4 bg-[#003B73]/5 flex justify-between items-center">
               <span className="font-bold text-[#003B73] uppercase tracking-wider text-sm">Total da Ordem de Serviço:</span>
               <span className="font-black text-xl text-[#003B73]">{fmtCurrency(t.total)}</span>
