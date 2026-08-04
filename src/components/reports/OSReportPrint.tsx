@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import { format } from "date-fns";
 import type { Client, ServiceReport, Settings, ServiceSession, Technician } from "@/lib/api";
-import { reportTotals, fmtCurrency, fmtHours, reportTotalsWithSessions } from "@/lib/api";
+import { reportTotals, fmtCurrency, fmtHours, reportTotalsWithSessions, diffHours } from "@/lib/api";
 
 type OSReportPrintProps = {
   report: ServiceReport;
@@ -154,20 +154,55 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
               <td className="px-4 py-3 text-right text-slate-600">{report.km}</td>
             </tr>
             {sessions.map((s, i) => {
-              const st = reportTotals(s as any, client);
+              const sTravelOut = diffHours(s.travelOutStart, s.travelOutEnd);
+              const sService = diffHours(s.serviceStart, s.serviceEnd);
+              const sTravelBack = diffHours(s.travelBackStart, s.travelBackEnd);
               return (
                 <tr key={i} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-slate-50/30' : ''}`}>
                   <td className="px-4 py-3 font-medium">{(s.technicianId && techByName.get(s.technicianId)) || "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy")}</td>
-                  <td className="px-4 py-3 text-center text-slate-600">{s.travelOutStart} → {s.travelOutEnd}</td>
-                  <td className="px-4 py-3 text-center text-slate-600 font-medium">{s.serviceStart} → {s.serviceEnd}</td>
-                  <td className="px-4 py-3 text-center text-slate-600">{s.travelBackStart} → {s.travelBackEnd}</td>
+                  <td className="px-4 py-3 text-center text-slate-600">{s.travelOutStart && s.travelOutEnd ? `${s.travelOutStart} → ${s.travelOutEnd}` : "—"} {sTravelOut > 0 && <><br/><span className="text-xs text-slate-400">{fmtHours(sTravelOut)}</span></>}</td>
+                  <td className="px-4 py-3 text-center text-slate-600 font-medium">{s.serviceStart && s.serviceEnd ? `${s.serviceStart} → ${s.serviceEnd}` : "—"} {sService > 0 && <><br/><span className="text-xs text-slate-400">{fmtHours(sService)}</span></>}</td>
+                  <td className="px-4 py-3 text-center text-slate-600">{s.travelBackStart && s.travelBackEnd ? `${s.travelBackStart} → ${s.travelBackEnd}` : "—"} {sTravelBack > 0 && <><br/><span className="text-xs text-slate-400">{fmtHours(sTravelBack)}</span></>}</td>
                   <td className="px-4 py-3 text-right text-slate-600">{s.km}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+
+        {/* ATIVIDADES DAS SESSÕES ADICIONAIS */}
+        {sessions.some(s => s.activitiesDone?.trim() || s.observation?.trim()) && (
+          <div className="mt-6 space-y-4">
+            <h4 className="text-xs font-bold text-[#003B73] uppercase tracking-wider border-b border-slate-200 pb-1">
+              Atividades Executadas e Observações das Sessões Adicionais
+            </h4>
+            {sessions.map((s, i) => {
+              if (!s.activitiesDone?.trim() && !s.observation?.trim()) return null;
+              const techName = (s.technicianId && techByName.get(s.technicianId)) || report.technician || "Técnico";
+              const formattedDate = format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy");
+              return (
+                <div key={i} className="bg-slate-50 p-4 rounded-lg border border-slate-200/80 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-800 border-b border-slate-200/60 pb-1.5">
+                    <span>Sessão / Dia Adicional ({formattedDate}) — {techName}</span>
+                  </div>
+                  {s.activitiesDone?.trim() && (
+                    <div>
+                      <p className="text-[11px] font-bold text-[#003B73] uppercase tracking-wider mb-0.5">Descrição das Atividades Executadas:</p>
+                      <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{s.activitiesDone}</p>
+                    </div>
+                  )}
+                  {s.observation?.trim() && (
+                    <div className="pt-1">
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Observações:</p>
+                      <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{s.observation}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* FECHAMENTO DE VALORES (Se Aplicável) */}

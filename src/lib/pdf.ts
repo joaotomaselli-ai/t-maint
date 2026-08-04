@@ -322,21 +322,33 @@ export async function exportSingleReport(
     doc.text(`Totais — Horas: ${fmtHours(totalsRow.totalHours)} · KM: ${totalsRow.km}${includeValues ? ` · A cobrar: ${fmtCurrency(totalsRow.total)}` : ""}`, 14, y);
     doc.setFont("helvetica", "normal");
 
-    // Activities log per session
-    const activitiesBlock = sessions.filter(s => s.activitiesDone?.trim());
+    // Activities & observations log per session
+    const activitiesBlock = sessions.filter(s => s.activitiesDone?.trim() || s.observation?.trim());
     if (activitiesBlock.length > 0) {
       y += 6;
       doc.setFont("helvetica", "bold");
-      doc.text("Histórico de atividades por sessão", 14, y);
+      doc.text("Atividades executadas e observações das sessões adicionais", 14, y);
       doc.setFont("helvetica", "normal");
       y += 5;
       for (const s of activitiesBlock) {
-        const head = `${format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy")} — ${(s.technicianId && techByName.get(s.technicianId)) || "—"}`;
+        const head = `${format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy")} — ${(s.technicianId && techByName.get(s.technicianId)) || r.technician || "Técnico"}`;
         doc.setFont("helvetica", "bold");
         doc.text(head, 14, y); y += 4;
         doc.setFont("helvetica", "normal");
-        const lines = doc.splitTextToSize(s.activitiesDone, pageW - 28);
-        doc.text(lines, 14, y); y += lines.length * 4 + 2;
+        if (s.activitiesDone?.trim()) {
+          doc.setFont("helvetica", "bold");
+          doc.text("Atividades Executadas:", 14, y); y += 4;
+          doc.setFont("helvetica", "normal");
+          const lines = doc.splitTextToSize(s.activitiesDone, pageW - 28);
+          doc.text(lines, 14, y); y += lines.length * 4 + 2;
+        }
+        if (s.observation?.trim()) {
+          doc.setFont("helvetica", "bold");
+          doc.text("Observação da Sessão:", 14, y); y += 4;
+          doc.setFont("helvetica", "normal");
+          const lines = doc.splitTextToSize(s.observation, pageW - 28);
+          doc.text(lines, 14, y); y += lines.length * 4 + 2;
+        }
       }
     }
   }
