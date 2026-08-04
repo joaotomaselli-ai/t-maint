@@ -127,6 +127,39 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
             <p className="text-slate-700 text-justify leading-relaxed whitespace-pre-wrap">{report.observation}</p>
           </div>
         )}
+
+        {/* ATIVIDADES DAS SESSÕES ADICIONAIS */}
+        {sessions.some(s => s.activitiesDone?.trim() || s.observation?.trim()) && (
+          <div className="space-y-4 pt-2">
+            <h3 className="text-sm font-bold text-[#003B73] uppercase tracking-wider border-b border-slate-200 pb-1">
+              Atividades Executadas e Observações das Sessões Adicionais
+            </h3>
+            {sessions.map((s, i) => {
+              if (!s.activitiesDone?.trim() && !s.observation?.trim()) return null;
+              const techName = (s.technicianId && techByName.get(s.technicianId)) || report.technician || "Técnico";
+              const formattedDate = format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy");
+              return (
+                <div key={i} className="bg-slate-50 p-4 rounded-lg border border-slate-200/80 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-800 border-b border-slate-200/60 pb-1.5">
+                    <span>Sessão / Dia Adicional ({formattedDate}) — {techName}</span>
+                  </div>
+                  {s.activitiesDone?.trim() && (
+                    <div>
+                      <p className="text-[11px] font-bold text-[#003B73] uppercase tracking-wider mb-0.5">Descrição das Atividades Executadas:</p>
+                      <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{s.activitiesDone}</p>
+                    </div>
+                  )}
+                  {s.observation?.trim() && (
+                    <div className="pt-1">
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Observações:</p>
+                      <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{s.observation}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* SESSÕES E HORÁRIOS (Tabelas Elegantes) */}
@@ -170,39 +203,6 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
             })}
           </tbody>
         </table>
-
-        {/* ATIVIDADES DAS SESSÕES ADICIONAIS */}
-        {sessions.some(s => s.activitiesDone?.trim() || s.observation?.trim()) && (
-          <div className="mt-6 space-y-4">
-            <h4 className="text-xs font-bold text-[#003B73] uppercase tracking-wider border-b border-slate-200 pb-1">
-              Atividades Executadas e Observações das Sessões Adicionais
-            </h4>
-            {sessions.map((s, i) => {
-              if (!s.activitiesDone?.trim() && !s.observation?.trim()) return null;
-              const techName = (s.technicianId && techByName.get(s.technicianId)) || report.technician || "Técnico";
-              const formattedDate = format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy");
-              return (
-                <div key={i} className="bg-slate-50 p-4 rounded-lg border border-slate-200/80 space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-800 border-b border-slate-200/60 pb-1.5">
-                    <span>Sessão / Dia Adicional ({formattedDate}) — {techName}</span>
-                  </div>
-                  {s.activitiesDone?.trim() && (
-                    <div>
-                      <p className="text-[11px] font-bold text-[#003B73] uppercase tracking-wider mb-0.5">Descrição das Atividades Executadas:</p>
-                      <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{s.activitiesDone}</p>
-                    </div>
-                  )}
-                  {s.observation?.trim() && (
-                    <div className="pt-1">
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Observações:</p>
-                      <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{s.observation}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
       </section>
 
       {/* FECHAMENTO DE VALORES (Se Aplicável) */}

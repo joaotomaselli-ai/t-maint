@@ -240,6 +240,46 @@ export async function exportSingleReport(
     y += Math.max(10, lines.length * 5);
   }
 
+  if (r.observation) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Observações Gerais", 14, y);
+    doc.setFont("helvetica", "normal");
+    y += 5;
+    const lines = doc.splitTextToSize(r.observation, pageW - 28);
+    doc.text(lines, 14, y);
+    y += Math.max(10, lines.length * 5);
+  }
+
+  // Activities & observations log per session (rendered BEFORE tables)
+  const techByName = new Map(technicians.map(t => [t.id, t.name]));
+  const activitiesBlock = sessions.filter(s => s.activitiesDone?.trim() || s.observation?.trim());
+  if (activitiesBlock.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Atividades executadas e observações das sessões adicionais", 14, y);
+    doc.setFont("helvetica", "normal");
+    y += 5;
+    for (const s of activitiesBlock) {
+      const head = `Sessão / Dia Adicional (${format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy")}) — ${(s.technicianId && techByName.get(s.technicianId)) || r.technician || "Técnico"}`;
+      doc.setFont("helvetica", "bold");
+      doc.text(head, 14, y); y += 4;
+      doc.setFont("helvetica", "normal");
+      if (s.activitiesDone?.trim()) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Descrição das Atividades Executadas:", 14, y); y += 4;
+        doc.setFont("helvetica", "normal");
+        const lines = doc.splitTextToSize(s.activitiesDone, pageW - 28);
+        doc.text(lines, 14, y); y += lines.length * 4 + 2;
+      }
+      if (s.observation?.trim()) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Observação da Sessão:", 14, y); y += 4;
+        doc.setFont("helvetica", "normal");
+        const lines = doc.splitTextToSize(s.observation, pageW - 28);
+        doc.text(lines, 14, y); y += lines.length * 4 + 2;
+      }
+    }
+  }
+
   const t = reportTotalsWithSessions(r, sessions, client);
   autoTable(doc, {
     startY: y + 4,
@@ -285,7 +325,6 @@ export async function exportSingleReport(
 
   if (sessions.length > 0) {
     y = (doc as any).lastAutoTable.finalY + 6;
-    const techByName = new Map(technicians.map(t => [t.id, t.name]));
     const totalsRow = reportTotalsWithSessions(r, sessions, client);
     autoTable(doc, {
       startY: y,
@@ -321,44 +360,6 @@ export async function exportSingleReport(
     doc.setFontSize(9);
     doc.text(`Totais — Horas: ${fmtHours(totalsRow.totalHours)} · KM: ${totalsRow.km}${includeValues ? ` · A cobrar: ${fmtCurrency(totalsRow.total)}` : ""}`, 14, y);
     doc.setFont("helvetica", "normal");
-
-    // Activities & observations log per session
-    const activitiesBlock = sessions.filter(s => s.activitiesDone?.trim() || s.observation?.trim());
-    if (activitiesBlock.length > 0) {
-      y += 6;
-      doc.setFont("helvetica", "bold");
-      doc.text("Atividades executadas e observações das sessões adicionais", 14, y);
-      doc.setFont("helvetica", "normal");
-      y += 5;
-      for (const s of activitiesBlock) {
-        const head = `${format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy")} — ${(s.technicianId && techByName.get(s.technicianId)) || r.technician || "Técnico"}`;
-        doc.setFont("helvetica", "bold");
-        doc.text(head, 14, y); y += 4;
-        doc.setFont("helvetica", "normal");
-        if (s.activitiesDone?.trim()) {
-          doc.setFont("helvetica", "bold");
-          doc.text("Atividades Executadas:", 14, y); y += 4;
-          doc.setFont("helvetica", "normal");
-          const lines = doc.splitTextToSize(s.activitiesDone, pageW - 28);
-          doc.text(lines, 14, y); y += lines.length * 4 + 2;
-        }
-        if (s.observation?.trim()) {
-          doc.setFont("helvetica", "bold");
-          doc.text("Observação da Sessão:", 14, y); y += 4;
-          doc.setFont("helvetica", "normal");
-          const lines = doc.splitTextToSize(s.observation, pageW - 28);
-          doc.text(lines, 14, y); y += lines.length * 4 + 2;
-        }
-      }
-    }
-  }
-
-  if (r.observation) {
-    y = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 6 : y + 6;
-    doc.setFont("helvetica", "bold");
-    doc.text("Observação", 14, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(doc.splitTextToSize(r.observation, pageW - 28), 14, y + 5);
   }
 
 
