@@ -23,6 +23,7 @@ import {
   type ServiceSession,
 } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
+import { useOSStatus, type ServiceReportStatus, type ServiceReportPriority } from "@/hooks/use-os-status";
 import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus , Loader2} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -71,10 +72,13 @@ function Atividades() {
   const { isTechnician, isAdmin } = useAccess();
   const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
   const qc = useQueryClient();
+  const { getStatus, getPriority, updateStatus } = useOSStatus();
   const [open, setOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const isSavingRef = useRef(false);
   const [editing, setEditing] = useState<Editing>(empty());
+  const [formStatus, setFormStatus] = useState<ServiceReportStatus>("aguardando");
+  const [formPriority, setFormPriority] = useState<ServiceReportPriority>("normal");
   const [editingExtras, setEditingExtras] = useState<{
     existingAttachments: ActivityAttachment[];
     pendingAttachments: { kind: AttachmentKind; file: File; previewUrl: string }[];
@@ -91,6 +95,7 @@ function Atividades() {
   const [search, setSearch] = useState("");
   const [filterClient, setFilterClient] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [pageSize, setPageSize] = useState<number>(20);
@@ -122,6 +127,7 @@ function Atividades() {
     return [...reports]
       .filter(r => filterClient === "all" || r.clientId === filterClient)
       .filter(r => filterType === "all" || r.type === filterType)
+      .filter(r => filterStatus === "all" || getStatus(r.id) === filterStatus)
       .filter(r => !dateFrom || r.date >= dateFrom)
       .filter(r => !dateTo || r.date <= dateTo)
       .filter(r => {
@@ -134,7 +140,7 @@ function Atividades() {
           (c?.name.toLowerCase().includes(s) ?? false);
       })
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  }, [reports, filterClient, filterType, dateFrom, dateTo, search, clientMap]);
+  }, [reports, filterClient, filterType, filterStatus, dateFrom, dateTo, search, clientMap, getStatus]);
 
   useEffect(() => { setPage(1); }, [search, filterClient, filterType, dateFrom, dateTo, pageSize]);
 
@@ -173,6 +179,8 @@ function Atividades() {
       }
     }
 
+    setFormStatus("aguardando");
+    setFormPriority("normal");
     setEditing(empty(defaultTechName));
     const extras = emptyExtras();
     if (initialTechs.length > 0) extras.activityTechnicians = initialTechs;
@@ -181,6 +189,8 @@ function Atividades() {
   };
 
   const startEdit = async (r: ServiceReport) => {
+    setFormStatus(getStatus(r.id));
+    setFormPriority(getPriority(r.id));
     setEditing(r);
     setEditingExtras(emptyExtras());
     setOpen(true);
@@ -245,6 +255,18 @@ function Atividades() {
         const created = await addReport.mutateAsync({ ...payload, technician: techName, orderNumber: editing.orderNumber || nextNum });
         activityId = created.id;
         toast.success("OS registrada");
+      }
+
+      if (activityId) {
+        try {
+          await updateStatus.mutateAsync({
+            activityId,
+            status: formStatus,
+            priority: formPriority,
+          });
+        } catch (err) {
+          console.error("Erro ao atualizar status:", err);
+        }
       }
 
       if (editing.type === "preventiva" && activityId && user) {
@@ -326,7 +348,7 @@ function Atividades() {
 
       <Card>
         <CardContent className="p-4 space-y-3">
-          <div className="grid gap-3 sm:grid-cols-[1fr_200px_180px]">
+          <div className="grid gap-3 sm:grid-cols-[1fr_180px_140px_160px]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, cliente..." className="pl-9" />
@@ -344,6 +366,15 @@ function Atividades() {
                 <SelectItem value="all">Todos os tipos</SelectItem>
                 <SelectItem value="corretiva">Corretiva</SelectItem>
                 <SelectItem value="preventiva">Preventiva</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="aguardando">⏳ Aguardando</SelectItem>
+                <SelectItem value="iniciada">🚀 Iniciada</SelectItem>
+                <SelectItem value="fechada">✅ Fechada</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -401,6 +432,8 @@ function Atividades() {
             const t = isTechnician && myTechId
               ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
               : baseT;
+            const currentStatus = getStatus(r.id);
+            const currentPriority = getPriority(r.id);
             return (
               <Card key={r.id} className="hover:shadow-elegant transition-shadow">
                 <CardContent className="p-5">
@@ -411,6 +444,50 @@ function Atividades() {
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.type === "corretiva" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
                           {r.type === "corretiva" ? "Corretiva" : "Preventiva"}
                         </span>
+                        
+                        <Select
+                          value={currentStatus}
+                          onValueChange={(val) => updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus })}
+                        >
+                          <SelectTrigger className={`h-6 text-xs px-2.5 py-0 border font-semibold rounded-full gap-1 ${
+                            currentStatus === "aguardando" 
+                              ? "bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400 dark:border-amber-800" 
+                              : currentStatus === "iniciada"
+                              ? "bg-blue-500/15 text-blue-700 border-blue-300 dark:text-blue-400 dark:border-blue-800"
+                              : "bg-emerald-500/15 text-emerald-700 border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
+                          }`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="aguardando">⏳ Aguardando atendimento</SelectItem>
+                            <SelectItem value="iniciada">🚀 Iniciada</SelectItem>
+                            <SelectItem value="fechada">✅ Fechada</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={currentPriority}
+                          onValueChange={(val) => updateStatus.mutate({ activityId: r.id, priority: val as ServiceReportPriority })}
+                        >
+                          <SelectTrigger className={`h-6 text-xs px-2 py-0 border font-medium rounded-full gap-1 ${
+                            currentPriority === "urgente"
+                              ? "bg-red-500/15 text-red-700 border-red-300 font-bold dark:text-red-400"
+                              : currentPriority === "alta"
+                              ? "bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400"
+                              : currentPriority === "normal"
+                              ? "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-400"
+                              : "bg-slate-500/10 text-slate-600 border-slate-200 dark:text-slate-400"
+                          }`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="baixa">⚪ Baixa</SelectItem>
+                            <SelectItem value="normal">🔵 Normal</SelectItem>
+                            <SelectItem value="alta">🟠 Alta</SelectItem>
+                            <SelectItem value="urgente">🔴 Urgente</SelectItem>
+                          </SelectContent>
+                        </Select>
+
                         <span className="text-xs text-muted-foreground">{format(new Date(r.date + "T00:00:00"), "dd 'de' MMMM, yyyy", { locale: ptBR })}</span>
                         {sess.length > 0 && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
@@ -474,6 +551,8 @@ function Atividades() {
         extras={editingExtras} setExtras={setEditingExtras}
         clients={clients} technicians={technicians} onSave={save}
         isSaving={isSaving}
+        formStatus={formStatus} setFormStatus={setFormStatus}
+        formPriority={formPriority} setFormPriority={setFormPriority}
       />
 
       <PdfChoiceDialog
@@ -660,11 +739,13 @@ function BulletedTextarea({ value, onChange, ...props }: Omit<React.ComponentPro
   return <Textarea value={value} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleFocus} onBlur={handleBlur} {...props} />;
 }
 
-function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave, isSaving }: {
+function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave, isSaving, formStatus, setFormStatus, formPriority, setFormPriority }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   editing: Editing; setEditing: (e: Editing) => void;
   extras: Extras; setExtras: React.Dispatch<React.SetStateAction<Extras>>;
   clients: Client[]; technicians: Technician[]; onSave: () => void; isSaving?: boolean;
+  formStatus: ServiceReportStatus; setFormStatus: (s: ServiceReportStatus) => void;
+  formPriority: ServiceReportPriority; setFormPriority: (p: ServiceReportPriority) => void;
 }) {
   const money = useMoney();
   const { user } = useAuth();
@@ -856,6 +937,33 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                 <SelectContent>
                   <SelectItem value="corretiva">Corretiva</SelectItem>
                   <SelectItem value="preventiva">Preventiva</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </section>
+
+          {/* Status & Priority Selection */}
+          <section className="grid gap-4 sm:grid-cols-2 bg-muted/20 p-3.5 rounded-lg border">
+            <div className="grid gap-2">
+              <Label className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Status do Atendimento *</Label>
+              <Select value={formStatus} onValueChange={(v) => setFormStatus(v as ServiceReportStatus)}>
+                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aguardando">⏳ Aguardando atendimento</SelectItem>
+                  <SelectItem value="iniciada">🚀 Iniciada / Em atendimento</SelectItem>
+                  <SelectItem value="fechada">✅ Fechada / Concluída</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Prioridade (Alerta Visual)</Label>
+              <Select value={formPriority} onValueChange={(v) => setFormPriority(v as ServiceReportPriority)}>
+                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="baixa">⚪ Baixa</SelectItem>
+                  <SelectItem value="normal">🔵 Normal</SelectItem>
+                  <SelectItem value="alta">🟠 Alta</SelectItem>
+                  <SelectItem value="urgente">🔴 Urgente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
