@@ -23,9 +23,9 @@ export const TechnicianReportPrint = forwardRef<HTMLDivElement, TechnicianReport
     totalsByReport.set(r.id, technicianPayForReport(r, sessions, technician, activityTechnicians));
   }
 
-  let hours = 0, ovtWk = 0, ovtWe = 0, km = 0, total = 0;
+  let hours = 0, regularHours = 0, ovtWk = 0, ovtWe = 0, km = 0, total = 0;
   for (const t of totalsByReport.values()) {
-    hours += t.totalHours; ovtWk += t.ovtWk; ovtWe += t.ovtWe;
+    hours += t.totalHours; regularHours += t.regularHours; ovtWk += t.ovtWk; ovtWe += t.ovtWe;
     km += t.km; total += t.total;
   }
 
@@ -80,7 +80,9 @@ export const TechnicianReportPrint = forwardRef<HTMLDivElement, TechnicianReport
               <th className="px-3 py-3 font-semibold">OS</th>
               <th className="px-3 py-3 font-semibold">Data</th>
               <th className="px-3 py-3 font-semibold">Cliente</th>
-              <th className="px-3 py-3 font-semibold text-center">Horas</th>
+              <th className="px-3 py-3 font-semibold text-center">H. Normais</th>
+              <th className="px-3 py-3 font-semibold text-center">HE Sem.</th>
+              <th className="px-3 py-3 font-semibold text-center">HE F.S.</th>
               <th className="px-3 py-3 font-semibold text-right">KM</th>
               <th className="px-3 py-3 font-semibold text-right">Comissão</th>
             </tr>
@@ -93,8 +95,10 @@ export const TechnicianReportPrint = forwardRef<HTMLDivElement, TechnicianReport
                 <tr key={r.id} className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-slate-50/30' : ''}`} style={{ pageBreakInside: 'avoid' }}>
                   <td className="px-3 py-3 font-medium">{r.orderNumber || "—"}</td>
                   <td className="px-3 py-3 text-slate-600 whitespace-nowrap">{format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy")}</td>
-                  <td className="px-3 py-3 text-slate-600 truncate max-w-[180px]">{cli?.name || "—"}</td>
-                  <td className="px-3 py-3 text-center text-slate-600 whitespace-nowrap">{fmtHours(t.totalHours)}</td>
+                  <td className="px-3 py-3 text-slate-600 truncate max-w-[150px]">{cli?.name || "—"}</td>
+                  <td className="px-3 py-3 text-center text-slate-600 whitespace-nowrap">{fmtHours(t.regularHours)}</td>
+                  <td className="px-3 py-3 text-center text-slate-600 whitespace-nowrap">{fmtHours(t.ovtWk)}</td>
+                  <td className="px-3 py-3 text-center text-slate-600 whitespace-nowrap">{fmtHours(t.ovtWe)}</td>
                   <td className="px-3 py-3 text-right text-slate-600 whitespace-nowrap">{t.km}</td>
                   <td className="px-3 py-3 text-right text-slate-800 font-medium whitespace-nowrap">{fmtCurrency(t.total)}</td>
                 </tr>
@@ -108,19 +112,27 @@ export const TechnicianReportPrint = forwardRef<HTMLDivElement, TechnicianReport
       <section className="mb-10 w-2/3 ml-auto" style={{ pageBreakInside: 'avoid' }}>
         <div className="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
-            <span className="text-slate-600">Horas Totais de Atendimento:</span>
-            <span className="font-bold text-slate-800">{fmtHours(hours)}</span>
+            <span className="text-slate-600">Total de Horas Normais:</span>
+            <span className="font-bold text-slate-800">{fmtHours(regularHours)}</span>
           </div>
           <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
-            <span className="text-slate-600">Horas Extras FDS:</span>
+            <span className="text-slate-600">Total de Horas Extras Semana:</span>
+            <span className="font-medium text-slate-800">{fmtHours(ovtWk)}</span>
+          </div>
+          <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
+            <span className="text-slate-600">Total de Horas Extras Final de Semana:</span>
             <span className="font-medium text-slate-800">{fmtHours(ovtWe)}</span>
           </div>
           <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
-            <span className="text-slate-600">Quilometragem Total:</span>
+            <span className="text-slate-600">Horas Totais Acumuladas:</span>
+            <span className="font-bold text-slate-800">{fmtHours(hours)}</span>
+          </div>
+          <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
+            <span className="text-slate-600">Total de KM's:</span>
             <span className="font-medium text-slate-800">{km} km</span>
           </div>
           <div className="px-4 py-4 bg-[#003B73]/5 flex justify-between items-center">
-            <span className="font-bold text-[#003B73] uppercase tracking-wider text-sm">Total de Comissão:</span>
+            <span className="font-bold text-[#003B73] uppercase tracking-wider text-sm">Total de Comissão / A Pagar:</span>
             <span className="font-black text-xl text-[#003B73]">{fmtCurrency(total)}</span>
           </div>
         </div>

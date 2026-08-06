@@ -641,7 +641,7 @@ export async function exportTechnicianReport(
       r.orderNumber || "—",
       format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy"),
       clientsById[r.clientId]?.name || "—",
-      fmtHours(t.totalHours),
+      fmtHours(t.regularHours),
       fmtHours(t.ovtWk),
       fmtHours(t.ovtWe),
       `${t.km} km`,
@@ -651,14 +651,20 @@ export async function exportTechnicianReport(
 
   const totals = reports.reduce((acc, r) => {
     const t = technicianPayForReport(r, sessions, technician as any);
-    acc.hours += t.totalHours; acc.ovtWk += t.ovtWk; acc.ovtWe += t.ovtWe;
-    acc.km += t.km; acc.hoursValue += t.hoursValue; acc.kmValue += t.kmValue; acc.total += t.total;
+    acc.hours += t.totalHours;
+    acc.regularHours += t.regularHours;
+    acc.ovtWk += t.ovtWk;
+    acc.ovtWe += t.ovtWe;
+    acc.km += t.km;
+    acc.hoursValue += t.hoursValue;
+    acc.kmValue += t.kmValue;
+    acc.total += t.total;
     return acc;
-  }, { hours: 0, ovtWk: 0, ovtWe: 0, km: 0, hoursValue: 0, kmValue: 0, total: 0 });
+  }, { hours: 0, regularHours: 0, ovtWk: 0, ovtWe: 0, km: 0, hoursValue: 0, kmValue: 0, total: 0 });
 
   autoTable(doc, {
     startY: (period?.from || period?.to) ? 72 : 66,
-    head: [["OS", "Data", "Cliente", "Horas", "HE Sem.", "HE F.S.", "KM", "A pagar"]],
+    head: [["OS", "Data", "Cliente", "H. Normais", "HE Sem.", "HE F.S.", "KM", "A pagar"]],
     body: rows,
     styles: { fontSize: 9, cellPadding: 2 },
     headStyles: { fillColor: [40, 60, 110], textColor: 255 },
@@ -667,24 +673,27 @@ export async function exportTechnicianReport(
 
   const finalY = (doc as any).lastAutoTable.finalY || 80;
 
+  const summaryBody = [
+    ["Total de atendimentos", String(reports.length)],
+    ["Total de horas normais", fmtHours(totals.regularHours)],
+    ["Total de horas extras semana", fmtHours(totals.ovtWk)],
+    ["Total de horas extras final de semana", fmtHours(totals.ovtWe)],
+    ["Horas totais acumuladas", fmtHours(totals.hours)],
+    ["Total de KM's", `${totals.km} km`],
+    ["Valor por horas", fmtCurrency(totals.hoursValue)],
+    ["Valor por km", fmtCurrency(totals.kmValue)],
+    ["TOTAL A PAGAR", fmtCurrency(totals.total)],
+  ];
+
   autoTable(doc, {
     startY: finalY + 6,
     head: [["Resumo", ""]],
-    body: [
-      ["Total de atendimentos", String(reports.length)],
-      ["Horas totais", fmtHours(totals.hours)],
-      ["Horas extras semana", fmtHours(totals.ovtWk)],
-      ["Horas extras fim de semana", fmtHours(totals.ovtWe)],
-      ["Quilometragem total", `${totals.km} km`],
-      ["Valor por horas", fmtCurrency(totals.hoursValue)],
-      ["Valor por km", fmtCurrency(totals.kmValue)],
-      ["TOTAL A PAGAR", fmtCurrency(totals.total)],
-    ],
+    body: summaryBody,
     styles: { fontSize: 10, cellPadding: 3 },
     headStyles: { fillColor: [40, 60, 110], textColor: 255 },
     columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right" } },
     didParseCell: (data) => {
-      if (data.row.index === 7 && data.section === "body") {
+      if (data.row.index === summaryBody.length - 1 && data.section === "body") {
         data.cell.styles.fillColor = [40, 60, 110];
         data.cell.styles.textColor = 255;
         data.cell.styles.fontStyle = "bold";
