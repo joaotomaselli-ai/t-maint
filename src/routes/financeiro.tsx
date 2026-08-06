@@ -690,7 +690,7 @@ function TechnicianMonthlyTab() {
             const closure = closuresMap.get(tech.id);
             const isPaid = !!closure;
 
-            let hoursAmount = 0, kmAmount = 0, extraAmount = 0, normalHours = 0;
+            let hoursAmount = 0, kmAmount = 0, extraAmount = 0, normalHours = 0, extraHours = 0;
             const monthPrefix = month;
             
             const name = tech.name.trim().toLowerCase();
@@ -705,8 +705,9 @@ function TechnicianMonthlyTab() {
 
             for (const r of monthReports) {
               const t = technicianPayForReport(r, sessions, tech, activityTechnicians);
-              normalHours += t.totalHours;
-              hoursAmount += t.totalHours * (tech.hourlyRate || 0);
+              normalHours += t.regularHours;
+              extraHours += (t.ovtWk + t.ovtWe);
+              hoursAmount += t.regularHours * (tech.hourlyRate || 0);
               kmAmount += t.km * (tech.kmRate || 0);
               extraAmount += (t.ovtWk * (tech.overtimeWeekdayRate || 0)) + (t.ovtWe * (tech.overtimeWeekendRate || 0));
             }
@@ -746,11 +747,11 @@ function TechnicianMonthlyTab() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-sm space-y-2">
-                    <div className="flex justify-between"><span>Horas ({fmtHours(normalHours)}):</span> <span>{money(hoursAmount)}</span></div>
+                    <div className="flex justify-between"><span>Horas Normais ({fmtHours(normalHours)}):</span> <span>{money(hoursAmount)}</span></div>
                     {complementAmount > 0 && (
                       <div className="flex justify-between text-warning font-medium"><span>Complemento ({fmtHours(complementHours)}):</span> <span>{money(complementAmount)}</span></div>
                     )}
-                    <div className="flex justify-between"><span>Horas Extras:</span> <span>{money(extraAmount)}</span></div>
+                    <div className="flex justify-between"><span>Horas Extras ({fmtHours(extraHours)}):</span> <span>{money(extraAmount)}</span></div>
                     <div className="flex justify-between border-b pb-2"><span>KMs:</span> <span>{money(kmAmount)}</span></div>
                     <div className="flex justify-between font-bold pt-1 text-base"><span>Total Final:</span> <span>{money(totalAmount)}</span></div>
                   </div>
