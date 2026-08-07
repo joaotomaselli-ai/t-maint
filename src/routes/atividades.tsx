@@ -434,13 +434,20 @@ function Atividades() {
               : baseT;
             const currentStatus = getStatus(r.id);
             const currentPriority = getPriority(r.id);
+            const cardBorder = {
+              urgente: "border-l-4 border-l-red-500",
+              alta: "border-l-4 border-l-amber-500",
+              normal: "border-l-4 border-l-blue-500",
+              baixa: "border-l-4 border-l-slate-400",
+            }[currentPriority];
+
             return (
-              <Card key={r.id} className="hover:shadow-elegant transition-shadow">
-                <CardContent className="p-5">
+              <Card key={r.id} className={`hover:shadow-elegant transition-all ${cardBorder}`}>
+                <CardContent className="p-4 sm:p-5">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">OS {r.orderNumber}</span>
+                        <span className="text-xs font-mono font-bold bg-muted px-2 py-0.5 rounded border">OS #{r.orderNumber}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.type === "corretiva" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
                           {r.type === "corretiva" ? "Corretiva" : "Preventiva"}
                         </span>
@@ -455,17 +462,17 @@ function Atividades() {
                             updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus });
                           }}
                         >
-                          <SelectTrigger className={`h-6 text-xs px-2.5 py-0 border font-semibold rounded-full gap-1 ${
+                          <SelectTrigger className={`h-5 text-[11px] px-2 py-0 border font-semibold rounded-full gap-1 ${
                             currentStatus === "aguardando" 
-                              ? "bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400 dark:border-amber-800" 
+                              ? "bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400" 
                               : currentStatus === "iniciada"
-                              ? "bg-blue-500/15 text-blue-700 border-blue-300 dark:text-blue-400 dark:border-blue-800"
-                              : "bg-emerald-500/15 text-emerald-700 border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
+                              ? "bg-blue-500/15 text-blue-700 border-blue-300 dark:text-blue-400"
+                              : "bg-emerald-500/15 text-emerald-700 border-emerald-300 dark:text-emerald-400"
                           }`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="aguardando">⏳ Aguardando atendimento</SelectItem>
+                            <SelectItem value="aguardando">⏳ Aguardando</SelectItem>
                             <SelectItem value="iniciada">🚀 Iniciada</SelectItem>
                             {(isAdmin || isMaster) ? (
                               <SelectItem value="fechada">✅ Fechada</SelectItem>
@@ -488,16 +495,8 @@ function Atividades() {
                             updateStatus.mutate({ activityId: r.id, priority: val as ServiceReportPriority });
                           }}
                         >
-                          <SelectTrigger className={`h-6 text-xs px-2 py-0 border font-medium rounded-full gap-1 ${
-                            (!isAdmin && !isMaster) ? "cursor-default opacity-90" : ""
-                          } ${
-                            currentPriority === "urgente"
-                              ? "bg-red-500/15 text-red-700 border-red-300 font-bold dark:text-red-400"
-                              : currentPriority === "alta"
-                              ? "bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400"
-                              : currentPriority === "normal"
-                              ? "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-400"
-                              : "bg-slate-500/10 text-slate-600 border-slate-200 dark:text-slate-400"
+                          <SelectTrigger className={`h-5 text-[11px] px-1.5 py-0 border-0 bg-transparent font-bold rounded gap-0.5 ${
+                            (!isAdmin && !isMaster) ? "cursor-default opacity-90" : "hover:bg-muted/60"
                           }`}>
                             <SelectValue />
                           </SelectTrigger>
