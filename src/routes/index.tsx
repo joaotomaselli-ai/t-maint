@@ -286,7 +286,7 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
                       }}
                     >
                       <SelectTrigger
-                        className={`h-6 px-1.5 text-[11px] font-bold border-0 bg-transparent rounded gap-0.5 ${
+                        className={`w-auto shrink-0 inline-flex h-6 px-1.5 text-[11px] font-bold border-0 bg-transparent rounded gap-0.5 ${
                           !canManagePriority ? "cursor-default opacity-90" : "hover:bg-muted/60"
                         }`}
                         title={!canManagePriority ? "Apenas administradores podem alterar a prioridade" : undefined}
@@ -332,11 +332,7 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
                       updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus });
                     }}
                   >
-                    <SelectTrigger className={`h-6 text-[11px] px-2.5 border font-semibold rounded-full gap-1 ${
-                      status === "aguardando"
-                        ? "bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400"
-                        : "bg-blue-500/15 text-blue-700 border-blue-300 dark:text-blue-400"
-                    }`}>
+                    <SelectTrigger className="w-auto shrink-0 inline-flex h-6 text-[11px] px-2.5 border font-semibold rounded-full gap-1 bg-muted/40 text-foreground border-border">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

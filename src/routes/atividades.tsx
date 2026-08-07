@@ -462,13 +462,7 @@ function Atividades() {
                             updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus });
                           }}
                         >
-                          <SelectTrigger className={`h-5 text-[11px] px-2 py-0 border font-semibold rounded-full gap-1 ${
-                            currentStatus === "aguardando" 
-                              ? "bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400" 
-                              : currentStatus === "iniciada"
-                              ? "bg-blue-500/15 text-blue-700 border-blue-300 dark:text-blue-400"
-                              : "bg-emerald-500/15 text-emerald-700 border-emerald-300 dark:text-emerald-400"
-                          }`}>
+                          <SelectTrigger className="w-auto shrink-0 inline-flex h-6 text-xs font-medium px-2.5 py-0 rounded-full border bg-muted/40 hover:bg-muted/80 text-foreground gap-1.5 shadow-none border-border">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -495,9 +489,12 @@ function Atividades() {
                             updateStatus.mutate({ activityId: r.id, priority: val as ServiceReportPriority });
                           }}
                         >
-                          <SelectTrigger className={`h-5 text-[11px] px-1.5 py-0 border-0 bg-transparent font-bold rounded gap-0.5 ${
-                            (!isAdmin && !isMaster) ? "cursor-default opacity-90" : "hover:bg-muted/60"
-                          }`}>
+                          <SelectTrigger
+                            className={`w-auto shrink-0 inline-flex h-6 text-xs font-medium px-2 py-0 border-0 bg-transparent text-muted-foreground gap-1 shadow-none ${
+                              (!isAdmin && !isMaster) ? "cursor-default opacity-85" : "hover:bg-muted/50 rounded"
+                            }`}
+                            title={!isAdmin && !isMaster ? "Apenas administradores podem alterar a prioridade" : undefined}
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
