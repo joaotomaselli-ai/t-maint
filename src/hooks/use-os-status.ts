@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess } from "@/hooks/use-access";
+import { useAuth } from "@/hooks/use-auth";
 import { useMemo } from "react";
+import { toast } from "sonner";
 
 export type ServiceReportStatus = "aguardando" | "iniciada" | "fechada";
 export type ServiceReportPriority = "baixa" | "normal" | "alta" | "urgente";
@@ -15,6 +17,7 @@ export interface OSStatusMeta {
 
 export function useOSStatus() {
   const { companyId } = useAccess();
+  const { user } = useAuth();
   const qc = useQueryClient();
 
   const queryKey = ["os_status_events", companyId];
@@ -28,7 +31,10 @@ export function useOSStatus() {
         .select("*")
         .eq("company_id", companyId)
         .eq("event_type", "os_status");
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar status de OS:", error);
+        throw error;
+      }
       return data ?? [];
     },
     enabled: !!companyId,
@@ -58,7 +64,13 @@ export function useOSStatus() {
       status?: ServiceReportStatus;
       priority?: ServiceReportPriority;
     }) => {
-      if (!companyId) return;
+      if (!companyId) {
+        throw new Error("Empresa não identificada.");
+      }
+      if (!user?.id) {
+        throw new Error("Usuário não autenticado.");
+      }
+
       const existing = osStatusMap.get(activityId);
       const newStatus = status ?? existing?.status ?? "aguardando";
       const newPriority = priority ?? existing?.priority ?? "normal";
@@ -71,7 +83,10 @@ export function useOSStatus() {
             recurrence_rule: newPriority,
           })
           .eq("id", existing.id);
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao atualizar status da OS:", error);
+          throw error;
+        }
       } else {
         const { error } = await supabase.from("agenda_events").insert({
           company_id: companyId,
@@ -80,18 +95,24 @@ export function useOSStatus() {
           recurrence_rule: newPriority,
           event_type: "os_status",
           is_all_day: false,
-          created_by: "system",
+          created_by: user.id,
         });
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao registrar status da OS:", error);
+          throw error;
+        }
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey });
     },
+    onError: (err: any) => {
+      console.error("Erro na alteração de status/prioridade:", err);
+      toast.error(err?.message || "Não foi possível salvar o status da OS.");
+    },
   });
 
   const getStatus = (activityId: string): ServiceReportStatus => {
-    // Default to "aguardando" if status is not explicitly set
     return osStatusMap.get(activityId)?.status ?? "aguardando";
   };
 
