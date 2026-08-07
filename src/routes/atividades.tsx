@@ -447,7 +447,13 @@ function Atividades() {
                         
                         <Select
                           value={currentStatus}
-                          onValueChange={(val) => updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus })}
+                          onValueChange={(val) => {
+                            if (val === "fechada" && !isAdmin && !isMaster) {
+                              toast.error("Somente administradores podem fechar a Ordem de Serviço.");
+                              return;
+                            }
+                            updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus });
+                          }}
                         >
                           <SelectTrigger className={`h-6 text-xs px-2.5 py-0 border font-semibold rounded-full gap-1 ${
                             currentStatus === "aguardando" 
@@ -461,15 +467,30 @@ function Atividades() {
                           <SelectContent>
                             <SelectItem value="aguardando">⏳ Aguardando atendimento</SelectItem>
                             <SelectItem value="iniciada">🚀 Iniciada</SelectItem>
-                            <SelectItem value="fechada">✅ Fechada</SelectItem>
+                            {(isAdmin || isMaster) ? (
+                              <SelectItem value="fechada">✅ Fechada</SelectItem>
+                            ) : (
+                              <SelectItem value="fechada" disabled className="opacity-50">
+                                🔒 Fechada (Apenas Admins)
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
 
                         <Select
+                          disabled={!isAdmin && !isMaster}
                           value={currentPriority}
-                          onValueChange={(val) => updateStatus.mutate({ activityId: r.id, priority: val as ServiceReportPriority })}
+                          onValueChange={(val) => {
+                            if (!isAdmin && !isMaster) {
+                              toast.error("Somente administradores podem alterar a prioridade da ordem.");
+                              return;
+                            }
+                            updateStatus.mutate({ activityId: r.id, priority: val as ServiceReportPriority });
+                          }}
                         >
                           <SelectTrigger className={`h-6 text-xs px-2 py-0 border font-medium rounded-full gap-1 ${
+                            (!isAdmin && !isMaster) ? "cursor-default opacity-90" : ""
+                          } ${
                             currentPriority === "urgente"
                               ? "bg-red-500/15 text-red-700 border-red-300 font-bold dark:text-red-400"
                               : currentPriority === "alta"
@@ -946,19 +967,46 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
           <section className="grid gap-4 sm:grid-cols-2 bg-muted/20 p-3.5 rounded-lg border">
             <div className="grid gap-2">
               <Label className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Status do Atendimento *</Label>
-              <Select value={formStatus} onValueChange={(v) => setFormStatus(v as ServiceReportStatus)}>
+              <Select
+                value={formStatus}
+                onValueChange={(v) => {
+                  if (v === "fechada" && !isAdmin) {
+                    toast.error("Somente administradores podem fechar a Ordem de Serviço.");
+                    return;
+                  }
+                  setFormStatus(v as ServiceReportStatus);
+                }}
+              >
                 <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="aguardando">⏳ Aguardando atendimento</SelectItem>
                   <SelectItem value="iniciada">🚀 Iniciada / Em atendimento</SelectItem>
-                  <SelectItem value="fechada">✅ Fechada / Concluída</SelectItem>
+                  {isAdmin ? (
+                    <SelectItem value="fechada">✅ Fechada / Concluída</SelectItem>
+                  ) : (
+                    <SelectItem value="fechada" disabled className="opacity-50">
+                      🔒 Fechada / Concluída (Apenas Admins)
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
               <Label className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Prioridade (Alerta Visual)</Label>
-              <Select value={formPriority} onValueChange={(v) => setFormPriority(v as ServiceReportPriority)}>
-                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+              <Select
+                disabled={!isAdmin}
+                value={formPriority}
+                onValueChange={(v) => {
+                  if (!isAdmin) {
+                    toast.error("Somente administradores podem alterar a prioridade.");
+                    return;
+                  }
+                  setFormPriority(v as ServiceReportPriority);
+                }}
+              >
+                <SelectTrigger className={`bg-background ${!isAdmin ? "opacity-75 cursor-not-allowed" : ""}`}>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="baixa">⚪ Baixa</SelectItem>
                   <SelectItem value="normal">🔵 Normal</SelectItem>

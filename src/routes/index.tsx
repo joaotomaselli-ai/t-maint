@@ -149,6 +149,9 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
   const { clients } = useClients();
   const { reports } = useReports();
   const { getStatus, getPriority, updateStatus } = useOSStatus();
+  const { isAdmin, isMaster } = useAccess();
+  const canManagePriority = isAdmin || isMaster;
+  const canCloseOS = isAdmin || isMaster;
   const [search, setSearch] = useState("");
   const [selectedReport, setSelectedReport] = useState<ServiceReport | null>(null);
 
@@ -185,6 +188,10 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
 
   const markClosed = (r: ServiceReport, e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (!canCloseOS) {
+      toast.error("Somente administradores podem fechar a Ordem de Serviço.");
+      return;
+    }
     updateStatus.mutate({ activityId: r.id, status: "fechada" });
     toast.success(`OS #${r.orderNumber || r.id} fechada!`);
   };
@@ -268,10 +275,22 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
                   {/* Priority Selector Pill */}
                   <div onClick={e => e.stopPropagation()}>
                     <Select
+                      disabled={!canManagePriority}
                       value={priority}
-                      onValueChange={(val) => updateStatus.mutate({ activityId: r.id, priority: val as ServiceReportPriority })}
+                      onValueChange={(val) => {
+                        if (!canManagePriority) {
+                          toast.error("Somente administradores podem alterar a prioridade da ordem.");
+                          return;
+                        }
+                        updateStatus.mutate({ activityId: r.id, priority: val as ServiceReportPriority });
+                      }}
                     >
-                      <SelectTrigger className="h-6 px-1.5 text-[11px] font-bold border-0 bg-transparent hover:bg-muted/60 rounded gap-0.5">
+                      <SelectTrigger
+                        className={`h-6 px-1.5 text-[11px] font-bold border-0 bg-transparent rounded gap-0.5 ${
+                          !canManagePriority ? "cursor-default opacity-90" : "hover:bg-muted/60"
+                        }`}
+                        title={!canManagePriority ? "Apenas administradores podem alterar a prioridade" : undefined}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -305,7 +324,13 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
                   {/* Status Dropdown */}
                   <Select
                     value={status}
-                    onValueChange={(val) => updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus })}
+                    onValueChange={(val) => {
+                      if (val === "fechada" && !canCloseOS) {
+                        toast.error("Somente administradores podem fechar a Ordem de Serviço.");
+                        return;
+                      }
+                      updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus });
+                    }}
                   >
                     <SelectTrigger className={`h-6 text-[11px] px-2.5 border font-semibold rounded-full gap-1 ${
                       status === "aguardando"
@@ -317,7 +342,13 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
                     <SelectContent>
                       <SelectItem value="aguardando">⏳ Aguardando</SelectItem>
                       <SelectItem value="iniciada">🚀 Iniciada</SelectItem>
-                      <SelectItem value="fechada">✅ Fechada</SelectItem>
+                      {canCloseOS ? (
+                        <SelectItem value="fechada">✅ Fechada</SelectItem>
+                      ) : (
+                        <SelectItem value="fechada" disabled className="opacity-50">
+                          🔒 Fechada (Apenas Admins)
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
 
@@ -332,14 +363,16 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
                     <Eye className="h-3.5 w-3.5" />
                   </Button>
 
-                  {/* Quick Concluir Button */}
-                  <Button
-                    size="sm"
-                    className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-1"
-                    onClick={(e) => markClosed(r, e)}
-                  >
-                    <Check className="h-3.5 w-3.5" /> Fechar
-                  </Button>
+                  {/* Quick Concluir Button (Admins only) */}
+                  {canCloseOS && (
+                    <Button
+                      size="sm"
+                      className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-1"
+                      onClick={(e) => markClosed(r, e)}
+                    >
+                      <Check className="h-3.5 w-3.5" /> Fechar
+                    </Button>
+                  )}
                 </div>
               </div>
             );
@@ -354,6 +387,7 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
           clientName={clientMap.get(selectedReport.clientId)?.name}
           status={getStatus(selectedReport.id)}
           priority={getPriority(selectedReport.id)}
+          canCloseOS={canCloseOS}
           onClose={() => setSelectedReport(null)}
           onCloseOS={() => {
             markClosed(selectedReport);
@@ -370,6 +404,7 @@ function OSDetailModal({
   clientName,
   status,
   priority,
+  canCloseOS,
   onClose,
   onCloseOS,
 }: {
@@ -377,6 +412,7 @@ function OSDetailModal({
   clientName?: string;
   status: ServiceReportStatus;
   priority: ServiceReportPriority;
+  canCloseOS?: boolean;
   onClose: () => void;
   onCloseOS: () => void;
 }) {
@@ -462,9 +498,11 @@ function OSDetailModal({
             <Button variant="ghost" size="sm" onClick={onClose}>
               Fechar Janela
             </Button>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 font-semibold" onClick={onCloseOS}>
-              <Check className="h-4 w-4" /> Marcar como Fechada
-            </Button>
+            {canCloseOS && (
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 font-semibold" onClick={onCloseOS}>
+                <Check className="h-4 w-4" /> Marcar como Fechada
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
