@@ -191,6 +191,29 @@ export function useTechnicianDocs(technicianId?: string) {
     },
   });
 
+  const updateDocument = useMutation({
+    mutationFn: async (doc: Partial<TechDocument> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("agenda_events")
+        .update({
+          description: JSON.stringify(doc),
+          recurrence_rule: doc.docType,
+        })
+        .eq("id", doc.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: docsQueryKey });
+      toast.success("Documento atualizado com sucesso!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Erro ao atualizar documento.");
+    },
+  });
+
   const deleteDocument = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("agenda_events").delete().eq("id", id);
@@ -230,6 +253,29 @@ export function useTechnicianDocs(technicianId?: string) {
     },
   });
 
+  const updateEPI = useMutation({
+    mutationFn: async (epi: Partial<TechEPIItem> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("agenda_events")
+        .update({
+          description: JSON.stringify(epi),
+          recurrence_rule: epi.category,
+        })
+        .eq("id", epi.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: episQueryKey });
+      toast.success("Registro de EPI atualizado com sucesso!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Erro ao atualizar EPI.");
+    },
+  });
+
   const deleteEPI = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("agenda_events").delete().eq("id", id);
@@ -251,8 +297,10 @@ export function useTechnicianDocs(technicianId?: string) {
     techEPIs,
     isLoading: qDocs.isLoading || qEPIs.isLoading,
     addDocument,
+    updateDocument,
     deleteDocument,
     addEPI,
+    updateEPI,
     deleteEPI,
   };
 }

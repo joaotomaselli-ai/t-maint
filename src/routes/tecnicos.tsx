@@ -308,9 +308,12 @@ function TechnicianCardItem({
 
   const expiredDocs = techDocs.filter(d => getDocStatus(d.expiryDate).status === "vencido");
   const expiringDocs = techDocs.filter(d => getDocStatus(d.expiryDate).status === "vencendo");
+  const hasNoDocs = techDocs.length === 0;
+  const hasNoEPIs = techEPIs.length === 0;
+  const isIrregular = hasNoDocs || hasNoEPIs || expiredDocs.length > 0;
 
   return (
-    <Card className="hover:shadow-elegant transition-shadow flex flex-col justify-between">
+    <Card className={`hover:shadow-elegant transition-shadow flex flex-col justify-between ${isIrregular ? "border-red-300 dark:border-red-900/60" : ""}`}>
       <CardContent className="p-5 flex flex-col justify-between h-full">
         <div>
           <div className="flex items-start justify-between gap-2">
@@ -331,7 +334,19 @@ function TechnicianCardItem({
 
           {/* Compliance Status Badges */}
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            {expiredDocs.length > 0 ? (
+            {hasNoDocs && hasNoEPIs ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
+                🔴 Irregular (Sem Docs/EPI)
+              </span>
+            ) : hasNoDocs ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
+                🔴 Irregular (Sem Docs/NR)
+              </span>
+            ) : hasNoEPIs ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
+                🔴 Irregular (Sem Ficha EPI)
+              </span>
+            ) : expiredDocs.length > 0 ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
                 🔴 {expiredDocs.length} Doc(s) Vencido(s)
               </span>
@@ -339,13 +354,13 @@ function TechnicianCardItem({
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300">
                 ⚠️ {expiringDocs.length} Doc(s) a Vencer
               </span>
-            ) : techDocs.length > 0 ? (
+            ) : (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300">
-                🟢 Documentos em Dia
+                🟢 Regular / Docs em Dia
               </span>
-            ) : null}
+            )}
 
-            {techEPIs.length > 0 && (
+            {!hasNoEPIs && (
               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-300">
                 🛡️ {techEPIs.length} EPI(s) / Uniforme
               </span>

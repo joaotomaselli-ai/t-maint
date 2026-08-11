@@ -9,9 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useTechnicianDocs, getDocStatus, type TechDocument, type TechDocType, type TechEPIItem, type EPICategory, type EPIStatus } from "@/hooks/use-technician-docs";
-import { FileText, ShieldAlert, Plus, Trash2, ExternalLink, Calendar, Upload, Award, CheckCircle2, AlertTriangle, XCircle, HardHat, Shield } from "lucide-react";
+import { FileText, ShieldAlert, Plus, Pencil, Trash2, ExternalLink, Calendar, Upload, Award, CheckCircle2, AlertTriangle, XCircle, HardHat, Shield } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import type { Technician } from "@/lib/api";
 
@@ -24,11 +23,12 @@ export function TechnicianComplianceModal({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
-  const { techDocs, techEPIs, addDocument, deleteDocument, addEPI, deleteEPI } = useTechnicianDocs(technician.id);
+  const { techDocs, techEPIs, addDocument, updateDocument, deleteDocument, addEPI, updateEPI, deleteEPI } = useTechnicianDocs(technician.id);
   const [activeTab, setActiveTab] = useState<"docs" | "epis">("docs");
 
   // Document Form State
   const [isAddingDoc, setIsAddingDoc] = useState(false);
+  const [editingDocId, setEditingDocId] = useState<string | null>(null);
   const [docName, setDocName] = useState("");
   const [docType, setDocType] = useState<TechDocType>("nr");
   const [nrCategory, setNrCategory] = useState("NR-35");
@@ -41,6 +41,7 @@ export function TechnicianComplianceModal({
 
   // EPI Form State
   const [isAddingEPI, setIsAddingEPI] = useState(false);
+  const [editingEpiId, setEditingEpiId] = useState<string | null>(null);
   const [itemName, setItemName] = useState("");
   const [category, setCategory] = useState<EPICategory>("epi");
   const [epiCaNumber, setEpiCaNumber] = useState("");
@@ -70,30 +71,61 @@ export function TechnicianComplianceModal({
     reader.readAsDataURL(file);
   };
 
+  const startEditDoc = (doc: TechDocument) => {
+    setEditingDocId(doc.id);
+    setDocName(doc.docName);
+    setDocType(doc.docType);
+    setNrCategory(doc.nrCategory || "NR-35");
+    setIssueDate(doc.issueDate || "");
+    setExpiryDate(doc.expiryDate || "");
+    setCaNumber(doc.caNumber || "");
+    setDocNotes(doc.notes || "");
+    setFileDataUrl(doc.fileUrl);
+    setFileName(doc.fileName);
+    setIsAddingDoc(true);
+  };
+
   const handleSaveDoc = async () => {
     if (!docName.trim()) {
       toast.error("Informe o nome do documento");
       return;
     }
     try {
-      await addDocument.mutateAsync({
-        technicianId: technician.id,
-        docName: docName.trim(),
-        docType,
-        nrCategory: docType === "nr" ? nrCategory : undefined,
-        issueDate: issueDate || undefined,
-        expiryDate: expiryDate || undefined,
-        caNumber: caNumber.trim() || undefined,
-        notes: docNotes.trim() || undefined,
-        fileUrl: fileDataUrl,
-        fileName: fileName,
-      });
+      if (editingDocId) {
+        await updateDocument.mutateAsync({
+          id: editingDocId,
+          technicianId: technician.id,
+          docName: docName.trim(),
+          docType,
+          nrCategory: docType === "nr" ? nrCategory : undefined,
+          issueDate: issueDate || undefined,
+          expiryDate: expiryDate || undefined,
+          caNumber: caNumber.trim() || undefined,
+          notes: docNotes.trim() || undefined,
+          fileUrl: fileDataUrl,
+          fileName: fileName,
+        });
+      } else {
+        await addDocument.mutateAsync({
+          technicianId: technician.id,
+          docName: docName.trim(),
+          docType,
+          nrCategory: docType === "nr" ? nrCategory : undefined,
+          issueDate: issueDate || undefined,
+          expiryDate: expiryDate || undefined,
+          caNumber: caNumber.trim() || undefined,
+          notes: docNotes.trim() || undefined,
+          fileUrl: fileDataUrl,
+          fileName: fileName,
+        });
+      }
       setIsAddingDoc(false);
       resetDocForm();
     } catch (e) {}
   };
 
   const resetDocForm = () => {
+    setEditingDocId(null);
     setDocName("");
     setDocType("nr");
     setNrCategory("NR-35");
@@ -105,31 +137,64 @@ export function TechnicianComplianceModal({
     setFileName(undefined);
   };
 
+  const startEditEPI = (item: TechEPIItem) => {
+    setEditingEpiId(item.id);
+    setItemName(item.itemName);
+    setCategory(item.category);
+    setEpiCaNumber(item.caNumber || "");
+    setDeliveryDate(item.deliveryDate);
+    setReplacementDate(item.replacementDate || "");
+    setQuantity(String(item.quantity ?? 1));
+    setSize(item.size || "");
+    setStatus(item.status);
+    setEpiNotes(item.notes || "");
+    setReceiptFileUrl(item.receiptFileUrl);
+    setIsAddingEPI(true);
+  };
+
   const handleSaveEPI = async () => {
     if (!itemName.trim()) {
       toast.error("Informe o nome do item / EPI / uniforme");
       return;
     }
     try {
-      await addEPI.mutateAsync({
-        technicianId: technician.id,
-        itemName: itemName.trim(),
-        category,
-        caNumber: epiCaNumber.trim() || undefined,
-        deliveryDate: deliveryDate || new Date().toISOString().split("T")[0],
-        replacementDate: replacementDate || undefined,
-        quantity: Number(quantity) || 1,
-        size: size.trim() || undefined,
-        status,
-        notes: epiNotes.trim() || undefined,
-        receiptFileUrl,
-      });
+      if (editingEpiId) {
+        await updateEPI.mutateAsync({
+          id: editingEpiId,
+          technicianId: technician.id,
+          itemName: itemName.trim(),
+          category,
+          caNumber: epiCaNumber.trim() || undefined,
+          deliveryDate: deliveryDate || new Date().toISOString().split("T")[0],
+          replacementDate: replacementDate || undefined,
+          quantity: Number(quantity) || 1,
+          size: size.trim() || undefined,
+          status,
+          notes: epiNotes.trim() || undefined,
+          receiptFileUrl,
+        });
+      } else {
+        await addEPI.mutateAsync({
+          technicianId: technician.id,
+          itemName: itemName.trim(),
+          category,
+          caNumber: epiCaNumber.trim() || undefined,
+          deliveryDate: deliveryDate || new Date().toISOString().split("T")[0],
+          replacementDate: replacementDate || undefined,
+          quantity: Number(quantity) || 1,
+          size: size.trim() || undefined,
+          status,
+          notes: epiNotes.trim() || undefined,
+          receiptFileUrl,
+        });
+      }
       setIsAddingEPI(false);
       resetEPIForm();
     } catch (e) {}
   };
 
   const resetEPIForm = () => {
+    setEditingEpiId(null);
     setItemName("");
     setCategory("epi");
     setEpiCaNumber("");
@@ -142,9 +207,12 @@ export function TechnicianComplianceModal({
     setReceiptFileUrl(undefined);
   };
 
-  // Status summaries
+  // Status summaries & Irregularity checking
   const expiredDocs = techDocs.filter(d => getDocStatus(d.expiryDate).status === "vencido");
   const expiringDocs = techDocs.filter(d => getDocStatus(d.expiryDate).status === "vencendo");
+  const hasNoDocs = techDocs.length === 0;
+  const hasNoEPIs = techEPIs.length === 0;
+  const isIrregular = hasNoDocs || hasNoEPIs || expiredDocs.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,24 +232,50 @@ export function TechnicianComplianceModal({
         </DialogHeader>
 
         {/* Status Alert Banner */}
-        {expiredDocs.length > 0 ? (
-          <div className="p-3 rounded-lg bg-red-500/15 border border-red-300 dark:border-red-900 text-red-700 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
-            <XCircle className="h-4 w-4 shrink-0 text-red-600" />
-            <span>
-              <b>Atenção Crítica:</b> Este técnico possui {expiredDocs.length} documento(s) com validade VENCIDA! Atualize a reciclagem antes de alocar em áreas industriais.
-            </span>
+        {hasNoDocs && hasNoEPIs ? (
+          <div className="p-3.5 rounded-lg bg-red-500/15 border border-red-300 dark:border-red-900 text-red-700 dark:text-red-400 text-xs font-semibold flex items-center gap-2.5">
+            <XCircle className="h-5 w-5 shrink-0 text-red-600" />
+            <div>
+              <b className="text-sm block">⚠️ Cadastro Irregular — Pendência Total:</b>
+              Este técnico não possui <b>nenhum documento/NR</b> e <b>nenhum registro de EPI/Uniforme</b>. Cadastre os documentos para liberar atendimentos industriais.
+            </div>
+          </div>
+        ) : hasNoDocs ? (
+          <div className="p-3.5 rounded-lg bg-red-500/15 border border-red-300 dark:border-red-900 text-red-700 dark:text-red-400 text-xs font-semibold flex items-center gap-2.5">
+            <XCircle className="h-5 w-5 shrink-0 text-red-600" />
+            <div>
+              <b className="text-sm block">⚠️ Cadastro Irregular — Sem Documentos:</b>
+              Este técnico não possui <b>nenhum ASO ou Norma Regulamentadora (NR)</b> cadastrada.
+            </div>
+          </div>
+        ) : hasNoEPIs ? (
+          <div className="p-3.5 rounded-lg bg-red-500/15 border border-red-300 dark:border-red-900 text-red-700 dark:text-red-400 text-xs font-semibold flex items-center gap-2.5">
+            <XCircle className="h-5 w-5 shrink-0 text-red-600" />
+            <div>
+              <b className="text-sm block">⚠️ Cadastro Irregular — Sem Ficha de EPIs:</b>
+              Nenhum registro de entrega de <b>Equipamentos de Proteção Individual (EPI) ou Uniforme</b> cadastrado para este técnico.
+            </div>
+          </div>
+        ) : expiredDocs.length > 0 ? (
+          <div className="p-3.5 rounded-lg bg-red-500/15 border border-red-300 dark:border-red-900 text-red-700 dark:text-red-400 text-xs font-semibold flex items-center gap-2.5">
+            <XCircle className="h-5 w-5 shrink-0 text-red-600" />
+            <div>
+              <b className="text-sm block">🔴 Cadastro Irregular — Documento Vencido:</b>
+              Este técnico possui <b>{expiredDocs.length} documento(s) com validade VENCIDA</b>! Providencie a reciclagem/renovação imediatamente.
+            </div>
           </div>
         ) : expiringDocs.length > 0 ? (
-          <div className="p-3 rounded-lg bg-amber-500/15 border border-amber-300 dark:border-amber-900 text-amber-700 dark:text-amber-400 text-xs font-semibold flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-            <span>
-              <b>Aviso:</b> {expiringDocs.length} documento(s) vencendo nos próximos 30 dias. Providencie o agendamento de reciclagem/exame.
-            </span>
+          <div className="p-3.5 rounded-lg bg-amber-500/15 border border-amber-300 dark:border-amber-900 text-amber-700 dark:text-amber-400 text-xs font-semibold flex items-center gap-2.5">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
+            <div>
+              <b className="text-sm block">⚠️ Atenção: Documento(s) a Vencer:</b>
+              Possui {expiringDocs.length} documento(s) vencendo nos próximos 30 dias. Providencie o agendamento de reciclagem.
+            </div>
           </div>
         ) : (
           <div className="p-3 rounded-lg bg-emerald-500/15 border border-emerald-300 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 text-xs font-medium flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-            <span>Técnico em conformidade industrial. Todos os documentos com validade estão em dia!</span>
+            <span>Técnico em conformidade industrial. Documentos, NRs e Ficha de EPIs devidamente cadastrados!</span>
           </div>
         )}
 
@@ -200,21 +294,22 @@ export function TechnicianComplianceModal({
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold tracking-tight">ASO, Normas Regulamentadoras & Matriz</h3>
               {!isAddingDoc && (
-                <Button size="sm" onClick={() => setIsAddingDoc(true)} className="gap-1.5 text-xs">
+                <Button size="sm" onClick={() => { resetDocForm(); setIsAddingDoc(true); }} className="gap-1.5 text-xs">
                   <Plus className="h-4 w-4" /> Adicionar Documento / NR
                 </Button>
               )}
             </div>
 
-            {/* Add Document Form */}
+            {/* Add/Edit Document Form */}
             {isAddingDoc && (
               <Card className="border-amber-300 dark:border-amber-800 bg-amber-500/5">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between border-b pb-2">
                     <h4 className="font-bold text-sm flex items-center gap-2">
-                      <Award className="h-4 w-4 text-amber-600" /> Novo Documento ou Certificado
+                      <Award className="h-4 w-4 text-amber-600" />
+                      {editingDocId ? "Editar Documento ou Certificado" : "Novo Documento ou Certificado"}
                     </h4>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setIsAddingDoc(false)}>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setIsAddingDoc(false); resetDocForm(); }}>
                       Cancelar
                     </Button>
                   </div>
@@ -317,11 +412,11 @@ export function TechnicianComplianceModal({
                   </div>
 
                   <div className="flex justify-end gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm" onClick={() => setIsAddingDoc(false)} className="h-8 text-xs">
+                    <Button variant="outline" size="sm" onClick={() => { setIsAddingDoc(false); resetDocForm(); }} className="h-8 text-xs">
                       Cancelar
                     </Button>
-                    <Button size="sm" onClick={handleSaveDoc} disabled={addDocument.isPending} className="h-8 text-xs bg-amber-600 hover:bg-amber-700 text-white">
-                      {addDocument.isPending ? "Salvando..." : "Salvar Documento"}
+                    <Button size="sm" onClick={handleSaveDoc} disabled={addDocument.isPending || updateDocument.isPending} className="h-8 text-xs bg-amber-600 hover:bg-amber-700 text-white">
+                      {addDocument.isPending || updateDocument.isPending ? "Salvando..." : (editingDocId ? "Atualizar Documento" : "Salvar Documento")}
                     </Button>
                   </div>
                 </CardContent>
@@ -330,10 +425,15 @@ export function TechnicianComplianceModal({
 
             {/* List of Documents */}
             {techDocs.length === 0 ? (
-              <Card className="p-8 text-center text-muted-foreground">
-                <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="font-semibold text-foreground">Nenhum documento cadastrado</p>
-                <p className="text-xs mt-0.5">Cadastre os certificados ASO, NRs e competências deste técnico.</p>
+              <Card className="p-8 text-center border-red-300 dark:border-red-900 bg-red-500/5">
+                <AlertTriangle className="h-10 w-10 mx-auto mb-2 text-red-500" />
+                <p className="font-bold text-red-700 dark:text-red-400">Nenhum documento ou NR cadastrado!</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+                  Este técnico está classificado como <b>IRREGULAR</b>. Cadastre o ASO e os certificados de Normas Regulamentadoras (NRs) necessários para liberar alocação em campo.
+                </p>
+                <Button size="sm" onClick={() => { resetDocForm(); setIsAddingDoc(true); }} className="mt-4 gap-1.5 text-xs bg-red-600 hover:bg-red-700 text-white">
+                  <Plus className="h-4 w-4" /> Cadastrar Primeiro Documento / NR
+                </Button>
               </Card>
             ) : (
               <div className="space-y-2.5">
@@ -379,6 +479,16 @@ export function TechnicianComplianceModal({
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => startEditDoc(doc)}
+                          title="Editar informações do documento"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
                           onClick={() => deleteDocument.mutate(doc.id)}
                           title="Remover documento"
@@ -398,21 +508,22 @@ export function TechnicianComplianceModal({
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold tracking-tight">Ficha de Entrega de Equipamentos & Uniformes</h3>
               {!isAddingEPI && (
-                <Button size="sm" onClick={() => setIsAddingEPI(true)} className="gap-1.5 text-xs">
+                <Button size="sm" onClick={() => { resetEPIForm(); setIsAddingEPI(true); }} className="gap-1.5 text-xs">
                   <Plus className="h-4 w-4" /> Registrar Entrega de EPI / Uniforme
                 </Button>
               )}
             </div>
 
-            {/* Add EPI Form */}
+            {/* Add/Edit EPI Form */}
             {isAddingEPI && (
               <Card className="border-blue-300 dark:border-blue-800 bg-blue-500/5">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between border-b pb-2">
                     <h4 className="font-bold text-sm flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-blue-600" /> Registro de Entrega de EPI / Uniforme
+                      <Shield className="h-4 w-4 text-blue-600" />
+                      {editingEpiId ? "Editar Registro de Entrega de EPI" : "Registro de Entrega de EPI / Uniforme"}
                     </h4>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setIsAddingEPI(false)}>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setIsAddingEPI(false); resetEPIForm(); }}>
                       Cancelar
                     </Button>
                   </div>
@@ -526,11 +637,11 @@ export function TechnicianComplianceModal({
                   </div>
 
                   <div className="flex justify-end gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm" onClick={() => setIsAddingEPI(false)} className="h-8 text-xs">
+                    <Button variant="outline" size="sm" onClick={() => { setIsAddingEPI(false); resetEPIForm(); }} className="h-8 text-xs">
                       Cancelar
                     </Button>
-                    <Button size="sm" onClick={handleSaveEPI} disabled={addEPI.isPending} className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white">
-                      {addEPI.isPending ? "Salvando..." : "Salvar Registro de EPI"}
+                    <Button size="sm" onClick={handleSaveEPI} disabled={addEPI.isPending || updateEPI.isPending} className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white">
+                      {addEPI.isPending || updateEPI.isPending ? "Salvando..." : (editingEpiId ? "Atualizar Registro de EPI" : "Salvar Registro de EPI")}
                     </Button>
                   </div>
                 </CardContent>
@@ -539,10 +650,15 @@ export function TechnicianComplianceModal({
 
             {/* List of EPIs */}
             {techEPIs.length === 0 ? (
-              <Card className="p-8 text-center text-muted-foreground">
-                <Shield className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="font-semibold text-foreground">Nenhum EPI ou Uniforme registrado</p>
-                <p className="text-xs mt-0.5">Mantenha a ficha de entrega de EPIs atualizada para auditorias de segurança.</p>
+              <Card className="p-8 text-center border-red-300 dark:border-red-900 bg-red-500/5">
+                <ShieldAlert className="h-10 w-10 mx-auto mb-2 text-red-500" />
+                <p className="font-bold text-red-700 dark:text-red-400">Nenhum EPI ou Uniforme registrado!</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+                  A Ficha de Entrega de EPIs é obrigatória para comprovação de entrega de equipamentos. Registre a entrega para regularizar o cadastro.
+                </p>
+                <Button size="sm" onClick={() => { resetEPIForm(); setIsAddingEPI(true); }} className="mt-4 gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="h-4 w-4" /> Registrar Primeira Entrega de EPI
+                </Button>
               </Card>
             ) : (
               <div className="space-y-2.5">
@@ -588,6 +704,16 @@ export function TechnicianComplianceModal({
                             </Button>
                           </a>
                         )}
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => startEditEPI(item)}
+                          title="Editar informações do EPI"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
 
                         <Button
                           variant="ghost"
