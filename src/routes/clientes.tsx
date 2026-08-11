@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useClients } from "@/hooks/use-data";
+import { useClientRequirements, getSubmissionStatus } from "@/hooks/use-client-requirements";
+import { ClientComplianceModal } from "@/components/ClientComplianceModal";
 import { fmtCurrency, uploadClientContract, getAttachmentUrl, type Client } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { useMoney } from "@/hooks/use-money-visibility";
-import { Plus, Pencil, Trash2, Users , Loader2} from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 export const Route = createFileRoute("/clientes")({ component: Clientes });
 
@@ -23,6 +26,7 @@ function Clientes() {
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
+  const [complianceClient, setComplianceClient] = useState<Client | null>(null);
 
   const startNew = () => { setEditing(empty()); setOpen(true); };
   const startEdit = (c: Client) => { setEditing(c); setOpen(true); };
@@ -122,7 +126,7 @@ function Clientes() {
       <header className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground mt-1">Cadastre o valor/hora e valor/km de cada cliente</p>
+          <p className="text-muted-foreground mt-1">Gerencie clientes, valores de hora/km e exigências de documentação industrial</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -214,45 +218,127 @@ function Clientes() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {clients.map(c => (
-            <Card key={c.id} className="hover:shadow-elegant transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-lg truncate">{c.name}</h3>
-                    {c.phone && <p className="text-xs text-muted-foreground truncate">{c.phone}</p>}
-                    {c.cnpj && <p className="text-xs text-muted-foreground truncate">CNPJ: {c.cnpj}</p>}
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => startEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                  <div className="bg-muted rounded-md p-2">
-                    <div className="text-xs text-muted-foreground">Hora</div>
-                    <div className="font-semibold">{money(c.hourlyRate)}</div>
-                  </div>
-                  <div className="bg-muted rounded-md p-2">
-                    <div className="text-xs text-muted-foreground">Km</div>
-                    <div className="font-semibold">{money(c.kmRate)}</div>
-                  </div>
-                </div>
-                {c.address && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{c.address}</p>}
-                {c.hasPreventiveContract && (
-                  <div className="mt-3 p-2 bg-blue-50/50 text-blue-800 text-xs rounded border border-blue-100 flex items-center justify-between">
-                    <span>Contrato: <strong>{money(c.preventiveContractValue || 0)}/mês</strong></span>
-                    {c.preventiveContractFile && (
-                      <Button variant="link" className="p-0 h-auto text-xs" onClick={() => viewPdf(c.preventiveContractFile!)}>Ver PDF</Button>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ClientCardItem
+              key={c.id}
+              c={c}
+              money={money}
+              onEdit={startEdit}
+              onRemove={remove}
+              onViewPdf={viewPdf}
+              onOpenCompliance={(clientObj) => setComplianceClient(clientObj)}
+            />
           ))}
         </div>
       )}
+
+      {complianceClient && (
+        <ClientComplianceModal
+          client={complianceClient}
+          open={!!complianceClient}
+          onOpenChange={(v) => { if (!v) setComplianceClient(null); }}
+        />
+      )}
     </div>
+  );
+}
+
+function ClientCardItem({
+  c,
+  money,
+  onEdit,
+  onRemove,
+  onViewPdf,
+  onOpenCompliance,
+}: {
+  c: Client;
+  money: (v: number) => string;
+  onEdit: (c: Client) => void;
+  onRemove: (id: string) => void;
+  onViewPdf: (path: string) => void;
+  onOpenCompliance: (c: Client) => void;
+}) {
+  const { clientReq } = useClientRequirements(c.id);
+  const subStatus = getSubmissionStatus(clientReq?.nextSubmissionDate);
+
+  return (
+    <Card className={`hover:shadow-elegant transition-shadow flex flex-col justify-between ${
+      subStatus.status === "vencido" ? "border-red-300 dark:border-red-900/60" : ""
+    }`}>
+      <CardContent className="p-5 flex flex-col justify-between h-full">
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-lg truncate">{c.name}</h3>
+              {c.phone && <p className="text-xs text-muted-foreground truncate">{c.phone}</p>}
+              {c.cnpj && <p className="text-xs text-muted-foreground truncate">CNPJ: {c.cnpj}</p>}
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => onEdit(c)} title="Editar dados do cliente"><Pencil className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => onRemove(c.id)} title="Excluir cliente"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            </div>
+          </div>
+
+          {/* Submission Status Badge */}
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {subStatus.status === "vencido" ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
+                🔴 Reenvio Vencido (há {Math.abs(subStatus.daysLeft || 0)}d)
+              </span>
+            ) : subStatus.status === "vencendo" ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300">
+                ⚠️ Reenvio em {subStatus.daysLeft} dias
+              </span>
+            ) : subStatus.status === "em_dia" ? (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300">
+                🟢 Reenvio em Dia ({subStatus.daysLeft}d)
+              </span>
+            ) : (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                📋 Sem prazo de reenvio
+              </span>
+            )}
+
+            {clientReq?.requiredDocs && clientReq.requiredDocs.length > 0 && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-300">
+                {clientReq.requiredDocs.length} Exigências
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div className="bg-muted rounded-md p-2">
+              <div className="text-xs text-muted-foreground">Hora</div>
+              <div className="font-semibold">{money(c.hourlyRate)}</div>
+            </div>
+            <div className="bg-muted rounded-md p-2">
+              <div className="text-xs text-muted-foreground">Km</div>
+              <div className="font-semibold">{money(c.kmRate)}</div>
+            </div>
+          </div>
+          {c.address && <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{c.address}</p>}
+          {c.hasPreventiveContract && (
+            <div className="mt-3 p-2 bg-blue-50/50 text-blue-800 text-xs rounded border border-blue-100 flex items-center justify-between">
+              <span>Contrato: <strong>{money(c.preventiveContractValue || 0)}/mês</strong></span>
+              {c.preventiveContractFile && (
+                <Button variant="link" className="p-0 h-auto text-xs text-blue-700" onClick={() => onViewPdf(c.preventiveContractFile!)}>Ver PDF</Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Industrial Integration Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full mt-4 gap-1.5 text-xs font-semibold border-blue-300 dark:border-blue-800 hover:bg-blue-500/10 text-blue-700 dark:text-blue-400"
+          onClick={() => onOpenCompliance(c)}
+        >
+          <Building2 className="h-4 w-4 text-blue-600" />
+          Exigências & Integração
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
