@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useTechnicians } from "@/hooks/use-data";
+import { useTechnicianDocs, getDocStatus } from "@/hooks/use-technician-docs";
+import { TechnicianComplianceModal } from "@/components/TechnicianComplianceModal";
 import { fmtCurrency, type Technician } from "@/lib/api";
 import { useServerFn } from "@tanstack/react-start";
 import { createTechnicianLogin, updateSubUser } from "@/lib/admin.functions";
 import { useMoney } from "@/hooks/use-money-visibility";
-import { Plus, Pencil, Trash2, HardHat, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, HardHat, Loader2, FileText, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tecnicos")({ component: Tecnicos });
@@ -29,6 +31,8 @@ function Tecnicos() {
   const { technicians, addTechnician, updateTechnician, deleteTechnician, isLoading } = useTechnicians();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
+  const [complianceTech, setComplianceTech] = useState<Technician | null>(null);
+
   const createLogin = useServerFn(createTechnicianLogin);
   const updateFeatures = useServerFn(updateSubUser);
 
@@ -85,8 +89,6 @@ function Tecnicos() {
           }
         });
         toast.success("Acesso ao sistema criado com sucesso!");
-        // We might want to refresh technicians here to grab the new user_id, 
-        // but react-query invalidation from useTechnicians should cover it eventually or next render.
       } else if (techId && editing.hasLogin && editing.userId) {
         await updateFeatures({
           data: {
@@ -117,7 +119,7 @@ function Tecnicos() {
       <header className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Técnicos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie sua equipe e os valores de cobrança de cada técnico</p>
+          <p className="text-muted-foreground mt-1">Gerencie a equipe, valores de cobrança, ASO, NRs e entrega de EPIs</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -192,7 +194,7 @@ function Tecnicos() {
                   </div>
                   <Switch
                     checked={!!editing.hasLogin}
-                    disabled={!!editing.userId} // If already has login, we disable the switch to avoid complexity of deleting/recreating here
+                    disabled={!!editing.userId}
                     onCheckedChange={(v) => setEditing({ ...editing, hasLogin: v })}
                   />
                 </div>
@@ -209,7 +211,7 @@ function Tecnicos() {
                   </div>
                 )}
                 {editing.userId && (
-                  <div className="text-xs text-success mb-4">Login ativo e configurado.</div>
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400 mb-4">Login ativo e configurado.</div>
                 )}
                 {editing.hasLogin && (
                   <div className="pt-3 border-t">
@@ -264,48 +266,123 @@ function Tecnicos() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {technicians.map(t => (
-            <Card key={t.id} className="hover:shadow-elegant transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-lg truncate flex items-center gap-2">
-                      {t.name}
-                      {t.isSalaried && <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary">Mensalista</span>}
-                    </h3>
-                    {t.monthlyFixedHours != null && (
-                      <p className="text-xs text-muted-foreground">Carga fixa: {t.monthlyFixedHours}h/mês</p>
-                    )}
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => startEdit(t)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(t.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                  <div className="bg-muted rounded-md p-2">
-                    <div className="text-xs text-muted-foreground">Hora</div>
-                    <div className="font-semibold">{money(t.hourlyRate)}</div>
-                  </div>
-                  <div className="bg-muted rounded-md p-2">
-                    <div className="text-xs text-muted-foreground">Km</div>
-                    <div className="font-semibold">{money(t.kmRate)}</div>
-                  </div>
-                  <div className="bg-muted rounded-md p-2">
-                    <div className="text-xs text-muted-foreground">Hora extra semana</div>
-                    <div className="font-semibold">{money(t.overtimeWeekdayRate)}</div>
-                  </div>
-                  <div className="bg-muted rounded-md p-2">
-                    <div className="text-xs text-muted-foreground">Hora extra FDS</div>
-                    <div className="font-semibold">{money(t.overtimeWeekendRate)}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <TechnicianCardItem
+              key={t.id}
+              t={t}
+              money={money}
+              onEdit={startEdit}
+              onRemove={remove}
+              onOpenCompliance={(tech) => setComplianceTech(tech)}
+            />
           ))}
         </div>
       )}
+
+      {complianceTech && (
+        <TechnicianComplianceModal
+          technician={complianceTech}
+          open={!!complianceTech}
+          onOpenChange={(v) => { if (!v) setComplianceTech(null); }}
+        />
+      )}
     </div>
+  );
+}
+
+function TechnicianCardItem({
+  t,
+  money,
+  onEdit,
+  onRemove,
+  onOpenCompliance,
+}: {
+  t: Technician;
+  money: (v: number) => string;
+  onEdit: (t: Technician) => void;
+  onRemove: (id: string) => void;
+  onOpenCompliance: (t: Technician) => void;
+}) {
+  const { techDocs, techEPIs } = useTechnicianDocs(t.id);
+
+  const expiredDocs = techDocs.filter(d => getDocStatus(d.expiryDate).status === "vencido");
+  const expiringDocs = techDocs.filter(d => getDocStatus(d.expiryDate).status === "vencendo");
+
+  return (
+    <Card className="hover:shadow-elegant transition-shadow flex flex-col justify-between">
+      <CardContent className="p-5 flex flex-col justify-between h-full">
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-lg truncate flex items-center gap-2">
+                {t.name}
+                {t.isSalaried && <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold bg-primary/10 text-primary">Mensalista</span>}
+              </h3>
+              {t.monthlyFixedHours != null && (
+                <p className="text-xs text-muted-foreground">Carga fixa: {t.monthlyFixedHours}h/mês</p>
+              )}
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => onEdit(t)} title="Editar dados do técnico"><Pencil className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => onRemove(t.id)} title="Excluir técnico"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            </div>
+          </div>
+
+          {/* Compliance Status Badges */}
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {expiredDocs.length > 0 ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
+                🔴 {expiredDocs.length} Doc(s) Vencido(s)
+              </span>
+            ) : expiringDocs.length > 0 ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300">
+                ⚠️ {expiringDocs.length} Doc(s) a Vencer
+              </span>
+            ) : techDocs.length > 0 ? (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300">
+                🟢 Documentos em Dia
+              </span>
+            ) : null}
+
+            {techEPIs.length > 0 && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-300">
+                🛡️ {techEPIs.length} EPI(s) / Uniforme
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div className="bg-muted rounded-md p-2">
+              <div className="text-xs text-muted-foreground">Hora</div>
+              <div className="font-semibold">{money(t.hourlyRate)}</div>
+            </div>
+            <div className="bg-muted rounded-md p-2">
+              <div className="text-xs text-muted-foreground">Km</div>
+              <div className="font-semibold">{money(t.kmRate)}</div>
+            </div>
+            <div className="bg-muted rounded-md p-2">
+              <div className="text-xs text-muted-foreground">Hora extra semana</div>
+              <div className="font-semibold">{money(t.overtimeWeekdayRate)}</div>
+            </div>
+            <div className="bg-muted rounded-md p-2">
+              <div className="text-xs text-muted-foreground">Hora extra FDS</div>
+              <div className="font-semibold">{money(t.overtimeWeekendRate)}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Industrial Document & EPI Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full mt-4 gap-1.5 text-xs font-semibold border-amber-300 dark:border-amber-800 hover:bg-amber-500/10"
+          onClick={() => onOpenCompliance(t)}
+        >
+          <FileText className="h-4 w-4 text-amber-600" />
+          Documentos, NR's & EPIs
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
