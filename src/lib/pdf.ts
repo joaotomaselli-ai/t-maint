@@ -297,11 +297,16 @@ export async function exportSingleReport(
   if (includeValues) {
     y = (doc as any).lastAutoTable.finalY + 6;
     const bodyRows: (string[])[] = [
-      ["Horas totais", fmtHours(t.totalHours)],
+      ["Horas cobradas", fmtHours(t.totalHours)],
+    ];
+    if (r.lunchHours && r.lunchHours > 0 && r.deductLunchFromClient) {
+      bodyRows.push(["Desconto de Almoço (Não cobrado)", `-${fmtHours(r.lunchHours)}`]);
+    }
+    bodyRows.push(
       r.isPackage 
         ? ["Pacote de Serviço (Valor Fechado)", fmtCurrency(t.hoursValue)]
-        : [`Horas × ${fmtCurrency(client?.hourlyRate ?? 0)}`, fmtCurrency(t.hoursValue)],
-    ];
+        : [`Horas faturadas × ${fmtCurrency(client?.hourlyRate ?? 0)}`, fmtCurrency(t.hoursValue)]
+    );
     if (!r.isPackage) {
       bodyRows.push([`${t.km} km × ${fmtCurrency(client?.kmRate ?? 0)}`, fmtCurrency(t.kmValue)]);
     }

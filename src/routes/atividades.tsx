@@ -1093,16 +1093,22 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               <TimeRange label="Viagem de volta" startVal={editing.travelBackStart} endVal={editing.travelBackEnd}
                 onStart={v => setEditing({ ...editing, travelBackStart: v })} onEnd={v => setEditing({ ...editing, travelBackEnd: v })} hours={t.travelBack} />
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-4">
               <div className="grid gap-2">
                 <Label>Quilometragem total (km)</Label>
                 <Input type="number" step="1" value={editing.km || ""} onChange={e => setEditing({ ...editing, km: Number(e.target.value) })} placeholder="50" />
               </div>
               <div className="grid gap-2">
+                <Label>Tempo de Almoço (horas)</Label>
+                <Input type="number" step="0.25" min="0" value={editing.lunchHours || ""}
+                  onChange={e => setEditing({ ...editing, lunchHours: Number(e.target.value) })}
+                  placeholder="Ex: 1.0 (1 hora)" />
+              </div>
+              <div className="grid gap-2">
                 <Label>Desconto de horas</Label>
                 <Input type="number" step="0.25" min="0" value={editing.discountHours || ""}
                   onChange={e => setEditing({ ...editing, discountHours: Number(e.target.value) })}
-                  placeholder="Ex: 1.5 (intervalo sem atendimento)" />
+                  placeholder="Ex: 1.5 (outro abatimento)" />
               </div>
               {!isPreventive && (
                 <div className="grid gap-2">
@@ -1116,6 +1122,24 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                 </div>
               )}
             </div>
+
+            {/* Lunch Deduction Switch */}
+            <div className="rounded-md border bg-background p-3 flex flex-col gap-1">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="deduct-lunch-main"
+                  checked={!!editing.deductLunchFromClient}
+                  onCheckedChange={(checked) => setEditing({ ...editing, deductLunchFromClient: checked })}
+                />
+                <Label htmlFor="deduct-lunch-main" className="text-xs font-semibold cursor-pointer">
+                  Não cobrar horário de almoço do cliente (Descontar da fatura do cliente)
+                </Label>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Quando ativado, o tempo de almoço ({editing.lunchHours || 0}h) é deduzido da cobrança do cliente, mas é pago normalmente ao técnico.
+              </p>
+            </div>
+
             {!isPreventive && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
@@ -1547,7 +1571,7 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
         <TimeRange label="Viagem de volta" startVal={s.travelBackStart} endVal={s.travelBackEnd}
           onStart={v => onChange({ travelBackStart: v })} onEnd={v => onChange({ travelBackEnd: v })} hours={travelBack} />
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <div className="grid gap-1">
           <Label className="text-xs">HE semana</Label>
           <Input type="number" step="0.5" min="0" value={s.overtimeWeekdayHours || ""}
@@ -1559,10 +1583,25 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
             onChange={e => onChange({ overtimeWeekendHours: Number(e.target.value) })} placeholder="0" />
         </div>
         <div className="grid gap-1">
+          <Label className="text-xs">Tempo Almoço (h)</Label>
+          <Input type="number" step="0.25" min="0" value={s.lunchHours || ""}
+            onChange={e => onChange({ lunchHours: Number(e.target.value) })} placeholder="0" />
+        </div>
+        <div className="grid gap-1">
           <Label className="text-xs">Desconto de horas</Label>
           <Input type="number" step="0.25" min="0" value={s.discountHours || ""}
             onChange={e => onChange({ discountHours: Number(e.target.value) })} placeholder="0" />
         </div>
+      </div>
+      <div className="flex items-center space-x-2 pt-1">
+        <Switch
+          id={`deduct-lunch-session-${s.id}`}
+          checked={!!s.deductLunchFromClient}
+          onCheckedChange={(checked) => onChange({ deductLunchFromClient: checked })}
+        />
+        <Label htmlFor={`deduct-lunch-session-${s.id}`} className="text-xs font-medium cursor-pointer">
+          Não cobrar horário de almoço do cliente nesta sessão
+        </Label>
       </div>
       <div className="grid gap-1">
         <Label className="text-xs">Atividades realizadas neste dia</Label>

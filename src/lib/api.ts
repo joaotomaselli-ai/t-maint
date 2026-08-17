@@ -54,6 +54,8 @@ export type ServiceReport = {
   overtimeWeekendHours: number;
   futureReplacements?: string;
   discountHours: number;
+  lunchHours?: number;
+  deductLunchFromClient?: boolean;
   clientSignature?: string;
   technicianSignature?: string;
   isPackage?: boolean;
@@ -155,65 +157,91 @@ const toTechnicianRow = (t: Omit<Technician, "id">) => ({
   has_login: t.hasLogin ?? false,
 });
 
-const fromReport = (r: any): ServiceReport => ({
-  id: r.id,
-  orderNumber: r.order_number ?? "",
-  clientId: r.client_id,
-  date: r.date,
-  machine: r.machine ?? "",
-  requester: r.requester ?? "",
-  type: r.type,
-  description: r.description ?? "",
-  summary: r.summary ?? "",
-  travelOutStart: r.travel_out_start ?? "",
-  travelOutEnd: r.travel_out_end ?? "",
-  serviceStart: r.service_start ?? "",
-  serviceEnd: r.service_end ?? "",
-  travelBackStart: r.travel_back_start ?? "",
-  travelBackEnd: r.travel_back_end ?? "",
-  km: Number(r.km ?? 0),
-  observation: r.observation ?? "",
-  technician: r.technician ?? "",
-  overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
-  overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
-  futureReplacements: r.future_replacements ?? "",
-  discountHours: Number(r.discount_hours ?? 0),
-  clientSignature: r.client_signature ?? "",
-  technicianSignature: r.technician_signature ?? "",
-  isPackage: Boolean(r.is_package),
-  packageValue: r.package_value == null ? null : Number(r.package_value),
-  packageContractFile: r.package_contract_file ?? null,
-  createdAt: r.created_at,
-});
+export function cleanObservation(obs?: string): string {
+  if (!obs) return "";
+  return obs.replace(/\[LUNCH:[\d.]*:(true|false)\]/g, "").trim();
+}
 
-const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => ({
-  order_number: r.orderNumber ?? "",
-  client_id: r.clientId,
-  date: r.date,
-  machine: r.machine ?? "",
-  requester: r.requester ?? "",
-  type: r.type,
-  description: r.description ?? "",
-  summary: r.summary ?? "",
-  travel_out_start: r.travelOutStart ?? "",
-  travel_out_end: r.travelOutEnd ?? "",
-  service_start: r.serviceStart ?? "",
-  service_end: r.serviceEnd ?? "",
-  travel_back_start: r.travelBackStart ?? "",
-  travel_back_end: r.travelBackEnd ?? "",
-  km: r.km ?? 0,
-  observation: r.observation || null,
-  technician: r.technician ?? "",
-  overtime_weekday_hours: r.overtimeWeekdayHours ?? 0,
-  overtime_weekend_hours: r.overtimeWeekendHours ?? 0,
-  future_replacements: r.futureReplacements ?? "",
-  discount_hours: r.discountHours ?? 0,
-  client_signature: r.clientSignature ?? null,
-  technician_signature: r.technicianSignature ?? null,
-  is_package: r.isPackage ?? false,
-  package_value: r.packageValue ?? null,
-  package_contract_file: r.packageContractFile ?? null,
-});
+const fromReport = (r: any): ServiceReport => {
+  let lunchHours = 0;
+  let deductLunchFromClient = false;
+  const rawObs = r.observation ?? "";
+  if (rawObs.includes("[LUNCH:")) {
+    const match = rawObs.match(/\[LUNCH:([\d.]+):(true|false)\]/);
+    if (match) {
+      lunchHours = Number(match[1]) || 0;
+      deductLunchFromClient = match[2] === "true";
+    }
+  }
+  return {
+    id: r.id,
+    orderNumber: r.order_number ?? "",
+    clientId: r.client_id,
+    date: r.date,
+    machine: r.machine ?? "",
+    requester: r.requester ?? "",
+    type: r.type,
+    description: r.description ?? "",
+    summary: r.summary ?? "",
+    travelOutStart: r.travel_out_start ?? "",
+    travelOutEnd: r.travel_out_end ?? "",
+    serviceStart: r.service_start ?? "",
+    serviceEnd: r.service_end ?? "",
+    travelBackStart: r.travel_back_start ?? "",
+    travelBackEnd: r.travel_back_end ?? "",
+    km: Number(r.km ?? 0),
+    observation: cleanObservation(rawObs),
+    technician: r.technician ?? "",
+    overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
+    overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
+    futureReplacements: r.future_replacements ?? "",
+    discountHours: Number(r.discount_hours ?? 0),
+    lunchHours,
+    deductLunchFromClient,
+    clientSignature: r.client_signature ?? "",
+    technicianSignature: r.technician_signature ?? "",
+    isPackage: Boolean(r.is_package),
+    packageValue: r.package_value == null ? null : Number(r.package_value),
+    packageContractFile: r.package_contract_file ?? null,
+    createdAt: r.created_at,
+  };
+};
+
+const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => {
+  let obs = cleanObservation(r.observation);
+  if (r.lunchHours && r.lunchHours > 0) {
+    const tag = `[LUNCH:${r.lunchHours}:${r.deductLunchFromClient ? "true" : "false"}]`;
+    obs = obs ? `${obs} ${tag}` : tag;
+  }
+  return {
+    order_number: r.orderNumber ?? "",
+    client_id: r.clientId,
+    date: r.date,
+    machine: r.machine ?? "",
+    requester: r.requester ?? "",
+    type: r.type,
+    description: r.description ?? "",
+    summary: r.summary ?? "",
+    travel_out_start: r.travelOutStart ?? "",
+    travel_out_end: r.travelOutEnd ?? "",
+    service_start: r.serviceStart ?? "",
+    service_end: r.serviceEnd ?? "",
+    travel_back_start: r.travelBackStart ?? "",
+    travel_back_end: r.travelBackEnd ?? "",
+    km: r.km ?? 0,
+    observation: obs || null,
+    technician: r.technician ?? "",
+    overtime_weekday_hours: r.overtimeWeekdayHours ?? 0,
+    overtime_weekend_hours: r.overtimeWeekendHours ?? 0,
+    future_replacements: r.futureReplacements ?? "",
+    discount_hours: r.discountHours ?? 0,
+    client_signature: r.clientSignature ?? null,
+    technician_signature: r.technicianSignature ?? null,
+    is_package: r.isPackage ?? false,
+    package_value: r.packageValue ?? null,
+    package_contract_file: r.packageContractFile ?? null,
+  };
+};
 
 const fromProfile = (r: any): Settings => ({
   companyName: r.company_name ?? "",
@@ -458,47 +486,70 @@ export type ServiceSession = {
   activitiesDone: string;
   observation?: string;
   discountHours: number;
+  lunchHours?: number;
+  deductLunchFromClient?: boolean;
   position: number;
 };
 
-const fromSession = (r: any): ServiceSession => ({
-  id: r.id,
-  activityId: r.activity_id,
-  technicianId: r.technician_id ?? null,
-  date: r.date,
-  travelOutStart: r.travel_out_start ?? "",
-  travelOutEnd: r.travel_out_end ?? "",
-  serviceStart: r.service_start ?? "",
-  serviceEnd: r.service_end ?? "",
-  travelBackStart: r.travel_back_start ?? "",
-  travelBackEnd: r.travel_back_end ?? "",
-  km: Number(r.km ?? 0),
-  overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
-  overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
-  activitiesDone: r.activities_done ?? "",
-  observation: r.observation ?? "",
-  discountHours: Number(r.discount_hours ?? 0),
-  position: Number(r.position ?? 1),
-});
+const fromSession = (r: any): ServiceSession => {
+  let lunchHours = 0;
+  let deductLunchFromClient = false;
+  const rawObs = r.observation ?? "";
+  if (rawObs.includes("[LUNCH:")) {
+    const match = rawObs.match(/\[LUNCH:([\d.]+):(true|false)\]/);
+    if (match) {
+      lunchHours = Number(match[1]) || 0;
+      deductLunchFromClient = match[2] === "true";
+    }
+  }
+  return {
+    id: r.id,
+    activityId: r.activity_id,
+    technicianId: r.technician_id ?? null,
+    date: r.date,
+    travelOutStart: r.travel_out_start ?? "",
+    travelOutEnd: r.travel_out_end ?? "",
+    serviceStart: r.service_start ?? "",
+    serviceEnd: r.service_end ?? "",
+    travelBackStart: r.travel_back_start ?? "",
+    travelBackEnd: r.travel_back_end ?? "",
+    km: Number(r.km ?? 0),
+    overtimeWeekdayHours: Number(r.overtime_weekday_hours ?? 0),
+    overtimeWeekendHours: Number(r.overtime_weekend_hours ?? 0),
+    activitiesDone: r.activities_done ?? "",
+    observation: cleanObservation(rawObs),
+    discountHours: Number(r.discount_hours ?? 0),
+    lunchHours,
+    deductLunchFromClient,
+    position: Number(r.position ?? 1),
+  };
+};
 
-const toSessionRow = (s: Omit<ServiceSession, "id">) => ({
-  activity_id: s.activityId,
-  technician_id: s.technicianId || null,
-  date: s.date,
-  travel_out_start: s.travelOutStart ?? "",
-  travel_out_end: s.travelOutEnd ?? "",
-  service_start: s.serviceStart ?? "",
-  service_end: s.serviceEnd ?? "",
-  travel_back_start: s.travelBackStart ?? "",
-  travel_back_end: s.travelBackEnd ?? "",
-  km: s.km ?? 0,
-  overtime_weekday_hours: s.overtimeWeekdayHours ?? 0,
-  overtime_weekend_hours: s.overtimeWeekendHours ?? 0,
-  activities_done: s.activitiesDone ?? "",
-  observation: s.observation || null,
-  discount_hours: s.discountHours ?? 0,
-  position: s.position ?? 1,
-});
+const toSessionRow = (s: Omit<ServiceSession, "id">) => {
+  let obs = cleanObservation(s.observation);
+  if (s.lunchHours && s.lunchHours > 0) {
+    const tag = `[LUNCH:${s.lunchHours}:${s.deductLunchFromClient ? "true" : "false"}]`;
+    obs = obs ? `${obs} ${tag}` : tag;
+  }
+  return {
+    activity_id: s.activityId,
+    technician_id: s.technicianId || null,
+    date: s.date,
+    travel_out_start: s.travelOutStart ?? "",
+    travel_out_end: s.travelOutEnd ?? "",
+    service_start: s.serviceStart ?? "",
+    service_end: s.serviceEnd ?? "",
+    travel_back_start: s.travelBackStart ?? "",
+    travel_back_end: s.travelBackEnd ?? "",
+    km: s.km ?? 0,
+    overtime_weekday_hours: s.overtimeWeekdayHours ?? 0,
+    overtime_weekend_hours: s.overtimeWeekendHours ?? 0,
+    activities_done: s.activitiesDone ?? "",
+    observation: obs || null,
+    discount_hours: s.discountHours ?? 0,
+    position: s.position ?? 1,
+  };
+};
 
 export async function listAllSessions(): Promise<ServiceSession[]> {
   const { data, error } = await supabase.from("service_sessions").select("*").order("date");
@@ -713,10 +764,11 @@ export function sessionClientTotals(s: ServiceSession, client?: Client, isPreven
   const service = diffHours(s.serviceStart, s.serviceEnd);
   const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
   const discount = Math.max(0, s.discountHours || 0);
-  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
+  const lunchDeduction = s.deductLunchFromClient ? Math.max(0, s.lunchHours || 0) : 0;
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount - lunchDeduction);
   const hoursValue = (isPreventive || isPackage) ? 0 : totalHours * (client?.hourlyRate ?? 0);
   const kmValue = (isPreventive || isPackage) ? 0 : (s.km || 0) * (client?.kmRate ?? 0);
-  return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
+  return { travelOut, service, travelBack, discount, lunchDeduction, totalHours, hoursValue, kmValue, total: hoursValue + kmValue };
 }
 
 export function sessionTechnicianTotals(s: ServiceSession, technician?: Technician) {
@@ -724,6 +776,7 @@ export function sessionTechnicianTotals(s: ServiceSession, technician?: Technici
   const service = diffHours(s.serviceStart, s.serviceEnd);
   const travelBack = diffHours(s.travelBackStart, s.travelBackEnd);
   const discount = Math.max(0, s.discountHours || 0);
+  // Technician payroll ALWAYS pays lunch normally!
   const totalHours = Math.max(0, travelOut + service + travelBack - discount);
   const ovtWk = Math.max(0, s.overtimeWeekdayHours || 0);
   const ovtWe = Math.max(0, s.overtimeWeekendHours || 0);
@@ -774,7 +827,8 @@ export function reportTotals(r: ServiceReport, client?: Client) {
   const service = diffHours(r.serviceStart, r.serviceEnd);
   const travelBack = diffHours(r.travelBackStart, r.travelBackEnd);
   const discount = Math.max(0, r.discountHours || 0);
-  const totalHours = Math.max(0, travelOut + service + travelBack - discount);
+  const lunchDeduction = r.deductLunchFromClient ? Math.max(0, r.lunchHours || 0) : 0;
+  const totalHours = Math.max(0, travelOut + service + travelBack - discount - lunchDeduction);
   const hourlyRate = client?.hourlyRate ?? 0;
   const kmRate = client?.kmRate ?? 0;
   const isPreventive = r.type === "preventiva";
@@ -791,7 +845,7 @@ export function reportTotals(r: ServiceReport, client?: Client) {
     kmValue = (r.km || 0) * kmRate;
   }
 
-  return { travelOut, service, travelBack, discount, totalHours, hoursValue, kmValue, km: r.km || 0, total: hoursValue + kmValue };
+  return { travelOut, service, travelBack, discount, lunchDeduction, totalHours, hoursValue, kmValue, km: r.km || 0, total: hoursValue + kmValue };
 }
 
 export function technicianTotals(r: ServiceReport, technician?: Technician) {
