@@ -12,14 +12,16 @@ type OSReportPrintProps = {
   includeValues?: boolean;
   photos?: { kind: string; url: string }[];
   technicianName?: string;
+  showLunchDeductionDetail?: boolean;
 };
 
 export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
-  report, client, settings, sessions = [], technicians = [], includeValues = false, photos = [], technicianName
+  report, client, settings, sessions = [], technicians = [], includeValues = false, photos = [], technicianName, showLunchDeductionDetail = true
 }, ref) => {
   const isPreventive = report.type === "preventiva";
   const t = reportTotalsWithSessions(report, sessions, client);
   const techByName = new Map(technicians.map(tt => [tt.id, tt.name]));
+  const totalLunchDeducted = (report.deductLunchFromClient ? (report.lunchHours || 0) : 0) + sessions.reduce((acc, s) => acc + (s.deductLunchFromClient ? (s.lunchHours || 0) : 0), 0);
   
   const beforePhotos = photos.filter(p => p.kind.includes('before'));
   const afterPhotos = photos.filter(p => p.kind.includes('after'));
@@ -213,6 +215,12 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
               <span className="text-slate-600">Horas Totais de Serviço & Deslocamento:</span>
               <span className="font-bold text-slate-800">{fmtHours(t.totalHours)}</span>
             </div>
+            {showLunchDeductionDetail && totalLunchDeducted > 0 && (
+              <div className="px-4 py-2.5 border-b border-slate-200 flex justify-between text-xs bg-amber-50/70 text-amber-900">
+                <span className="font-semibold">Desconto de Almoço (Abatido da fatura):</span>
+                <span className="font-bold text-amber-800">-{fmtHours(totalLunchDeducted)}</span>
+              </div>
+            )}
             <div className="px-4 py-3 border-b border-slate-200 flex justify-between text-sm">
               <span className="text-slate-600">
                 {report.isPackage ? "Pacote de Serviço (Valor Fechado):" : `Apuração de Horas (${fmtCurrency(client?.hourlyRate ?? 0)}/h):`}

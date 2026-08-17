@@ -158,11 +158,13 @@ export async function exportSingleReport(
   r: ServiceReport,
   client: Client | undefined,
   settings: Settings,
-  opts: { includeValues?: boolean; sessions?: ServiceSession[]; technicians?: Technician[] } = {},
+  opts: { includeValues?: boolean; sessions?: ServiceSession[]; technicians?: Technician[]; showLunchDeductionDetail?: boolean } = {},
 ) {
   const includeValues = opts.includeValues !== false;
+  const showLunchDeductionDetail = opts.showLunchDeductionDetail !== false;
   const sessions = opts.sessions ?? [];
   const technicians = opts.technicians ?? [];
+  const totalLunchDeducted = (r.deductLunchFromClient ? (r.lunchHours || 0) : 0) + sessions.reduce((acc, s) => acc + (s.deductLunchFromClient ? (s.lunchHours || 0) : 0), 0);
   const isPreventive = r.type === "preventiva";
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
@@ -299,8 +301,8 @@ export async function exportSingleReport(
     const bodyRows: (string[])[] = [
       ["Horas cobradas", fmtHours(t.totalHours)],
     ];
-    if (r.lunchHours && r.lunchHours > 0 && r.deductLunchFromClient) {
-      bodyRows.push(["Desconto de Almoço (Não cobrado)", `-${fmtHours(r.lunchHours)}`]);
+    if (showLunchDeductionDetail && totalLunchDeducted > 0) {
+      bodyRows.push(["Desconto de Almoço (Não cobrado)", `-${fmtHours(totalLunchDeducted)}`]);
     }
     bodyRows.push(
       r.isPackage 

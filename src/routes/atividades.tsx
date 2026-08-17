@@ -577,7 +577,6 @@ function Atividades() {
         clientMap={clientMap} settings={settings} companySettings={companySettings}
         sessionsByActivity={sessionsByActivity} technicians={technicians}
       />
-
     </div>
   );
 }
@@ -594,7 +593,8 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
   sessionsByActivity: Map<string, ServiceSession[]>;
   technicians: Technician[];
 }) {
-  const [printProps, setPrintProps] = useState<{ includeValues: boolean; photos: { kind: string; url: string }[] } | null>(null);
+  const [printProps, setPrintProps] = useState<{ includeValues: boolean; photos: { kind: string; url: string }[]; showLunchDeductionDetail: boolean } | null>(null);
+  const [showLunchDeductionDetail, setShowLunchDeductionDetail] = useState(true);
   const printRef = useRef<HTMLDivElement>(null);
   const { isAdmin } = useAccess();
   
@@ -627,19 +627,21 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
   const client = clientMap.get(r.clientId);
   const sessions = sessionsByActivity.get(r.id) ?? [];
 
+  const totalLunchDeducted = (r.deductLunchFromClient ? (r.lunchHours || 0) : 0) + sessions.reduce((acc, s) => acc + (s.deductLunchFromClient ? (s.lunchHours || 0) : 0), 0);
+
   const exportInformative = async () => {
     try {
       toast.loading("Preparando relatório e fotos...", { id: "pdf-gen" });
       const { listAttachments, getAttachmentUrl } = await import("@/lib/api");
       const atts = await listAttachments(r.id);
       const photos = await Promise.all(atts.map(async a => ({ kind: a.kind, url: await getAttachmentUrl(a.storagePath) })));
-      setPrintProps({ includeValues: false, photos });
+      setPrintProps({ includeValues: false, photos, showLunchDeductionDetail });
       toast.success("Pronto para imprimir!", { id: "pdf-gen" });
     } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF", { id: "pdf-gen" }); }
   };
   const exportOperational = (includeValues: boolean) => {
     toast.loading("Preparando relatório...", { id: "pdf-gen" });
-    setPrintProps({ includeValues, photos: [] });
+    setPrintProps({ includeValues, photos: [], showLunchDeductionDetail });
     setTimeout(() => toast.success("Pronto para imprimir!", { id: "pdf-gen" }), 500);
   };
 
@@ -651,6 +653,25 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
           <DialogDescription>OS {r.orderNumber} — {client?.name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-2">
+          {totalLunchDeducted > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3.5 space-y-1.5">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-lunch-detail-switch"
+                  checked={showLunchDeductionDetail}
+                  onCheckedChange={setShowLunchDeductionDetail}
+                />
+                <Label htmlFor="show-lunch-detail-switch" className="text-xs font-semibold cursor-pointer text-amber-900">
+                  Exibir discriminação de desconto de almoço ({fmtHours(totalLunchDeducted)})
+                </Label>
+              </div>
+              <p className="text-[11px] text-amber-800 leading-relaxed">
+                {showLunchDeductionDetail
+                  ? "O relatório PDF conterá a descrição detalhada do abatimento de almoço no fechamento de valores."
+                  : "O relatório PDF ocultará a linha de desconto, exibindo apenas as horas faturadas finais."}
+              </p>
+            </div>
+          )}
           {r.type === "preventiva" && (
             <div className="rounded-md border p-3 space-y-2">
               <div className="font-semibold text-sm">Informativo (cliente)</div>
@@ -693,6 +714,7 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
             technicians={technicians}
             includeValues={printProps.includeValues}
             photos={printProps.photos}
+            showLunchDeductionDetail={printProps.showLunchDeductionDetail}
           />
         )}
       </div>
