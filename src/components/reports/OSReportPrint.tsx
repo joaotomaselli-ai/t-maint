@@ -22,6 +22,7 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
   const t = reportTotalsWithSessions(report, sessions, client);
   const techByName = new Map(technicians.map(tt => [tt.id, tt.name]));
   const totalLunchDeducted = (report.deductLunchFromClient ? (report.lunchHours || 0) : 0) + sessions.reduce((acc, s) => acc + (s.deductLunchFromClient ? (s.lunchHours || 0) : 0), 0);
+  const totalLunchHours = (report.lunchHours || 0) + sessions.reduce((acc, s) => acc + (s.lunchHours || 0), 0);
   
   const beforePhotos = photos.filter(p => p.kind.includes('before'));
   const afterPhotos = photos.filter(p => p.kind.includes('after'));
@@ -184,7 +185,15 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
               <td className="px-4 py-3 font-medium">{report.technician || "—"}</td>
               <td className="px-4 py-3 text-slate-600">{format(new Date(report.date + "T00:00:00"), "dd/MM/yyyy")}</td>
               <td className="px-4 py-3 text-center text-slate-600">{report.travelOutStart} → {report.travelOutEnd} <br/><span className="text-xs text-slate-400">{fmtHours(t.travelOut)}</span></td>
-              <td className="px-4 py-3 text-center text-slate-600 font-medium">{report.serviceStart} → {report.serviceEnd} <br/><span className="text-xs text-slate-400">{fmtHours(t.service)}</span></td>
+              <td className="px-4 py-3 text-center text-slate-600 font-medium">
+                {report.serviceStart} → {report.serviceEnd} <br/>
+                <span className="text-xs text-slate-400">{fmtHours(t.service)}</span>
+                {report.lunchHours && report.lunchHours > 0 ? (
+                  <div className="text-[11px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80 mt-1 inline-block">
+                    Almoço: {fmtHours(report.lunchHours)}
+                  </div>
+                ) : null}
+              </td>
               <td className="px-4 py-3 text-center text-slate-600">{report.travelBackStart} → {report.travelBackEnd} <br/><span className="text-xs text-slate-400">{fmtHours(t.travelBack)}</span></td>
               <td className="px-4 py-3 text-right text-slate-600">{report.km}</td>
             </tr>
@@ -197,7 +206,15 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
                   <td className="px-4 py-3 font-medium">{(s.technicianId && techByName.get(s.technicianId)) || "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy")}</td>
                   <td className="px-4 py-3 text-center text-slate-600">{s.travelOutStart && s.travelOutEnd ? `${s.travelOutStart} → ${s.travelOutEnd}` : "—"} {sTravelOut > 0 && <><br/><span className="text-xs text-slate-400">{fmtHours(sTravelOut)}</span></>}</td>
-                  <td className="px-4 py-3 text-center text-slate-600 font-medium">{s.serviceStart && s.serviceEnd ? `${s.serviceStart} → ${s.serviceEnd}` : "—"} {sService > 0 && <><br/><span className="text-xs text-slate-400">{fmtHours(sService)}</span></>}</td>
+                  <td className="px-4 py-3 text-center text-slate-600 font-medium">
+                    {s.serviceStart && s.serviceEnd ? `${s.serviceStart} → ${s.serviceEnd}` : "—"}
+                    {sService > 0 && <><br/><span className="text-xs text-slate-400">{fmtHours(sService)}</span></>}
+                    {s.lunchHours && s.lunchHours > 0 ? (
+                      <div className="text-[11px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80 mt-1 inline-block">
+                        Almoço: {fmtHours(s.lunchHours)}
+                      </div>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-3 text-center text-slate-600">{s.travelBackStart && s.travelBackEnd ? `${s.travelBackStart} → ${s.travelBackEnd}` : "—"} {sTravelBack > 0 && <><br/><span className="text-xs text-slate-400">{fmtHours(sTravelBack)}</span></>}</td>
                   <td className="px-4 py-3 text-right text-slate-600">{s.km}</td>
                 </tr>
@@ -205,6 +222,20 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
             })}
           </tbody>
         </table>
+
+        {totalLunchHours > 0 && (
+          <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-700">
+              Intervalo de Almoço Registrado:
+              <span className="font-normal text-slate-500 ml-1.5">
+                (Tempo de pausa para refeição durante o atendimento)
+              </span>
+            </span>
+            <span className="font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded">
+              {fmtHours(totalLunchHours)}
+            </span>
+          </div>
+        )}
       </section>
 
       {/* FECHAMENTO DE VALORES (Se Aplicável) */}

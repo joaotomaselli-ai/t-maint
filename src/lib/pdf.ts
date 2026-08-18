@@ -283,12 +283,15 @@ export async function exportSingleReport(
   }
 
   const t = reportTotalsWithSessions(r, sessions, client);
+  const totalLunchHours = (r.lunchHours || 0) + sessions.reduce((acc, s) => acc + (s.lunchHours || 0), 0);
+  const serviceCellText = `${r.serviceStart} → ${r.serviceEnd}\n${fmtHours(t.service)}${r.lunchHours && r.lunchHours > 0 ? `\n(Almoço: ${fmtHours(r.lunchHours)})` : ""}`;
+
   autoTable(doc, {
     startY: y + 4,
     head: [["Viagem de ida", "Serviço", "Viagem de volta", "KM"]],
     body: [[
       `${r.travelOutStart} → ${r.travelOutEnd}\n${fmtHours(t.travelOut)}`,
-      `${r.serviceStart} → ${r.serviceEnd}\n${fmtHours(t.service)}`,
+      serviceCellText,
       `${r.travelBackStart} → ${r.travelBackEnd}\n${fmtHours(t.travelBack)}`,
       `${r.km} km`,
     ]],
@@ -341,7 +344,7 @@ export async function exportSingleReport(
           format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy"),
           r.technician || "—",
           `${r.travelOutStart}→${r.travelOutEnd}`,
-          `${r.serviceStart}→${r.serviceEnd}`,
+          `${r.serviceStart}→${r.serviceEnd}${r.lunchHours && r.lunchHours > 0 ? ` (Almoço: ${fmtHours(r.lunchHours)})` : ""}`,
           `${r.travelBackStart}→${r.travelBackEnd}`,
           `${r.km}`,
           fmtHours(r.overtimeWeekdayHours || 0),
@@ -351,7 +354,7 @@ export async function exportSingleReport(
           format(new Date(s.date + "T00:00:00"), "dd/MM/yyyy"),
           (s.technicianId && techByName.get(s.technicianId)) || "—",
           `${s.travelOutStart}→${s.travelOutEnd}`,
-          `${s.serviceStart}→${s.serviceEnd}`,
+          `${s.serviceStart}→${s.serviceEnd}${s.lunchHours && s.lunchHours > 0 ? ` (Almoço: ${fmtHours(s.lunchHours)})` : ""}`,
           `${s.travelBackStart}→${s.travelBackEnd}`,
           `${s.km}`,
           fmtHours(s.overtimeWeekdayHours || 0),
@@ -365,7 +368,8 @@ export async function exportSingleReport(
     y = (doc as any).lastAutoTable.finalY + 4;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.text(`Totais — Horas: ${fmtHours(totalsRow.totalHours)} · KM: ${totalsRow.km}${includeValues ? ` · A cobrar: ${fmtCurrency(totalsRow.total)}` : ""}`, 14, y);
+    const lunchSummaryNote = totalLunchHours > 0 ? ` · Intervalo Almoço: ${fmtHours(totalLunchHours)}` : "";
+    doc.text(`Totais — Horas: ${fmtHours(totalsRow.totalHours)} · KM: ${totalsRow.km}${lunchSummaryNote}${includeValues ? ` · A cobrar: ${fmtCurrency(totalsRow.total)}` : ""}`, 14, y);
     doc.setFont("helvetica", "normal");
   }
 
