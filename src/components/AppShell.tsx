@@ -53,11 +53,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 
 
-  const isPublic = location.pathname === "/login";
+  const isPublic = location.pathname === "/login" || location.pathname === "/landing";
 
   useEffect(() => {
     if (!loading && !user && !isPublic) {
-      navigate({ to: "/login" });
+      navigate({ to: "/landing" });
     }
   }, [loading, user, isPublic, navigate]);
 
