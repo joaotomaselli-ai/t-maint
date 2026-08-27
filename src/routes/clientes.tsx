@@ -13,7 +13,8 @@ import { fmtCurrency, uploadClientContract, getAttachmentUrl, type Client } from
 import { useAuth } from "@/hooks/use-auth";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useServerFn } from "@tanstack/react-start";
-import { createClientLogin, updateSubUser } from "@/lib/admin.functions";
+import { useQueryClient } from "@tanstack/react-query";
+import { createClientLogin, updateSubUser, disableClientLogin } from "@/lib/admin.functions";
 import { Plus, Pencil, Trash2, Users, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle, Shield, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -49,6 +50,7 @@ const empty = (): Editing => ({
 function Clientes() {
   const { user } = useAuth();
   const money = useMoney();
+  const qc = useQueryClient();
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
@@ -56,6 +58,7 @@ function Clientes() {
 
   const createLogin = useServerFn(createClientLogin);
   const updateSub = useServerFn(updateSubUser);
+  const disableLogin = useServerFn(disableClientLogin);
 
   const startNew = () => { setEditing(empty()); setOpen(true); };
   const startEdit = (c: Client) => {
@@ -132,7 +135,7 @@ function Clientes() {
         toast.success("Cliente cadastrado");
       }
 
-      // Handle Portal Access Creation or Password Update
+      // Handle Portal Access Creation, Password Update or Revoke
       if (clientId && editing.hasLogin && !editing.userId && editing.loginEmail && editing.loginPassword) {
         await createLogin({
           data: {
@@ -141,6 +144,7 @@ function Clientes() {
             clientId: clientId,
           }
         });
+        await qc.invalidateQueries({ queryKey: ["clients"] });
         toast.success("Acesso ao Portal do Cliente criado com sucesso!");
       } else if (editing.hasLogin && editing.userId && editing.loginPassword) {
         await updateSub({
@@ -151,7 +155,12 @@ function Clientes() {
         });
         toast.success("Senha do Portal do Cliente redefinida com sucesso!");
       } else if (!editing.hasLogin && editing.userId && editing.id) {
-        await updateClient.mutateAsync({ ...editing, userId: null, id: editing.id } as Client);
+        await disableLogin({
+          data: {
+            clientId: editing.id,
+          }
+        });
+        await qc.invalidateQueries({ queryKey: ["clients"] });
         toast.success("Acesso ao Portal desativado para este cliente.");
       }
 

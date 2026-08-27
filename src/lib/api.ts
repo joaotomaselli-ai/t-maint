@@ -122,8 +122,8 @@ const fromClient = (r: any): Client => ({
   hasPreventiveContract: Boolean(r.has_preventive_contract),
   preventiveContractValue: r.preventive_contract_value == null ? null : Number(r.preventive_contract_value),
   preventiveContractFile: r.preventive_contract_file ?? null,
-  userId: r.user_id || null,
-  hasLogin: Boolean(r.user_id),
+  userId: null,
+  hasLogin: false,
 });
 
 const toClientRow = (c: Omit<Client, "id">) => ({
@@ -137,7 +137,6 @@ const toClientRow = (c: Omit<Client, "id">) => ({
   has_preventive_contract: c.hasPreventiveContract ?? false,
   preventive_contract_value: c.preventiveContractValue ?? null,
   preventive_contract_file: c.preventiveContractFile ?? null,
-  user_id: c.userId ?? undefined,
 });
 
 const fromTechnician = (r: any): Technician => ({
@@ -262,7 +261,21 @@ const fromProfile = (r: any): Settings => ({
 export async function listClients(): Promise<Client[]> {
   const { data, error } = await supabase.from("clients").select("*").order("name");
   if (error) throw error;
-  return (data ?? []).map(fromClient);
+  const rawClients = data ?? [];
+
+  const { data: userRoles } = await supabase
+    .from("user_roles")
+    .select("user_id, allowed_features")
+    .eq("role", "user");
+
+  return rawClients.map((c) => {
+    const roleEntry = (userRoles ?? []).find(r => r.allowed_features?.includes(`client_id:${c.id}`));
+    return {
+      ...fromClient(c),
+      userId: roleEntry ? roleEntry.user_id : null,
+      hasLogin: Boolean(roleEntry),
+    };
+  });
 }
 export async function createClient(c: Omit<Client, "id">, userId: string): Promise<Client> {
   const { data, error } = await supabase.from("clients")

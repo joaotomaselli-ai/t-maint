@@ -119,19 +119,23 @@ export const getMyAccess = createServerFn({ method: "GET" })
     }
     const isMaster = roles.includes("master");
     const isAdmin = roles.includes("admin");
-    const isClient = roles.includes("client");
+    const clientRoleEntry = data?.find((r) => r.role === "user" && (r.allowed_features?.includes("client_portal") || r.allowed_features?.some((f: string) => f.startsWith("client_id:"))));
+    const isClient = Boolean(clientRoleEntry) || roles.includes("client");
     let clientId: string | null = null;
     let clientName: string | null = null;
 
-    if (isClient) {
-      const { data: cl } = await supabaseAdmin
-        .from("clients")
-        .select("id, name, company_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (cl) {
-        clientId = cl.id;
-        clientName = cl.name;
+    if (isClient && clientRoleEntry) {
+      const feature = clientRoleEntry.allowed_features?.find((f: string) => f.startsWith("client_id:"));
+      clientId = feature ? feature.split(":")[1] : null;
+      if (clientId) {
+        const { data: cl } = await supabaseAdmin
+          .from("clients")
+          .select("id, name, company_id")
+          .eq("id", clientId)
+          .maybeSingle();
+        if (cl) {
+          clientName = cl.name;
+        }
       }
     }
 
@@ -496,7 +500,7 @@ export const createTechnicianLogin = createServerFn({ method: "POST" })
   });
 
 // ----------------------------------------------------------------------
-// ADMIN / MASTER: create a login for a client (role: "client")
+// ADMIN / MASTER: create a login for a client
 // ----------------------------------------------------------------------
 export const createClientLogin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -537,30 +541,74 @@ export const createClientLogin = createServerFn({ method: "POST" })
     if (created.error) throw new Error(created.error.message);
     const newUserId = created.data.user!.id;
 
+    // Delete any old role for this client_id just in case
+    const { data: oldRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("id, user_id, allowed_features")
+      .eq("role", "user");
+    for (const r of oldRoles || []) {
+      if (r.allowed_features?.includes(`client_id:${data.clientId}`)) {
+        await supabaseAdmin.from("user_roles").delete().eq("id", r.id);
+        await supabaseAdmin.auth.admin.deleteUser(r.user_id).catch(() => {});
+      }
+    }
+
     const { error: re } = await supabaseAdmin
       .from("user_roles")
       .insert({
         user_id: newUserId,
-        role: "client",
+        role: "user",
         company_id: targetCompany,
-        allowed_features: ["client_portal"],
+        allowed_features: ["client_portal", `client_id:${data.clientId}`],
       });
     if (re && !re.message.includes("duplicate")) throw new Error(re.message);
 
     await supabaseAdmin.from("allowed_emails").upsert({
       email,
-      role: "client",
+      role: "user",
       company_id: targetCompany,
       invited_by: userId,
     }, { onConflict: "email" });
 
-    const { error: ce } = await supabaseAdmin
-      .from("clients")
-      .update({ user_id: newUserId })
-      .eq("id", data.clientId);
-    if (ce) throw new Error(ce.message);
-
     return { userId: newUserId };
+  });
+
+// ----------------------------------------------------------------------
+// ADMIN / MASTER: disable/revoke a client's portal access
+// ----------------------------------------------------------------------
+export const disableClientLogin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        clientId: z.string().uuid(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role, company_id")
+      .eq("user_id", userId);
+    const isMaster = roles?.some((r) => r.role === "master");
+    const adminEntry = roles?.find((r) => r.role === "admin");
+    if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
+
+    const { data: userRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("id, user_id, allowed_features")
+      .eq("role", "user");
+
+    const targetRole = (userRoles || []).find((r) =>
+      r.allowed_features?.includes(`client_id:${data.clientId}`)
+    );
+    if (targetRole) {
+      await supabaseAdmin.from("user_roles").delete().eq("id", targetRole.id);
+      await supabaseAdmin.auth.admin.deleteUser(targetRole.user_id).catch(() => {});
+    }
+
+    return { ok: true };
   });
 
 // ----------------------------------------------------------------------
