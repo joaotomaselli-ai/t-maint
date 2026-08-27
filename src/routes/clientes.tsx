@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useClients } from "@/hooks/use-data";
 import { useClientRequirements, getSubmissionStatus } from "@/hooks/use-client-requirements";
@@ -11,14 +12,39 @@ import { ClientComplianceModal } from "@/components/ClientComplianceModal";
 import { fmtCurrency, uploadClientContract, getAttachmentUrl, type Client } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { useMoney } from "@/hooks/use-money-visibility";
-import { Plus, Pencil, Trash2, Users, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { createClientLogin } from "@/lib/admin.functions";
+import { Plus, Pencil, Trash2, Users, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
 export const Route = createFileRoute("/clientes")({ component: Clientes });
 
-type Editing = Omit<Client, "id"> & { id?: string; fileToUpload?: File | null };
-const empty = (): Editing => ({ name: "", hourlyRate: 0, kmRate: 0, cnpj: "", phone: "", address: "", contact: "", hasPreventiveContract: false, preventiveContractValue: null, preventiveContractFile: null, fileToUpload: null });
+type Editing = Omit<Client, "id"> & {
+  id?: string;
+  fileToUpload?: File | null;
+  hasLogin?: boolean;
+  loginEmail?: string;
+  loginPassword?: string;
+};
+
+const empty = (): Editing => ({
+  name: "",
+  hourlyRate: 0,
+  kmRate: 0,
+  cnpj: "",
+  phone: "",
+  address: "",
+  contact: "",
+  hasPreventiveContract: false,
+  preventiveContractValue: null,
+  preventiveContractFile: null,
+  fileToUpload: null,
+  hasLogin: false,
+  loginEmail: "",
+  loginPassword: "",
+  userId: null,
+});
 
 function Clientes() {
   const { user } = useAuth();
@@ -28,18 +54,42 @@ function Clientes() {
   const [editing, setEditing] = useState<Editing>(empty());
   const [complianceClient, setComplianceClient] = useState<Client | null>(null);
 
+  const createLogin = useServerFn(createClientLogin);
+
   const startNew = () => { setEditing(empty()); setOpen(true); };
-  const startEdit = (c: Client) => { setEditing(c); setOpen(true); };
+  const startEdit = (c: Client) => {
+    setEditing({
+      ...c,
+      hasLogin: Boolean(c.userId),
+      loginEmail: "",
+      loginPassword: "",
+      fileToUpload: null,
+    });
+    setOpen(true);
+  };
 
   const save = async () => {
     if (!editing.name.trim()) { toast.error("Informe o nome do cliente"); return; }
     if (!editing.hourlyRate || editing.hourlyRate <= 0) { toast.error("Informe o valor por hora"); return; }
     if (!editing.kmRate || editing.kmRate <= 0) { toast.error("Informe o valor por km"); return; }
     if (editing.hasPreventiveContract && (!editing.preventiveContractValue || editing.preventiveContractValue <= 0)) {
-        toast.error("Informe o valor do contrato de preventiva"); return;
+      toast.error("Informe o valor do contrato de preventiva"); return;
     }
+    if (editing.hasLogin && !editing.userId) {
+      if (!editing.loginEmail?.trim() || !editing.loginPassword?.trim()) {
+        toast.error("Preencha o e-mail e a senha para criar o acesso ao Portal do Cliente.");
+        return;
+      }
+      if (editing.loginPassword.length < 6) {
+        toast.error("A senha deve ter no mínimo 6 caracteres.");
+        return;
+      }
+    }
+
     try {
       let finalFile = editing.preventiveContractFile;
+
+      let clientId = editing.id;
 
       if (editing.id) {
         if (editing.fileToUpload && user) {
@@ -56,29 +106,43 @@ function Clientes() {
         }
         toast.success("Cliente atualizado");
       } else {
-        const { id: _drop, fileToUpload, ...rest } = editing;
+        const { id: _drop, fileToUpload, hasLogin: _hl, loginEmail: _le, loginPassword: _lp, ...rest } = editing;
         let newClient;
         try {
           newClient = await addClient.mutateAsync(rest);
+          clientId = newClient.id;
         } catch (e: any) {
           throw new Error(`Erro ao criar cliente (DB INSERT): ${e?.message}`);
         }
         
         if (fileToUpload && user && newClient && newClient.id) {
-           let path;
-           try {
-             path = await uploadClientContract(user.id, newClient.id, fileToUpload);
-           } catch (e: any) {
-             throw new Error(`Erro no upload (Storage): ${e?.message}`);
-           }
-           try {
-             await updateClient.mutateAsync({ ...newClient, preventiveContractFile: path });
-           } catch (e: any) {
-             throw new Error(`Erro ao atualizar cliente com arquivo (DB UPDATE): ${e?.message}`);
-           }
+          let path;
+          try {
+            path = await uploadClientContract(user.id, newClient.id, fileToUpload);
+          } catch (e: any) {
+            throw new Error(`Erro no upload (Storage): ${e?.message}`);
+          }
+          try {
+            await updateClient.mutateAsync({ ...newClient, preventiveContractFile: path });
+          } catch (e: any) {
+            throw new Error(`Erro ao atualizar cliente com arquivo (DB UPDATE): ${e?.message}`);
+          }
         }
         toast.success("Cliente cadastrado");
       }
+
+      // Handle Portal Access Creation
+      if (clientId && editing.hasLogin && !editing.userId && editing.loginEmail && editing.loginPassword) {
+        await createLogin({
+          data: {
+            email: editing.loginEmail.trim(),
+            password: editing.loginPassword,
+            clientId: clientId,
+          }
+        });
+        toast.success("Acesso ao Portal do Cliente criado com sucesso!");
+      }
+
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
@@ -126,13 +190,13 @@ function Clientes() {
       <header className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground mt-1">Gerencie clientes, valores de hora/km e exigências de documentação industrial</p>
+          <p className="text-muted-foreground mt-1">Gerencie clientes, acesso ao Portal do Cliente e documentação industrial</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={startNew} className="gap-2"><Plus className="h-4 w-4" /> Novo cliente</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editing.id ? "Editar cliente" : "Novo cliente"}</DialogTitle>
             </DialogHeader>
@@ -166,10 +230,11 @@ function Clientes() {
                 <Input value={editing.address || ""} onChange={e => setEditing({ ...editing, address: e.target.value })} placeholder="Rua, número, cidade" />
               </div>
 
+              {/* Preventiva */}
               <div className="border rounded-md p-4 mt-2 space-y-4">
                 <div className="flex items-center gap-2">
                   <input type="checkbox" id="hasPreventive" className="w-4 h-4 cursor-pointer" checked={editing.hasPreventiveContract} onChange={e => setEditing({ ...editing, hasPreventiveContract: e.target.checked })} />
-                  <Label htmlFor="hasPreventive" className="cursor-pointer">Possui Contrato de Preventiva?</Label>
+                  <Label htmlFor="hasPreventive" className="cursor-pointer font-medium">Possui Contrato de Preventiva?</Label>
                 </div>
                 {editing.hasPreventiveContract && (
                   <div className="grid grid-cols-2 gap-4">
@@ -195,6 +260,55 @@ function Clientes() {
                   </div>
                 )}
               </div>
+
+              {/* Portal do Cliente (Acesso) */}
+              <div className="border rounded-md p-4 space-y-3 bg-slate-50/50 dark:bg-slate-900/30">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-semibold flex items-center gap-1.5">
+                      <Shield className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> Acesso ao Portal do Cliente
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Permite que o cliente acesse o sistema para visualizar o histórico de suas máquinas e emitir relatórios (sem valores).
+                    </p>
+                  </div>
+                  <Switch
+                    checked={editing.hasLogin}
+                    onCheckedChange={(v) => setEditing({ ...editing, hasLogin: v })}
+                  />
+                </div>
+
+                {editing.hasLogin && !editing.userId && (
+                  <div className="grid sm:grid-cols-2 gap-3 pt-3 border-t">
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs font-medium">E-mail de Login do Cliente *</Label>
+                      <Input
+                        type="email"
+                        placeholder="cliente@empresa.com"
+                        value={editing.loginEmail || ""}
+                        onChange={(e) => setEditing({ ...editing, loginEmail: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs font-medium">Senha Inicial *</Label>
+                      <Input
+                        type="password"
+                        placeholder="Mínimo 6 caracteres"
+                        value={editing.loginPassword || ""}
+                        onChange={(e) => setEditing({ ...editing, loginPassword: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {editing.hasLogin && editing.userId && (
+                  <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-xs text-cyan-800 dark:text-cyan-300 flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-cyan-600 shrink-0" />
+                    <span>Acesso ao Portal ativo para este cliente.</span>
+                  </div>
+                )}
+              </div>
+
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
@@ -280,8 +394,14 @@ function ClientCardItem({
             </div>
           </div>
 
-          {/* Submission Status Badge */}
+          {/* Badges */}
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {c.userId && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-300 flex items-center gap-1">
+                <Shield className="h-3 w-3" /> Portal Ativo
+              </span>
+            )}
+
             {subStatus.status === "vencido" ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
                 🔴 Reenvio Vencido (há {Math.abs(subStatus.daysLeft || 0)}d)

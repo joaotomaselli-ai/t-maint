@@ -13,6 +13,9 @@ export type Client = {
   hasPreventiveContract: boolean;
   preventiveContractValue?: number | null;
   preventiveContractFile?: string | null;
+  userId?: string | null;
+  hasLogin?: boolean;
+  loginEmail?: string;
 };
 
 export type Technician = {
@@ -119,6 +122,8 @@ const fromClient = (r: any): Client => ({
   hasPreventiveContract: Boolean(r.has_preventive_contract),
   preventiveContractValue: r.preventive_contract_value == null ? null : Number(r.preventive_contract_value),
   preventiveContractFile: r.preventive_contract_file ?? null,
+  userId: r.user_id || null,
+  hasLogin: Boolean(r.user_id),
 });
 
 const toClientRow = (c: Omit<Client, "id">) => ({
@@ -132,6 +137,7 @@ const toClientRow = (c: Omit<Client, "id">) => ({
   has_preventive_contract: c.hasPreventiveContract ?? false,
   preventive_contract_value: c.preventiveContractValue ?? null,
   preventive_contract_file: c.preventiveContractFile ?? null,
+  user_id: c.userId ?? undefined,
 });
 
 const fromTechnician = (r: any): Technician => ({

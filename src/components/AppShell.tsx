@@ -27,9 +27,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const moneyHidden = useMoneyHidden();
-  const { isMaster, isAdmin, isTechnician, allowedFeatures, planType } = useAccess();
+  const { isMaster, isAdmin, isTechnician, isClient, allowedFeatures, planType } = useAccess();
 
   const nav: NavItem[] = ALL_NAV.filter((item: any) => {
+    if (isClient) {
+      return item.to === "/" || item.to === "/atividades" || item.to === "/configuracoes";
+    }
     if (item.adminOnly && !isAdmin) return false;
     if (item.proOnly && planType === "basic") return false;
     if (!item.feature) return true;
@@ -79,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col leading-tight min-w-0 flex-1">
             <span className="text-base font-semibold tracking-tight text-sidebar-foreground">T-Maint</span>
             <span className="text-[9px] uppercase tracking-[0.08em] text-sidebar-foreground/60 leading-snug break-words">
-              Gestão Inteligente<br />de Manutenção
+              {isClient ? "Portal do Cliente" : "Gestão Inteligente\nde Manutenção"}
             </span>
           </div>
         </div>
@@ -104,17 +107,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="p-3 border-t border-sidebar-border space-y-2">
-          <div className="px-2 text-xs text-sidebar-foreground/60 truncate">{user.email}</div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleMoneyHidden}
-            className="w-full justify-start gap-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            title={moneyHidden ? "Mostrar valores" : "Ocultar valores"}
-          >
-            {moneyHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            {moneyHidden ? "Mostrar valores" : "Ocultar valores"}
-          </Button>
+          <div className="px-2 text-xs text-sidebar-foreground/60 truncate">
+            {user.email}
+            {isClient && <div className="text-[10px] text-cyan-400 font-semibold mt-0.5">● Portal do Cliente</div>}
+          </div>
+          {!isClient && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleMoneyHidden}
+              className="w-full justify-start gap-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              title={moneyHidden ? "Mostrar valores" : "Ocultar valores"}
+            >
+              {moneyHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {moneyHidden ? "Mostrar valores" : "Ocultar valores"}
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start gap-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
             <LogOut className="h-4 w-4" /> Sair
           </Button>
@@ -129,14 +137,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex flex-col leading-tight min-w-0 flex-1">
               <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">T-Maint</span>
               <span className="text-[9px] uppercase tracking-[0.08em] text-sidebar-foreground/60 leading-snug">
-                Gestão Inteligente de Manutenção
+                {isClient ? "Portal do Cliente" : "Gestão Inteligente de Manutenção"}
               </span>
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={toggleMoneyHidden} className="text-sidebar-foreground" title={moneyHidden ? "Mostrar valores" : "Ocultar valores"}>
-              {moneyHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
+            {!isClient && (
+              <Button variant="ghost" size="icon" onClick={toggleMoneyHidden} className="text-sidebar-foreground" title={moneyHidden ? "Mostrar valores" : "Ocultar valores"}>
+                {moneyHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground">
               <LogOut className="h-4 w-4" />
             </Button>

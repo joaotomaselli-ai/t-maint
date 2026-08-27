@@ -119,6 +119,22 @@ export const getMyAccess = createServerFn({ method: "GET" })
     }
     const isMaster = roles.includes("master");
     const isAdmin = roles.includes("admin");
+    const isClient = roles.includes("client");
+    let clientId: string | null = null;
+    let clientName: string | null = null;
+
+    if (isClient) {
+      const { data: cl } = await supabaseAdmin
+        .from("clients")
+        .select("id, name, company_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (cl) {
+        clientId = cl.id;
+        clientName = cl.name;
+      }
+    }
+
     const companyId =
       data?.find((r) => r.role === "admin" && r.company_id)?.company_id ??
       data?.find((r) => r.company_id)?.company_id ??
@@ -139,7 +155,10 @@ export const getMyAccess = createServerFn({ method: "GET" })
       userId,
       isMaster,
       isAdmin,
-      role: isMaster ? "master" : isAdmin ? "admin" : roles[0] ?? "user",
+      isClient,
+      clientId,
+      clientName,
+      role: isMaster ? "master" : isAdmin ? "admin" : isClient ? "client" : roles[0] ?? "user",
       companyId,
       companyName,
       allowedFeatures,
@@ -476,6 +495,73 @@ export const createTechnicianLogin = createServerFn({ method: "POST" })
     return { userId: newUserId };
   });
 
+// ----------------------------------------------------------------------
+// ADMIN / MASTER: create a login for a client (role: "client")
+// ----------------------------------------------------------------------
+export const createClientLogin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        email: z.string().trim().email(),
+        password: z.string().min(6).max(128),
+        clientId: z.string().uuid(),
+        companyId: z.string().uuid().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role, company_id")
+      .eq("user_id", userId);
+    const isMaster = roles?.some((r) => r.role === "master");
+    const adminEntry = roles?.find((r) => r.role === "admin");
+    const targetCompany = data.companyId ?? adminEntry?.company_id ?? null;
+    if (!isMaster && !adminEntry) throw new Error("Sem permissão.");
+    if (!targetCompany) throw new Error("Empresa não definida.");
+
+    const email = data.email.toLowerCase();
+    const list = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existingUser = list.data?.users.find((u) => u.email?.toLowerCase() === email);
+    if (existingUser) {
+      throw new Error("Este e-mail já está sendo utilizado por outro usuário no sistema.");
+    }
+
+    const created = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: data.password,
+      email_confirm: true,
+    });
+    if (created.error) throw new Error(created.error.message);
+    const newUserId = created.data.user!.id;
+
+    const { error: re } = await supabaseAdmin
+      .from("user_roles")
+      .insert({
+        user_id: newUserId,
+        role: "client",
+        company_id: targetCompany,
+        allowed_features: ["client_portal"],
+      });
+    if (re && !re.message.includes("duplicate")) throw new Error(re.message);
+
+    await supabaseAdmin.from("allowed_emails").upsert({
+      email,
+      role: "client",
+      company_id: targetCompany,
+      invited_by: userId,
+    }, { onConflict: "email" });
+
+    const { error: ce } = await supabaseAdmin
+      .from("clients")
+      .update({ user_id: newUserId })
+      .eq("id", data.clientId);
+    if (ce) throw new Error(ce.message);
+
+    return { userId: newUserId };
+  });
 
 // ----------------------------------------------------------------------
 // ADMIN / MASTER: update a sub-user (email, password, role, features)
@@ -490,7 +576,7 @@ export const updateSubUser = createServerFn({ method: "POST" })
         email: z.string().trim().email().optional(),
         username: z.string().trim().min(3).max(50).optional(),
         password: z.string().min(6).max(128).optional(),
-        role: z.enum(["admin", "user", "technician"]).optional(),
+        role: z.enum(["admin", "user", "technician", "client"]).optional(),
         allowedFeatures: z.array(z.string()).nullable().optional(),
       })
       .parse(d),

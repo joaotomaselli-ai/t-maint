@@ -15,17 +15,19 @@ import { MasterPanel } from "@/components/MasterPanel";
 import { Wrench, Users, Clock, DollarSign, Plus, TrendingUp, Loader2, Search, ArrowLeft, Check, Eye, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ClientPortalDashboard } from "@/components/ClientPortalDashboard";
 import { AgendaWidget } from "@/components/agenda/AgendaWidget";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({ component: Dashboard });
 
 function Dashboard() {
-  const { isLoading, isMaster } = useAccess();
+  const { isLoading, isMaster, isClient } = useAccess();
   if (isLoading) {
     return <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
   if (isMaster) return <MasterPanel />;
+  if (isClient) return <ClientPortalDashboard />;
   return <CompanyDashboard />;
 }
 

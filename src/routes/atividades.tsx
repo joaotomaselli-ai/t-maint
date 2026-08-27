@@ -69,7 +69,7 @@ function Atividades() {
   const paidByClient = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
   const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
   const { user } = useAuth();
-  const { isTechnician, isAdmin } = useAccess();
+  const { isTechnician, isAdmin, isClient, clientId } = useAccess();
   const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
   const qc = useQueryClient();
   const { getStatus, getPriority, updateStatus } = useOSStatus();
@@ -125,7 +125,7 @@ function Atividades() {
 
   const filtered = useMemo(() => {
     return [...reports]
-      .filter(r => filterClient === "all" || r.clientId === filterClient)
+      .filter(r => (isClient && clientId) ? r.clientId === clientId : (filterClient === "all" || r.clientId === filterClient))
       .filter(r => filterType === "all" || r.type === filterType)
       .filter(r => filterStatus === "all" || getStatus(r.id) === filterStatus)
       .filter(r => !dateFrom || r.date >= dateFrom)
@@ -140,7 +140,7 @@ function Atividades() {
           (c?.name.toLowerCase().includes(s) ?? false);
       })
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  }, [reports, filterClient, filterType, filterStatus, dateFrom, dateTo, search, clientMap, getStatus]);
+  }, [reports, filterClient, filterType, filterStatus, dateFrom, dateTo, search, clientMap, getStatus, isClient, clientId]);
 
   useEffect(() => { setPage(1); }, [search, filterClient, filterType, dateFrom, dateTo, pageSize]);
 
@@ -341,25 +341,31 @@ function Atividades() {
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Ordem de Serviço</h1>
-          <p className="text-muted-foreground mt-1">Registre cada atendimento de manutenção</p>
+          <p className="text-muted-foreground mt-1">
+            {isClient ? "Consulte os atendimentos técnicos e emita relatórios em PDF" : "Registre cada atendimento de manutenção"}
+          </p>
         </div>
-        <Button onClick={startNew} size="lg" className="gap-2"><Plus className="h-4 w-4" /> Ordem de Serviço</Button>
+        {!isClient && (
+          <Button onClick={startNew} size="lg" className="gap-2"><Plus className="h-4 w-4" /> Ordem de Serviço</Button>
+        )}
       </header>
 
       <Card>
         <CardContent className="p-4 space-y-3">
-          <div className="grid gap-3 sm:grid-cols-[1fr_180px_140px_160px]">
+          <div className={`grid gap-3 ${isClient ? "sm:grid-cols-[1fr_140px_160px]" : "sm:grid-cols-[1fr_180px_140px_160px]"}`}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, cliente..." className="pl-9" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, serviço..." className="pl-9" />
             </div>
-            <Select value={filterClient} onValueChange={setFilterClient}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os clientes</SelectItem>
-                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {!isClient && (
+              <Select value={filterClient} onValueChange={setFilterClient}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os clientes</SelectItem>
+                  {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -409,10 +415,12 @@ function Atividades() {
       </Card>
 
       {filtered.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 text-sm">
+        <div className={`grid ${isClient ? "grid-cols-2" : "grid-cols-3"} gap-3 text-sm`}>
           <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Atendimentos filtrados</div><div className="text-xl font-bold mt-1">{filtered.length}</div></CardContent></Card>
           <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Horas totais</div><div className="text-xl font-bold mt-1">{fmtHours(totals.hours)}</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Valor total</div><div className="text-xl font-bold mt-1 text-primary">{money(totals.value)}</div></CardContent></Card>
+          {!isClient && (
+            <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Valor total</div><div className="text-xl font-bold mt-1 text-primary">{money(totals.value)}</div></CardContent></Card>
+          )}
         </div>
       )}
 
@@ -533,13 +541,17 @@ function Atividades() {
                     </div>
                     <div className="flex sm:flex-col items-end gap-2 shrink-0">
                       <div className="text-right">
-                        <div className="text-xl font-bold text-primary">{money(t.total)}</div>
-                        <div className="text-xs text-muted-foreground">{fmtHours(t.totalHours)} totais</div>
+                        {!isClient && <div className="text-xl font-bold text-primary">{money(t.total)}</div>}
+                        <div className="text-xs text-muted-foreground">{fmtHours(t.totalHours)} {isClient ? "de atendimento" : "totais"}</div>
                       </div>
                       <div className="flex gap-1">
                         <Button variant="outline" size="icon" onClick={() => openPdfChoice(r)} title="Exportar PDF"><FileDown className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => startEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        {!isClient && (
+                          <>
+                            <Button variant="ghost" size="icon" onClick={() => startEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

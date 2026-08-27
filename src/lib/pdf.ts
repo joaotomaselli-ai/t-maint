@@ -721,3 +721,95 @@ export async function exportTechnicianReport(
 
   doc.save(`relatorio-tecnico-${technician.name.replace(/\s+/g, "_")}-${format(new Date(), "yyyyMMdd")}.pdf`);
 }
+
+export async function exportMachineHistoryReport(
+  clientName: string,
+  machineName: string,
+  reports: ServiceReport[],
+  settings: Settings,
+  period?: { from?: string; to?: string },
+  sessions: ServiceSession[] = [],
+) {
+  const doc = new jsPDF();
+  const pageW = doc.internal.pageSize.getWidth();
+
+  // Header
+  doc.setFillColor(40, 60, 110);
+  doc.rect(0, 0, pageW, 28, "F");
+
+  let startX = 14;
+  if (settings.logoUrl) {
+    const logoInfo = await fetchImageAsBase64(settings.logoUrl);
+    if (logoInfo) {
+      const maxH = 16;
+      const w = (logoInfo.width / logoInfo.height) * maxH;
+      doc.addImage(logoInfo.dataUrl, "PNG", startX, 6, w, maxH);
+      startX += w + 6;
+    }
+  }
+
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(settings.companyName || "Histórico de Manutenções", startX, 12);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  const subParts = [settings.cnpj && `CNPJ ${settings.cnpj}`, settings.phone, settings.address].filter(Boolean);
+  doc.text(subParts.join("  •  "), startX, 19);
+  doc.text(`Emitido em ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, startX, 24);
+
+  doc.setTextColor(20);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text(machineName ? `Histórico do Equipamento: ${machineName}` : "Histórico Geral de Manutenções", 14, 40);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Cliente: ${clientName}`, 14, 47);
+  if (period?.from || period?.to) {
+    const f = period.from ? format(new Date(period.from), "dd/MM/yyyy") : "—";
+    const t = period.to ? format(new Date(period.to), "dd/MM/yyyy") : "—";
+    doc.text(`Período: ${f} a ${t}`, 14, 53);
+  }
+
+  const rows = reports.map(r => {
+    const t = reportTotalsWithSessions(r, sessions);
+    return [
+      r.orderNumber || "—",
+      format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy"),
+      r.machine || "—",
+      r.type === "preventiva" ? "Preventiva" : "Corretiva",
+      r.technician || "—",
+      fmtHours(t.hours),
+      (r.summary || r.description || "—").slice(0, 70) + ((r.summary || r.description || "").length > 70 ? "..." : ""),
+    ];
+  });
+
+  autoTable(doc, {
+    startY: (period?.from || period?.to) ? 60 : 54,
+    head: [["OS", "Data", "Equipamento", "Tipo", "Técnico", "Horas", "Resumo do Atendimento"]],
+    body: rows,
+    styles: { fontSize: 8.5, cellPadding: 2.5 },
+    headStyles: { fillColor: [40, 60, 110], textColor: 255 },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+  });
+
+  const finalY = (doc as any).lastAutoTable.finalY || 80;
+  const totalHours = reports.reduce((acc, r) => acc + reportTotalsWithSessions(r, sessions).hours, 0);
+
+  autoTable(doc, {
+    startY: finalY + 6,
+    head: [["Resumo de Atendimentos Realizados", ""]],
+    body: [
+      ["Total de Ordens de Serviço", String(reports.length)],
+      ["Total de Horas Técnicas Dedicadas", fmtHours(totalHours)],
+      ["Atendimentos Corretivos", String(reports.filter(r => r.type === "corretiva").length)],
+      ["Atendimentos Preventivos", String(reports.filter(r => r.type === "preventiva").length)],
+    ],
+    styles: { fontSize: 9.5, cellPadding: 3 },
+    headStyles: { fillColor: [40, 60, 110], textColor: 255 },
+    columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right" } },
+  });
+
+  const sanitizedFileName = (machineName || clientName || "historico").replace(/[^a-zA-Z0-9_-]/g, "_");
+  doc.save(`historico-${sanitizedFileName}-${format(new Date(), "yyyyMMdd")}.pdf`);
+}
