@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const nav: NavItem[] = ALL_NAV.filter((item: any) => {
     if (isClient) {
-      return item.to === "/" || item.to === "/atividades" || item.to === "/configuracoes";
+      return item.to === "/" || item.to === "/configuracoes";
     }
     if (item.adminOnly && !isAdmin) return false;
     if (item.proOnly && planType === "basic") return false;

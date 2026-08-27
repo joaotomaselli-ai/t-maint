@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { SignaturePad } from "@/components/ui/SignaturePad";
 import { useClients, useReports, useSettings, useCompanySettings, useTechnicians, useAllSessions, useAllActivityTechnicians, useClientPayments, useTechnicianPayments } from "@/hooks/use-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
+import { ClientPortalDashboard } from "@/components/ClientPortalDashboard";
 import {
   reportTotals, technicianTotals, fmtCurrency, fmtHours,
   listAttachments, uploadAttachment, deleteAttachment,
@@ -56,6 +57,19 @@ type PdfChoice = {
 };
 
 function Atividades() {
+  const { isTechnician, isAdmin, isClient, clientId } = useAccess();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isClient) {
+      navigate({ to: "/" });
+    }
+  }, [isClient, navigate]);
+
+  if (isClient) {
+    return <ClientPortalDashboard />;
+  }
+
   const money = useMoney();
   const { clients } = useClients();
   const { technicians } = useTechnicians();
@@ -69,7 +83,6 @@ function Atividades() {
   const paidByClient = useMemo(() => new Set(clientPays.map(p => p.activityId)), [clientPays]);
   const paidTechSet = useMemo(() => new Set(techPays.map(p => `${p.activityId}::${p.technicianId}`)), [techPays]);
   const { user } = useAuth();
-  const { isTechnician, isAdmin, isClient, clientId } = useAccess();
   const myTechId = useMemo(() => technicians.find(t => t.userId === user?.id)?.id, [technicians, user?.id]);
   const qc = useQueryClient();
   const { getStatus, getPriority, updateStatus } = useOSStatus();

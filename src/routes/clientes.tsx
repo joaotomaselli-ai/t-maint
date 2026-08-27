@@ -53,6 +53,7 @@ function Clientes() {
   const qc = useQueryClient();
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients();
   const [open, setOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
   const [complianceClient, setComplianceClient] = useState<Client | null>(null);
 
@@ -91,6 +92,7 @@ function Clientes() {
     }
 
     try {
+      setIsSaving(true);
       let finalFile = editing.preventiveContractFile;
 
       let clientId = editing.id;
@@ -167,6 +169,8 @@ function Clientes() {
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -349,9 +353,9 @@ function Clientes() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button onClick={save} disabled={addClient.isPending || updateClient.isPending}>
-                {(addClient.isPending || updateClient.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {(addClient.isPending || updateClient.isPending) ? "Salvando..." : "Salvar"}
+              <Button onClick={save} disabled={isSaving || addClient.isPending || updateClient.isPending}>
+                {(isSaving || addClient.isPending || updateClient.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {(isSaving || addClient.isPending || updateClient.isPending) ? "Salvando..." : "Salvar"}
               </Button>
             </DialogFooter>
           </DialogContent>

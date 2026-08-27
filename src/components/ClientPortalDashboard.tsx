@@ -1,14 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { useReactToPrint } from "react-to-print";
+import { OSReportPrint } from "@/components/reports/OSReportPrint";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useReports, useSettings, useClients, useAllSessions } from "@/hooks/use-data";
+import { useReports, useSettings, useCompanySettings, useClients, useAllSessions, useTechnicians } from "@/hooks/use-data";
 import { useAccess } from "@/hooks/use-access";
-import { type ServiceReport, reportTotalsWithSessions, fmtHours, cleanObservation } from "@/lib/api";
-import { exportSingleReport, exportMachineHistoryReport } from "@/lib/pdf";
+import { type ServiceReport, reportTotalsWithSessions, fmtHours, cleanObservation, listAttachments, getAttachmentUrl } from "@/lib/api";
+import { exportMachineHistoryReport } from "@/lib/pdf";
 import {
   Wrench,
   Cpu,
@@ -35,8 +37,14 @@ export function ClientPortalDashboard() {
   const { clientId, clientName } = useAccess();
   const { reports = [], isLoading: loadingReports } = useReports();
   const { settings } = useSettings();
+  const { companySettings } = useCompanySettings();
+  const { technicians = [] } = useTechnicians();
   const { clients = [] } = useClients();
   const { sessions = [] } = useAllSessions();
+
+  const activeSettings = useMemo(() => {
+    return (companySettings?.companyName || companySettings?.logoUrl) ? companySettings : settings;
+  }, [companySettings, settings]);
 
   const [selectedMachine, setSelectedMachine] = useState<string>("todas");
   const [selectedType, setSelectedType] = useState<string>("todos");
@@ -44,6 +52,34 @@ export function ClientPortalDashboard() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [selectedOsForView, setSelectedOsForView] = useState<ServiceReport | null>(null);
+
+  const [printReport, setPrintReport] = useState<{
+    report: ServiceReport;
+    photos: { kind: string; url: string }[];
+  } | null>(null);
+
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `OS-${printReport?.report?.orderNumber || printReport?.report?.id}`,
+    pageStyle: `
+      @page { size: A4; margin: 10mm; }
+      @media print { 
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+      }
+    `,
+    onAfterPrint: () => {
+      setPrintReport(null);
+    }
+  });
+
+  useEffect(() => {
+    if (printReport) {
+      const timer = setTimeout(() => handlePrint(), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [printReport, handlePrint]);
 
   // Filter client's own reports strictly
   const myReports = useMemo(() => {
@@ -104,17 +140,16 @@ export function ClientPortalDashboard() {
 
   const handleExportSinglePdf = async (report: ServiceReport) => {
     try {
-      const clientObj = clients.find((c) => c.id === report.clientId) || {
-        id: clientId || "",
-        name: clientName || "Cliente",
-        hourlyRate: 0,
-        kmRate: 0,
-        hasPreventiveContract: false,
-      };
-      await exportSingleReport(report, clientObj as any, settings, sessions, false);
-      toast.success("Relatório em PDF gerado com sucesso!");
+      toast.loading("Preparando relatório técnico e fotos...", { id: "pdf-gen" });
+      const atts = await listAttachments(report.id);
+      const photos = await Promise.all(
+        atts.map(async (a) => ({ kind: a.kind, url: await getAttachmentUrl(a.storagePath) }))
+      );
+      setPrintReport({ report, photos });
+      toast.success("Pronto para imprimir / salvar em PDF!", { id: "pdf-gen" });
     } catch (e: any) {
-      toast.error("Erro ao gerar PDF da OS.");
+      console.error(e);
+      toast.error("Erro ao preparar relatório da OS.", { id: "pdf-gen" });
     }
   };
 
@@ -130,7 +165,7 @@ export function ClientPortalDashboard() {
         clientName || "Minha Empresa",
         machineTitle,
         filteredReports,
-        settings,
+        activeSettings,
         period,
         sessions,
       );
@@ -503,6 +538,31 @@ export function ClientPortalDashboard() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* HIDDEN PRINT COMPONENT */}
+      <div className="hidden">
+        {printReport && (
+          <OSReportPrint
+            ref={printRef}
+            report={printReport.report}
+            client={
+              clients.find((c) => c.id === printReport.report.clientId) || {
+                id: clientId || "",
+                name: clientName || "Cliente",
+                hourlyRate: 0,
+                kmRate: 0,
+                hasPreventiveContract: false,
+              }
+            }
+            settings={activeSettings}
+            sessions={sessions.filter((s) => s.activityId === printReport.report.id)}
+            technicians={technicians}
+            includeValues={false}
+            photos={printReport.photos}
+            showLunchDeductionDetail={false}
+          />
+        )}
+      </div>
     </div>
   );
 }

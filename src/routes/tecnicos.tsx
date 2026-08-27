@@ -30,6 +30,7 @@ function Tecnicos() {
   const money = useMoney();
   const { technicians, addTechnician, updateTechnician, deleteTechnician, isLoading } = useTechnicians();
   const [open, setOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
   const [complianceTech, setComplianceTech] = useState<Technician | null>(null);
 
@@ -62,6 +63,7 @@ function Tecnicos() {
       hasLogin: editing.hasLogin,
     };
     try {
+      setIsSaving(true);
       if (editing.hasLogin && !editing.userId) {
         if (!editing.loginEmail || !editing.loginPassword) {
           toast.error("Preencha o e-mail e senha para o acesso ao sistema.");
@@ -101,6 +103,8 @@ function Tecnicos() {
       setOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao salvar");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -246,9 +250,9 @@ function Tecnicos() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button onClick={save} disabled={addTechnician.isPending || updateTechnician.isPending}>
-                {(addTechnician.isPending || updateTechnician.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {(addTechnician.isPending || updateTechnician.isPending) ? "Salvando..." : "Salvar"}
+              <Button onClick={save} disabled={isSaving || addTechnician.isPending || updateTechnician.isPending}>
+                {(isSaving || addTechnician.isPending || updateTechnician.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {(isSaving || addTechnician.isPending || updateTechnician.isPending) ? "Salvando..." : "Salvar"}
               </Button>
             </DialogFooter>
           </DialogContent>
