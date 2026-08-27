@@ -24,6 +24,11 @@ import {
   Gauge,
   HelpCircle,
   Check,
+  Layers,
+  Shield,
+  Laptop,
+  Users,
+  Package,
 } from "lucide-react";
 
 export const Route = createFileRoute("/landing")({ component: LandingPage });
@@ -33,22 +38,29 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
+  const whatsappUrlService = "https://wa.me/5547988485668?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20atendimento%20t%C3%A9cnico%20de%20manuten%C3%A7%C3%A3o.";
+  const whatsappUrlSoftware = "https://wa.me/5547988485668?text=Ol%C3%A1!%20Tenho%20interesse%20em%20adquirir%20a%20plataforma%20de%20gest%C3%A3o%20T-MAINT%20para%20minha%20empresa.";
+
   const faqs = [
     {
       q: "Quais marcas de comando e eletrônica CNC são atendidas?",
-      a: "Atendemos multimarcas de mercado, incluindo sistemas Okuma, Fanuc, Fagor, Mazak, Mitsubishi, MCS, entre outros controladores industriais e acionamentos.",
+      a: "Atendemos multimarcas de mercado, incluindo sistemas Okuma, Fanuc, Fagor, Mazak, Mitsubishi, MCS, além de toda a infraestrutura eletroeletrônica de máquinas operatrizes e usinagens.",
     },
     {
       q: "Como o cliente acompanha o histórico das manutenções?",
-      a: "Através da Plataforma T-MAINT, cada equipamento possui uma ficha digital completa com histórico de paradas, relatórios fotográficos antes/depois, requisição de peças e apontamento de horas.",
+      a: "Através do Portal do Cliente T-MAINT, cada equipamento possui uma ficha digital completa com histórico de paradas, relatórios fotográficos antes/depois, requisição de peças e apontamento de horas.",
     },
     {
       q: "Como é feita a emissão dos relatórios de serviço?",
       a: "Ao finalizar o atendimento, os relatórios técnicos e operacionais são gerados em PDF de forma padronizada, prontos para envio ao cliente e arquivamento de compliance.",
     },
     {
-      q: "O sistema T-MAINT é exclusivo para clientes de manutenção?",
-      a: "Não. Além de servir como portal de transparência para nossos clientes de manutenção CNC, o T-MAINT é uma solução completa de gestão industrial que pode ser utilizada por equipes técnicas próprias e prestadores de serviço.",
+      q: "Minha empresa pode adquirir apenas a plataforma de software T-MAINT?",
+      a: "Sim! Se você possui uma empresa de manutenção, assistência técnica ou equipe de manutenção interna, pode contratar a plataforma T-MAINT no modelo SaaS (Software como Serviço) para gerenciar seus próprios técnicos, ordens de serviço, clientes e estoque.",
+    },
+    {
+      q: "O cliente tem acesso a valores dentro do Portal do Cliente?",
+      a: "Não. O Portal do Cliente é voltado 100% para o histórico técnico e operacional dos equipamentos, fotos de evidências e relatórios em PDF, sem exibição de valores financeiros internos.",
     },
   ];
 
@@ -72,10 +84,13 @@ export function LandingPage() {
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-            <a href="#servicos" className="hover:text-white transition-colors">Serviços CNC</a>
-            <a href="#plataforma" className="hover:text-white transition-colors">Plataforma T-MAINT</a>
+          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-300">
+            <a href="#servicos" className="hover:text-white transition-colors">Serviços</a>
             <a href="#diferenciais" className="hover:text-white transition-colors">Diferenciais</a>
+            <a href="#plataforma" className="hover:text-white transition-colors">Plataforma T-MAINT</a>
+            <a href="#software" className="hover:text-white text-cyan-400 transition-colors flex items-center gap-1">
+              <Laptop className="h-3.5 w-3.5" /> Adquirir Sistema
+            </a>
             <a href="#faq" className="hover:text-white transition-colors">Dúvidas</a>
           </nav>
 
@@ -103,7 +118,7 @@ export function LandingPage() {
             
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-semibold tracking-wide">
-                <Sparkles className="h-3.5 w-3.5" /> Soluções Integradas para Indústrias & Usinagens
+                <Sparkles className="h-3.5 w-3.5" /> Soluções Integradas para Usinagens & Indústrias
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
@@ -114,18 +129,18 @@ export function LandingPage() {
               </h1>
 
               <p className="text-lg sm:text-xl text-slate-300 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                Maximizando a disponibilidade das suas máquinas CNC através de diagnóstico eletroeletrônico especializado e controle inteligente de paradas com rastreabilidade total.
+                Maximizando a disponibilidade do seu parque fabril através de atendimento especializado em elétrica e eletrônica CNC com controle inteligente de paradas e histórico digital de máquinas.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
                 <a
-                  href="https://wa.me/5547999999999?text=Olá!%20Gostaria%20de%20solicitar%20um%20atendimento%20de%20manutenção%20CNC."
+                  href={whatsappUrlService}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full sm:w-auto"
                 >
-                  <Button size="lg" className="w-full sm:w-auto gap-2 font-bold text-base px-8 h-12 shadow-xl shadow-primary/20">
-                    <Zap className="h-5 w-5 text-amber-300" /> Solicitar Atendimento CNC
+                  <Button size="lg" className="w-full sm:w-auto gap-2 font-bold text-base px-8 h-12 shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Zap className="h-5 w-5 text-amber-300" /> Solicitar Atendimento
                   </Button>
                 </a>
                 <Link to="/login" className="w-full sm:w-auto">
@@ -167,7 +182,7 @@ export function LandingPage() {
                       <Cpu className="h-6 w-6" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white text-base">Controle de Atendimento CNC</h3>
+                      <h3 className="font-bold text-white text-base">Controle de Atendimento</h3>
                       <p className="text-xs text-slate-400">Plataforma Integrada T-MAINT</p>
                     </div>
                   </div>
@@ -179,19 +194,19 @@ export function LandingPage() {
                 <div className="space-y-3 text-xs">
                   <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
                     <span className="text-slate-400">Diagnóstico Eletroeletrônico</span>
-                    <span className="font-semibold text-white">Drives / Servo Motores</span>
+                    <span className="font-semibold text-white">Drives / Servo Motores / Painéis</span>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
                     <span className="text-slate-400">Histórico de Máquina</span>
                     <span className="font-semibold text-primary">Rastreabilidade Total</span>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
-                    <span className="text-slate-400">Relatório PDF Técnico</span>
+                    <span className="text-slate-400">Relatório Técnico</span>
                     <span className="font-semibold text-emerald-400">Com Evidências & Fotos</span>
                   </div>
                   <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
-                    <span className="text-slate-400">Apuração Transparente</span>
-                    <span className="font-semibold text-amber-300">Horas + Deslocamento</span>
+                    <span className="text-slate-400">Portal do Cliente</span>
+                    <span className="font-semibold text-cyan-300">Acesso Transparente</span>
                   </div>
                 </div>
 
@@ -210,16 +225,16 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* SEÇÃO 1: SERVIÇOS TÉCNICOS CNC */}
+      {/* SEÇÃO 1: SERVIÇOS TÉCNICOS */}
       <section id="servicos" className="py-20 md:py-28 border-b border-slate-800/80 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
             <h2 className="text-xs font-bold uppercase tracking-widest text-primary">Especialização em Campo</h2>
             <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Serviços de Manutenção Eletrônica CNC
+              Serviços de Manutenção Elétrica & Eletrônica CNC
             </p>
             <p className="text-slate-400 text-base">
-              Soluções completas para manter seu parque fabril produzindo sem paradas inesperadas.
+              Atendimento técnico completo para demandas elétricas de usinagens, metalúrgicas e indústrias em geral.
             </p>
           </div>
 
@@ -231,11 +246,11 @@ export function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold text-white">Manutenção Corretiva Emergencial</h3>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  Atendimento ágil para paradas de máquina. Diagnóstico preciso em comandos CNC, acionamentos, drives, servo drivers e painéis elétricos.
+                  Atendimento ágil para paradas de máquina. Diagnóstico preciso em comandos CNC, acionamentos, drives, servo drivers, fontes e painéis elétricos industriais.
                 </p>
                 <ul className="space-y-2 text-xs text-slate-300 pt-2 border-t border-slate-800">
-                  <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> Busca de falhas em código de alarme CNC</li>
-                  <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> Substituição e parametrização de componentes</li>
+                  <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> Busca de falhas em alarmes e sensores</li>
+                  <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> Substituição e parametrização de módulos</li>
                 </ul>
               </CardContent>
             </Card>
@@ -245,12 +260,12 @@ export function LandingPage() {
                 <div className="p-3 rounded-xl bg-primary/10 text-primary w-fit border border-primary/20">
                   <ShieldCheck className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Manutenção Preventiva Preditiva</h3>
+                <h3 className="text-xl font-bold text-white">Manutenção Preventiva & Preditiva</h3>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  Planos periódicos para identificação prévia de desgastes em componentes eletroeletrônicos, prevenindo paradas caríssimas na produção.
+                  Planos periódicos de revisão eletroeletrônica, identificando desgastes antes que ocorra a quebra, garantindo a continuidade da produção fabril.
                 </p>
                 <ul className="space-y-2 text-xs text-slate-300 pt-2 border-t border-slate-800">
-                  <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> Limpeza técnica especializada em painéis</li>
+                  <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> Limpeza técnica especializada de painéis</li>
                   <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> Teste de isolamento e conexões de potência</li>
                 </ul>
               </CardContent>
@@ -261,9 +276,9 @@ export function LandingPage() {
                 <div className="p-3 rounded-xl bg-primary/10 text-primary w-fit border border-primary/20">
                   <Cpu className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Retrofit & Adequação Elétrica</h3>
+                <h3 className="text-xl font-bold text-white">Adequação Elétrica & Retrofit</h3>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  Modernização de comando e painéis de máquinas CNC antigas, melhorando a precisão, confiabilidade e facilidade de reposição de peças.
+                  Modernização de comando e painéis de máquinas operatrizes antigas, reorganização de infraestrutura elétrica e adequação a normas técnicas.
                 </p>
                 <ul className="space-y-2 text-xs text-slate-300 pt-2 border-t border-slate-800">
                   <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> Esquemas elétricos atualizados</li>
@@ -275,8 +290,85 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* SEÇÃO 2: PLATAFORMA T-MAINT (O DIFERENCIAL TECNOLÓGICO) */}
-      <section id="plataforma" className="py-20 md:py-28 border-b border-slate-800/80 bg-gradient-to-b from-slate-950 via-slate-900/40 to-slate-950">
+      {/* SEÇÃO DIFERENCIAIS (NOVA SEÇÃO ANCORADA) */}
+      <section id="diferenciais" className="py-20 md:py-28 border-b border-slate-800/80 bg-slate-900/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-primary">Por Que a T-MAINT?</h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Diferenciais que Elevam a Gestão da Sua Fábrica
+            </p>
+            <p className="text-slate-400 text-base">
+              A união definitiva entre experiência prática de campo e tecnologia de ponta em gestão industrial.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 w-fit border border-blue-500/20">
+                <Cpu className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Especialização em Comandos & Usinagem</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Diagnóstico aprofundado em multimarcas (Okuma, Fanuc, Fagor, Mazak, Mitsubishi, MCS) e elétrica industrial pesada.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 w-fit border border-emerald-500/20">
+                <FileText className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Relatórios Técnicos Padronizados</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Documentação fotográfica antes/depois, detalhamento de peças trocadas e fechamento de horas em PDF para arquivo técnico.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 w-fit border border-purple-500/20">
+                <Activity className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Portal do Cliente com Histórico de Máquinas</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Acesse a "ficha médica" digital de cada equipamento da sua empresa, consultando manutenções passadas a qualquer momento.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 w-fit border border-amber-500/20">
+                <Clock className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Apuração Justa e Transparente</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Registro detalhado de horários de viagem e serviço, com opção de desconto de horário de almoço faturado ao cliente.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 w-fit border border-cyan-500/20">
+                <Shield className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Segurança do Trabalho & Compliance</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Controle rigoroso de ASO, NRs dos técnicos e entrega de EPIs, garantindo conformidade total para entrada em plantas industriais.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="p-3 rounded-xl bg-rose-500/10 text-rose-400 w-fit border border-rose-500/20">
+                <Gauge className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Foco na Redução de Paradas</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Identificação ágil da causa-raiz das falhas, minimizando o tempo de máquina parada (MTTR) e evitando paradas repetitivas.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SEÇÃO 2: PLATAFORMA T-MAINT */}
+      <section id="plataforma" className="py-20 md:py-28 border-b border-slate-800/80 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             
@@ -330,7 +422,7 @@ export function LandingPage() {
               <div className="pt-4">
                 <Link to="/login">
                   <Button size="lg" className="gap-2 font-bold px-6 shadow-lg shadow-primary/20">
-                    <LogIn className="h-5 w-5" /> Experimentar / Entrar no Sistema
+                    <LogIn className="h-5 w-5" /> Entrar no Portal / Sistema
                   </Button>
                 </Link>
               </div>
@@ -351,7 +443,7 @@ export function LandingPage() {
                     </div>
                     <div className="p-3 rounded bg-slate-950 border border-slate-800">
                       <div className="text-[10px] text-slate-500 uppercase font-bold">Equipamento</div>
-                      <div className="font-bold text-slate-200 mt-0.5">Centro Usinagem CNC (Comando Fanuc / Okuma)</div>
+                      <div className="font-bold text-slate-200 mt-0.5">Centro Usinagem CNC (Fanuc / Okuma)</div>
                     </div>
                   </div>
 
@@ -368,6 +460,67 @@ export function LandingPage() {
               </div>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      {/* SEÇÃO NOVO: PARA EMPRESAS & ASSISTÊNCIAS TÉCNICAS (SAAS / ADQUIRIR O SISTEMA) */}
+      <section id="software" className="py-20 md:py-28 border-b border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="bg-gradient-to-r from-slate-900 to-slate-950 border border-cyan-500/30 rounded-3xl p-8 sm:p-12 shadow-2xl">
+            <div className="grid lg:grid-cols-12 gap-8 items-center">
+              
+              <div className="lg:col-span-8 space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-xs font-semibold">
+                  <Laptop className="h-3.5 w-3.5" /> Software de Gestão para Prestadores e Equipes Internas
+                </div>
+
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                  Quer Utilizar a Plataforma T-MAINT na Sua Empresa?
+                </h2>
+
+                <p className="text-slate-300 text-base leading-relaxed">
+                  Se você possui uma <strong>empresa de manutenção</strong>, <strong>assistência técnica</strong> ou uma <strong>equipe própria de manutenção industrial</strong>, você pode contratar o T-MAINT como software (SaaS). Tenha controle completo de ordens de serviço, técnicos de campo, documentação de ASO/NRs, estoque e portal para seus próprios clientes.
+                </p>
+
+                <div className="grid sm:grid-cols-2 gap-3 pt-2 text-xs text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-cyan-400 shrink-0" />
+                    <span>Gestão completa de OS e atendimentos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-cyan-400 shrink-0" />
+                    <span>Portal do Cliente personalizado</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-cyan-400 shrink-0" />
+                    <span>Relatórios fotográficos automáticos em PDF</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-cyan-400 shrink-0" />
+                    <span>Controle de estoque, peças e técnicos</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 flex flex-col items-center lg:items-end justify-center gap-4">
+                <a
+                  href={whatsappUrlSoftware}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full sm:w-auto"
+                >
+                  <Button size="lg" className="w-full sm:w-auto gap-2 font-bold px-8 h-12 bg-cyan-500 hover:bg-cyan-600 text-slate-950 shadow-xl shadow-cyan-500/20">
+                    <Phone className="h-4 w-4" /> Conhecer Planos de Software
+                  </Button>
+                </a>
+                <p className="text-[11px] text-slate-400 text-center lg:text-right">
+                  Planos flexíveis para profissionais autônomos e equipes corporativas.
+                </p>
+              </div>
+
+            </div>
           </div>
         </div>
       </section>
@@ -407,12 +560,14 @@ export function LandingPage() {
           <div className="flex items-center gap-3">
             <img src={logoTmaint} alt="T-MAINT" className="h-8 w-8 object-contain" />
             <span className="font-bold text-white text-base">T-MAINT</span>
-            <span className="text-xs text-slate-500">· Soluções em Manutenção Eletrônica CNC & Gestão Industrial</span>
+            <span className="text-xs text-slate-500">· Soluções em Manutenção Elétrica CNC & Gestão Industrial</span>
           </div>
 
           <div className="flex items-center gap-6 text-xs">
             <a href="#servicos" className="hover:text-white transition-colors">Serviços</a>
+            <a href="#diferenciais" className="hover:text-white transition-colors">Diferenciais</a>
             <a href="#plataforma" className="hover:text-white transition-colors">Sistema</a>
+            <a href="#software" className="hover:text-white transition-colors">Adquirir Software</a>
             <Link to="/login" className="hover:text-white text-primary font-semibold transition-colors flex items-center gap-1">
               <LogIn className="h-3.5 w-3.5" /> Área de Login
             </Link>
