@@ -13,8 +13,8 @@ import { fmtCurrency, uploadClientContract, getAttachmentUrl, type Client } from
 import { useAuth } from "@/hooks/use-auth";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useServerFn } from "@tanstack/react-start";
-import { createClientLogin } from "@/lib/admin.functions";
-import { Plus, Pencil, Trash2, Users, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle, Shield } from "lucide-react";
+import { createClientLogin, updateSubUser } from "@/lib/admin.functions";
+import { Plus, Pencil, Trash2, Users, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle, Shield, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -55,6 +55,7 @@ function Clientes() {
   const [complianceClient, setComplianceClient] = useState<Client | null>(null);
 
   const createLogin = useServerFn(createClientLogin);
+  const updateSub = useServerFn(updateSubUser);
 
   const startNew = () => { setEditing(empty()); setOpen(true); };
   const startEdit = (c: Client) => {
@@ -131,7 +132,7 @@ function Clientes() {
         toast.success("Cliente cadastrado");
       }
 
-      // Handle Portal Access Creation
+      // Handle Portal Access Creation or Password Update
       if (clientId && editing.hasLogin && !editing.userId && editing.loginEmail && editing.loginPassword) {
         await createLogin({
           data: {
@@ -141,6 +142,17 @@ function Clientes() {
           }
         });
         toast.success("Acesso ao Portal do Cliente criado com sucesso!");
+      } else if (editing.hasLogin && editing.userId && editing.loginPassword) {
+        await updateSub({
+          data: {
+            targetUserId: editing.userId,
+            password: editing.loginPassword,
+          }
+        });
+        toast.success("Senha do Portal do Cliente redefinida com sucesso!");
+      } else if (!editing.hasLogin && editing.userId && editing.id) {
+        await updateClient.mutateAsync({ ...editing, userId: null, id: editing.id } as Client);
+        toast.success("Acesso ao Portal desativado para este cliente.");
       }
 
       setOpen(false);
@@ -302,9 +314,25 @@ function Clientes() {
                 )}
 
                 {editing.hasLogin && editing.userId && (
-                  <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-xs text-cyan-800 dark:text-cyan-300 flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-cyan-600 shrink-0" />
-                    <span>Acesso ao Portal ativo para este cliente.</span>
+                  <div className="space-y-3 pt-3 border-t">
+                    <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-xs text-cyan-800 dark:text-cyan-300 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-cyan-600 shrink-0" />
+                      <span>Acesso ao Portal ativo para este cliente.</span>
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs font-medium flex items-center gap-1">
+                        <KeyRound className="h-3.5 w-3.5 text-cyan-600" /> Redefinir Senha do Cliente (Opcional)
+                      </Label>
+                      <Input
+                        type="password"
+                        placeholder="Deixe em branco para manter a senha atual"
+                        value={editing.loginPassword || ""}
+                        onChange={(e) => setEditing({ ...editing, loginPassword: e.target.value })}
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        Preencha caso o cliente tenha esquecido a senha ou solicitado uma nova.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
