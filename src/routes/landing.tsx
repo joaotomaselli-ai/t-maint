@@ -36,7 +36,7 @@ export function LandingPage() {
   const faqs = [
     {
       q: "Quais marcas de comando e eletrônica CNC são atendidas?",
-      a: "Atendemos multimarcas de mercado, incluindo sistemas Siemens, Fanuc, MCS, Heidenhain, Fagor, Mach, entre outros controladores industriais e acionamentos.",
+      a: "Atendemos multimarcas de mercado, incluindo sistemas Okuma, Fanuc, Fagor, Mazak, Mitsubishi, MCS, entre outros controladores industriais e acionamentos.",
     },
     {
       q: "Como o cliente acompanha o histórico das manutenções?",
@@ -141,7 +141,7 @@ export function LandingPage() {
                   <div className="text-2xl font-bold text-white flex items-center gap-1">
                     <CheckCircle2 className="h-5 w-5 text-primary" /> Multi-marcas
                   </div>
-                  <div className="text-xs text-slate-400 mt-0.5">Fanuc, Siemens, MCS, Heidenhain</div>
+                  <div className="text-xs text-slate-400 mt-0.5">Okuma, Fanuc, Fagor, Mazak, Mitsubishi, MCS</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-white flex items-center gap-1">
@@ -351,7 +351,7 @@ export function LandingPage() {
                     </div>
                     <div className="p-3 rounded bg-slate-950 border border-slate-800">
                       <div className="text-[10px] text-slate-500 uppercase font-bold">Equipamento</div>
-                      <div className="font-bold text-slate-200 mt-0.5">Centro Usinagem CNC (Siemens 840D)</div>
+                      <div className="font-bold text-slate-200 mt-0.5">Centro Usinagem CNC (Comando Fanuc / Okuma)</div>
                     </div>
                   </div>
 
