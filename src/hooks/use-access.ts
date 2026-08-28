@@ -25,5 +25,8 @@ export function useAccess() {
     companyName: q.data?.companyName ?? null,
     allowedFeatures: q.data?.allowedFeatures ?? null,
     planType: q.data?.planType ?? "basic",
+    isBlocked: q.data?.isBlocked ?? false,
+    blockedReason: q.data?.blockedReason ?? null,
+    subscription: q.data?.subscription ?? null,
   };
 }

@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff, ShoppingCart, Package } from "lucide-react";
+import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff, ShoppingCart, Package, ShieldAlert, Lock, MessageCircle } from "lucide-react";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { useMoneyHidden, toggleMoneyHidden } from "@/hooks/use-money-visibility";
 import { useAccess } from "@/hooks/use-access";
 
-type NavItem = { to: string; label: string; icon: any; feature?: string; adminOnly?: boolean };
+type NavItem = { to: string; label: string; icon: any; feature?: string; adminOnly?: boolean; masterOnly?: boolean };
 
 const ALL_NAV: NavItem[] = [
+  { to: "/master", label: "Painel Master", icon: ShieldAlert, masterOnly: true },
   { to: "/", label: "Painel", icon: LayoutDashboard },
   { to: "/clientes", label: "Clientes", icon: Users, feature: "clientes" },
   { to: "/tecnicos", label: "Técnicos", icon: HardHat, feature: "tecnicos" },
@@ -27,17 +28,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const moneyHidden = useMoneyHidden();
-  const { isMaster, isAdmin, isTechnician, isClient, allowedFeatures, planType } = useAccess();
+  const { isMaster, isAdmin, isTechnician, isClient, companyName, allowedFeatures, planType, isBlocked, blockedReason, subscription } = useAccess();
 
   const nav: NavItem[] = ALL_NAV.filter((item: any) => {
+    if (isMaster) {
+      return item.to === "/master" || item.to === "/financeiro" || item.to === "/configuracoes";
+    }
+    if (item.masterOnly) return false;
     if (isClient) {
       return item.to === "/" || item.to === "/configuracoes";
     }
     if (item.adminOnly && !isAdmin) return false;
     if (item.proOnly && planType === "basic") return false;
     if (!item.feature) return true;
-    // Master: hide operational tabs (clientes, técnicos, atividades, relatórios)
-    if (isMaster) return item.feature === "financeiro";
     
     // Only admins can see Clientes and Técnicos
     if (item.feature === "clientes" || item.feature === "tecnicos") {
@@ -54,8 +57,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return allowedFeatures.includes(item.feature);
   });
 
-
-
   const isPublic = location.pathname === "/login" || location.pathname === "/landing";
 
   useEffect(() => {
@@ -71,6 +72,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen grid place-items-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
+    );
+  }
+
+  // If user/admin is blocked and not master, show BlockedScreen
+  if (isBlocked && !isMaster) {
+    return (
+      <BlockedScreen
+        companyName={companyName}
+        blockedReason={blockedReason}
+        subscription={subscription}
+        onSignOut={signOut}
+      />
     );
   }
 
@@ -171,6 +184,90 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 md:ml-0 mt-[88px] md:mt-0 overflow-x-hidden">
         <div className="max-w-7xl mx-auto p-4 md:p-8">{children}</div>
       </main>
+    </div>
+  );
+}
+
+function BlockedScreen({
+  companyName,
+  blockedReason,
+  subscription,
+  onSignOut,
+}: {
+  companyName: string | null;
+  blockedReason: string | null;
+  subscription: any;
+  onSignOut: () => void;
+}) {
+  const masterPhone = "47988485668";
+  const whatsappMsg = encodeURIComponent(
+    `Olá João! Sou da empresa *${companyName || "Minha Empresa"}* e gostaria de solicitar a renovação / liberação do nosso acesso ao T-Maint.`
+  );
+  const whatsappUrl = `https://wa.me/55${masterPhone}?text=${whatsappMsg}`;
+
+  const formattedDate = subscription?.endDate
+    ? subscription.endDate.split("-").reverse().join("/")
+    : null;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 text-slate-100">
+      <div className="max-w-md w-full bg-slate-900/90 border border-slate-700/80 rounded-3xl p-8 shadow-2xl backdrop-blur text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+        <div className="flex justify-center">
+          <div className="h-20 w-20 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-inner">
+            <Lock className="h-10 w-10" />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <ShieldAlert className="h-3.5 w-3.5" /> Acesso Suspenso
+          </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            {companyName ? `Empresa ${companyName}` : "Acesso Bloqueado"}
+          </h1>
+          <p className="text-sm text-slate-300 leading-relaxed">
+            {blockedReason || "O acesso a este ambiente foi temporariamente suspenso devido ao término da vigência da assinatura ou bloqueio administrativo."}
+          </p>
+        </div>
+
+        {subscription && formattedDate && (
+          <div className="bg-slate-800/80 rounded-xl p-4 border border-slate-700/50 text-left text-xs space-y-2">
+            <div className="flex justify-between text-slate-400">
+              <span>Plano Contratado:</span>
+              <span className="font-semibold text-slate-200 capitalize">{subscription.cycle || "Mensal"}</span>
+            </div>
+            <div className="flex justify-between text-slate-400">
+              <span>Data de Vencimento:</span>
+              <span className="font-semibold text-amber-300">{formattedDate}</span>
+            </div>
+            {subscription.daysRemaining < 0 && (
+              <div className="flex justify-between text-slate-400">
+                <span>Tempo expirado:</span>
+                <span className="font-semibold text-rose-400">{Math.abs(subscription.daysRemaining)} dia(s) atrás</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-3 pt-2">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all shadow-lg shadow-emerald-900/40 hover:scale-[1.02]"
+          >
+            <MessageCircle className="h-5 w-5" /> Falar no WhatsApp para Renovar
+          </a>
+
+          <Button
+            variant="ghost"
+            onClick={onSignOut}
+            className="w-full text-slate-400 hover:text-slate-100 hover:bg-slate-800/60"
+          >
+            <LogOut className="h-4 w-4 mr-2" /> Sair da conta
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
