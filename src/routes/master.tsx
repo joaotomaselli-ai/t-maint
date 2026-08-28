@@ -96,7 +96,17 @@ function MasterPage() {
   const [renewMonths, setRenewMonths] = useState(1);
   const [renewAmount, setRenewAmount] = useState(397);
 
-  // Mutations
+  const parseErrorMessage = (err: any, fallback: string) => {
+    const msg = err?.message || fallback;
+    try {
+      const parsed = JSON.parse(msg);
+      if (Array.isArray(parsed) && parsed[0]?.message) {
+        return parsed[0].message;
+      }
+    } catch {}
+    return msg;
+  };
+
   const createMut = useMutation({
     mutationFn: () => create({ data: createForm }),
     onSuccess: () => {
@@ -117,7 +127,7 @@ function MasterPage() {
         autoBlockOnExpire: true,
       });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Erro ao cadastrar empresa"),
+    onError: (e: any) => toast.error(parseErrorMessage(e, "Erro ao cadastrar empresa")),
   });
 
   const updateMut = useMutation({
@@ -125,6 +135,10 @@ function MasterPage() {
       data: {
         companyId: editingCompany.id,
         ...editForm,
+        contactEmail: editForm.contactEmail?.trim() || undefined,
+        contactPhone: editForm.contactPhone?.trim() || undefined,
+        adminName: editForm.adminName?.trim() || undefined,
+        blockedReason: editForm.blockedReason?.trim() || null,
       }
     }),
     onSuccess: () => {
@@ -132,7 +146,7 @@ function MasterPage() {
       qc.invalidateQueries({ queryKey: ["companies"] });
       setEditingCompany(null);
     },
-    onError: (e: any) => toast.error(e?.message ?? "Erro ao atualizar"),
+    onError: (e: any) => toast.error(parseErrorMessage(e, "Erro ao atualizar")),
   });
 
   const toggleBlockMut = useMutation({
@@ -142,7 +156,7 @@ function MasterPage() {
       toast.success(vars.isBlocked ? "Administrador bloqueado." : "Administrador desbloqueado.");
       qc.invalidateQueries({ queryKey: ["companies"] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Erro ao alterar bloqueio"),
+    onError: (e: any) => toast.error(parseErrorMessage(e, "Erro ao alterar bloqueio")),
   });
 
   const renewMut = useMutation({
@@ -159,7 +173,7 @@ function MasterPage() {
       qc.invalidateQueries({ queryKey: ["companies"] });
       setRenewCompany(null);
     },
-    onError: (e: any) => toast.error(e?.message ?? "Erro ao renovar"),
+    onError: (e: any) => toast.error(parseErrorMessage(e, "Erro ao renovar")),
   });
 
   const deleteMut = useMutation({
@@ -168,7 +182,7 @@ function MasterPage() {
       toast.success("Empresa excluída com sucesso");
       qc.invalidateQueries({ queryKey: ["companies"] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Erro ao excluir"),
+    onError: (e: any) => toast.error(parseErrorMessage(e, "Erro ao excluir")),
   });
 
   // Reminder trigger
