@@ -131,16 +131,27 @@ function MasterPage() {
   });
 
   const updateMut = useMutation({
-    mutationFn: () => update({
-      data: {
+    mutationFn: () => {
+      const isMaster = editingCompany.isMasterAccount;
+      const payload: any = {
         companyId: editingCompany.id,
-        ...editForm,
-        contactEmail: editForm.contactEmail?.trim() || undefined,
-        contactPhone: editForm.contactPhone?.trim() || undefined,
+        name: editForm.name?.trim() || undefined,
         adminName: editForm.adminName?.trim() || undefined,
-        blockedReason: editForm.blockedReason?.trim() || null,
+        contactPhone: editForm.contactPhone?.trim() || undefined,
+        contactEmail: editForm.contactEmail?.trim() || undefined,
+      };
+      if (!isMaster) {
+        payload.subscriptionFee = editForm.subscriptionFee;
+        payload.planType = editForm.planType;
+        payload.subscriptionCycle = editForm.subscriptionCycle;
+        payload.subscriptionStartDate = editForm.subscriptionStartDate || undefined;
+        payload.subscriptionEndDate = editForm.subscriptionEndDate || undefined;
+        payload.isBlocked = editForm.isBlocked;
+        payload.blockedReason = editForm.blockedReason?.trim() || null;
+        payload.autoBlockOnExpire = editForm.autoBlockOnExpire;
       }
-    }),
+      return update({ data: payload });
+    },
     onSuccess: () => {
       toast.success("Dados da empresa atualizados!");
       qc.invalidateQueries({ queryKey: ["companies"] });
@@ -208,7 +219,7 @@ function MasterPage() {
       contactPhone: c.subscription?.contactPhone || "",
       contactEmail: c.subscription?.contactEmail || c.ownerEmail || "",
       subscriptionFee: c.subscriptionFee ?? 0,
-      planType: c.planType ?? "pro",
+      planType: c.isMasterAccount ? "pro" : (c.planType ?? "pro"),
       subscriptionCycle: c.subscription?.cycle ?? "mensal",
       subscriptionStartDate: c.subscription?.startDate ?? "",
       subscriptionEndDate: c.subscription?.endDate ?? "",

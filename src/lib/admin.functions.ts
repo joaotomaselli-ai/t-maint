@@ -581,7 +581,7 @@ export const updateCompany = createServerFn({ method: "POST" })
       contactPhone: z.string().trim().max(50).nullable().optional(),
       contactEmail: z.string().trim().email("E-mail inválido").or(z.literal("")).nullable().optional(),
       subscriptionFee: z.number().min(0).optional(),
-      planType: z.enum(["basic", "pro", "elite", "elite_pro"]).optional(),
+      planType: z.enum(["basic", "pro", "elite", "elite_pro", "master"]).optional(),
       subscriptionCycle: z.enum(["mensal", "semestral", "anual", "personalizado"]).optional(),
       subscriptionStartDate: z.string().nullable().optional(),
       subscriptionEndDate: z.string().nullable().optional(),
@@ -603,7 +603,7 @@ export const updateCompany = createServerFn({ method: "POST" })
     const patch: any = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.subscriptionFee !== undefined) patch.subscription_fee = data.subscriptionFee;
-    if (data.planType !== undefined) patch.plan_type = data.planType;
+    if (data.planType !== undefined && data.planType !== "master") patch.plan_type = data.planType;
 
     if (Object.keys(patch).length > 0) {
       const { error } = await supabaseAdmin
