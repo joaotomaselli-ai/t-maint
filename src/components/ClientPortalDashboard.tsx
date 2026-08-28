@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import { OSReportPrint } from "@/components/reports/OSReportPrint";
+import { MachineHistoryReportPrint } from "@/components/reports/MachineHistoryReportPrint";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,10 @@ export function ClientPortalDashboard() {
     photos: { kind: string; url: string }[];
   } | null>(null);
 
+  const [printHistory, setPrintHistory] = useState<boolean>(false);
+
   const printRef = useRef<HTMLDivElement>(null);
+  const printHistoryRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -74,12 +78,33 @@ export function ClientPortalDashboard() {
     }
   });
 
+  const handlePrintHistory = useReactToPrint({
+    contentRef: printHistoryRef,
+    documentTitle: `Historico-Manutencoes-${(selectedMachine !== "todas" ? selectedMachine : clientName || "Geral").replace(/\s+/g, "_")}`,
+    pageStyle: `
+      @page { size: A4 portrait; margin: 10mm; }
+      @media print { 
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+      }
+    `,
+    onAfterPrint: () => {
+      setPrintHistory(false);
+    }
+  });
+
   useEffect(() => {
     if (printReport) {
       const timer = setTimeout(() => handlePrint(), 800);
       return () => clearTimeout(timer);
     }
   }, [printReport, handlePrint]);
+
+  useEffect(() => {
+    if (printHistory) {
+      const timer = setTimeout(() => handlePrintHistory(), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [printHistory, handlePrintHistory]);
 
   // Filter client's own reports strictly
   const myReports = useMemo(() => {
@@ -154,25 +179,13 @@ export function ClientPortalDashboard() {
   };
 
   const handleExportHistoryPdf = async () => {
-    try {
-      if (filteredReports.length === 0) {
-        toast.error("Nenhuma ordem encontrada com os filtros atuais.");
-        return;
-      }
-      const machineTitle = selectedMachine !== "todas" ? selectedMachine : "";
-      const period = (startDate || endDate) ? { from: startDate, to: endDate } : undefined;
-      await exportMachineHistoryReport(
-        clientName || "Minha Empresa",
-        machineTitle,
-        filteredReports,
-        activeSettings,
-        period,
-        sessions,
-      );
-      toast.success("Histórico consolidado em PDF gerado com sucesso!");
-    } catch (e: any) {
-      toast.error("Erro ao gerar histórico em PDF.");
+    if (filteredReports.length === 0) {
+      toast.error("Nenhuma ordem encontrada com os filtros atuais.");
+      return;
     }
+    toast.loading("Preparando relatório de histórico consolidado...", { id: "pdf-history" });
+    setPrintHistory(true);
+    toast.success("Pronto para imprimir / salvar em PDF!", { id: "pdf-history" });
   };
 
   const resetFilters = () => {
@@ -560,6 +573,17 @@ export function ClientPortalDashboard() {
             includeValues={false}
             photos={printReport.photos}
             showLunchDeductionDetail={false}
+          />
+        )}
+        {printHistory && (
+          <MachineHistoryReportPrint
+            ref={printHistoryRef}
+            clientName={clientName || "Cliente"}
+            machineTitle={selectedMachine !== "todas" ? selectedMachine : undefined}
+            reports={filteredReports}
+            settings={activeSettings}
+            period={(startDate || endDate) ? { from: startDate, to: endDate } : undefined}
+            sessions={sessions}
           />
         )}
       </div>

@@ -779,7 +779,7 @@ export async function exportMachineHistoryReport(
       r.machine || "—",
       r.type === "preventiva" ? "Preventiva" : "Corretiva",
       r.technician || "—",
-      fmtHours(t.hours),
+      fmtHours(t.totalHours),
       (r.summary || r.description || "—").slice(0, 70) + ((r.summary || r.description || "").length > 70 ? "..." : ""),
     ];
   });
@@ -794,7 +794,7 @@ export async function exportMachineHistoryReport(
   });
 
   const finalY = (doc as any).lastAutoTable.finalY || 80;
-  const totalHours = reports.reduce((acc, r) => acc + reportTotalsWithSessions(r, sessions).hours, 0);
+  const totalHours = reports.reduce((acc, r) => acc + reportTotalsWithSessions(r, sessions).totalHours, 0);
 
   autoTable(doc, {
     startY: finalY + 6,

@@ -47,6 +47,7 @@ const empty = (technician = ""): Editing => ({
   overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
   futureReplacements: "",
   discountHours: 0,
+  downtimeHours: 0,
   isPackage: false,
   packageValue: null,
 });
@@ -1140,22 +1141,29 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               <TimeRange label="Viagem de volta" startVal={editing.travelBackStart} endVal={editing.travelBackEnd}
                 onStart={v => setEditing({ ...editing, travelBackStart: v })} onEnd={v => setEditing({ ...editing, travelBackEnd: v })} hours={t.travelBack} />
             </div>
-            <div className="grid gap-4 sm:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-5">
               <div className="grid gap-2">
                 <Label>Quilometragem total (km)</Label>
                 <Input type="number" step="1" value={editing.km || ""} onChange={e => setEditing({ ...editing, km: Number(e.target.value) })} placeholder="50" />
               </div>
               <div className="grid gap-2">
-                <Label>Tempo de Almoço (horas)</Label>
+                <Label>Tempo de Almoço (h)</Label>
                 <Input type="number" step="0.25" min="0" value={editing.lunchHours || ""}
                   onChange={e => setEditing({ ...editing, lunchHours: Number(e.target.value) })}
-                  placeholder="Ex: 1.0 (1 hora)" />
+                  placeholder="Ex: 1.0" />
               </div>
               <div className="grid gap-2">
-                <Label>Desconto de horas</Label>
+                <Label>Desconto horas</Label>
                 <Input type="number" step="0.25" min="0" value={editing.discountHours || ""}
                   onChange={e => setEditing({ ...editing, discountHours: Number(e.target.value) })}
-                  placeholder="Ex: 1.5 (outro abatimento)" />
+                  placeholder="Ex: 1.5" />
+              </div>
+              <div className="grid gap-2">
+                <Label className="text-amber-700 dark:text-amber-400 font-semibold">Máq. Parada (h)</Label>
+                <Input type="number" step="0.25" min="0" value={editing.downtimeHours || ""}
+                  onChange={e => setEditing({ ...editing, downtimeHours: Number(e.target.value) })}
+                  placeholder="Ex: 2.5"
+                  title="Tempo total em que a máquina ficou parada sem produzir durante esta sessão" />
               </div>
               {!isPreventive && (
                 <div className="grid gap-2">
@@ -1472,6 +1480,7 @@ function emptyDraftSession(): Omit<ServiceSession, "id"> {
     overtimeWeekdayHours: 0, overtimeWeekendHours: 0,
     activitiesDone: "", observation: "",
     discountHours: 0,
+    downtimeHours: 0,
     position: 1,
   };
 }
@@ -1618,7 +1627,7 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
         <TimeRange label="Viagem de volta" startVal={s.travelBackStart} endVal={s.travelBackEnd}
           onStart={v => onChange({ travelBackStart: v })} onEnd={v => onChange({ travelBackEnd: v })} hours={travelBack} />
       </div>
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-5">
         <div className="grid gap-1">
           <Label className="text-xs">HE semana</Label>
           <Input type="number" step="0.5" min="0" value={s.overtimeWeekdayHours || ""}
@@ -1638,6 +1647,12 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
           <Label className="text-xs">Desconto de horas</Label>
           <Input type="number" step="0.25" min="0" value={s.discountHours || ""}
             onChange={e => onChange({ discountHours: Number(e.target.value) })} placeholder="0" />
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-xs text-amber-700 dark:text-amber-400 font-semibold">Máq. Parada (h)</Label>
+          <Input type="number" step="0.25" min="0" value={s.downtimeHours || ""}
+            onChange={e => onChange({ downtimeHours: Number(e.target.value) })} placeholder="0"
+            title="Tempo que a máquina ficou parada sem produzir nesta sessão" />
         </div>
       </div>
       <div className="flex items-center space-x-2 pt-1">

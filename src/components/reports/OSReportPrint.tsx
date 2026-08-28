@@ -23,6 +23,7 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
   const techByName = new Map(technicians.map(tt => [tt.id, tt.name]));
   const totalLunchDeducted = (report.deductLunchFromClient ? (report.lunchHours || 0) : 0) + sessions.reduce((acc, s) => acc + (s.deductLunchFromClient ? (s.lunchHours || 0) : 0), 0);
   const totalLunchHours = (report.lunchHours || 0) + sessions.reduce((acc, s) => acc + (s.lunchHours || 0), 0);
+  const totalDowntime = (report.downtimeHours || 0) + sessions.reduce((acc, s) => acc + (s.downtimeHours || 0), 0);
   
   const beforePhotos = photos.filter(p => p.kind.includes('before'));
   const afterPhotos = photos.filter(p => p.kind.includes('after'));
@@ -80,7 +81,7 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
       </header>
 
       {/* METADADOS (Grid) */}
-      <section className="grid grid-cols-2 gap-x-8 gap-y-4 mb-8">
+      <section className="grid grid-cols-2 gap-x-8 gap-y-4 mb-6">
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
           <p className="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-1">Cliente</p>
           <p className="font-bold text-slate-800 text-lg">{client?.name || "—"}</p>
@@ -98,6 +99,18 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
           <p className="font-medium text-slate-800">{report.technician || settings.technicianName || "—"} / {report.requester || "—"}</p>
         </div>
       </section>
+
+      {totalDowntime > 0 && (
+        <section className="mb-6 bg-amber-50/80 border border-amber-200/90 rounded-lg p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-amber-800 uppercase tracking-wider font-bold">Tempo de Parada de Máquina (Downtime)</p>
+            <p className="text-xs text-amber-900 mt-0.5 font-medium">Equipamento indisponível / sem produzir durante o atendimento</p>
+          </div>
+          <div className="text-right">
+            <span className="text-xl font-extrabold text-amber-900 font-mono">{fmtHours(totalDowntime)}</span>
+          </div>
+        </section>
+      )}
 
       {/* CONTEÚDO TÉCNICO */}
       <section className="mb-8 space-y-6">

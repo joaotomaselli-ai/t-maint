@@ -59,6 +59,7 @@ export type ServiceReport = {
   discountHours: number;
   lunchHours?: number;
   deductLunchFromClient?: boolean;
+  downtimeHours?: number;
   clientSignature?: string;
   technicianSignature?: string;
   isPackage?: boolean;
@@ -164,18 +165,28 @@ const toTechnicianRow = (t: Omit<Technician, "id">) => ({
 
 export function cleanObservation(obs?: string): string {
   if (!obs) return "";
-  return obs.replace(/\[LUNCH:[\d.]*:(true|false)\]/g, "").trim();
+  return obs
+    .replace(/\[LUNCH:[\d.]*:(true|false)\]/g, "")
+    .replace(/\[DOWNTIME:[\d.]*\]/g, "")
+    .trim();
 }
 
 const fromReport = (r: any): ServiceReport => {
   let lunchHours = 0;
   let deductLunchFromClient = false;
+  let downtimeHours = 0;
   const rawObs = r.observation ?? "";
   if (rawObs.includes("[LUNCH:")) {
     const match = rawObs.match(/\[LUNCH:([\d.]+):(true|false)\]/);
     if (match) {
       lunchHours = Number(match[1]) || 0;
       deductLunchFromClient = match[2] === "true";
+    }
+  }
+  if (rawObs.includes("[DOWNTIME:")) {
+    const match = rawObs.match(/\[DOWNTIME:([\d.]+)\]/);
+    if (match) {
+      downtimeHours = Number(match[1]) || 0;
     }
   }
   return {
@@ -203,6 +214,7 @@ const fromReport = (r: any): ServiceReport => {
     discountHours: Number(r.discount_hours ?? 0),
     lunchHours,
     deductLunchFromClient,
+    downtimeHours,
     clientSignature: r.client_signature ?? "",
     technicianSignature: r.technician_signature ?? "",
     isPackage: Boolean(r.is_package),
@@ -216,6 +228,10 @@ const toReportRow = (r: Omit<ServiceReport, "id" | "createdAt">) => {
   let obs = cleanObservation(r.observation);
   if (r.lunchHours && r.lunchHours > 0) {
     const tag = `[LUNCH:${r.lunchHours}:${r.deductLunchFromClient ? "true" : "false"}]`;
+    obs = obs ? `${obs} ${tag}` : tag;
+  }
+  if (r.downtimeHours && r.downtimeHours > 0) {
+    const tag = `[DOWNTIME:${r.downtimeHours}]`;
     obs = obs ? `${obs} ${tag}` : tag;
   }
   return {
@@ -507,18 +523,26 @@ export type ServiceSession = {
   discountHours: number;
   lunchHours?: number;
   deductLunchFromClient?: boolean;
+  downtimeHours?: number;
   position: number;
 };
 
 const fromSession = (r: any): ServiceSession => {
   let lunchHours = 0;
   let deductLunchFromClient = false;
+  let downtimeHours = 0;
   const rawObs = r.observation ?? "";
   if (rawObs.includes("[LUNCH:")) {
     const match = rawObs.match(/\[LUNCH:([\d.]+):(true|false)\]/);
     if (match) {
       lunchHours = Number(match[1]) || 0;
       deductLunchFromClient = match[2] === "true";
+    }
+  }
+  if (rawObs.includes("[DOWNTIME:")) {
+    const match = rawObs.match(/\[DOWNTIME:([\d.]+)\]/);
+    if (match) {
+      downtimeHours = Number(match[1]) || 0;
     }
   }
   return {
@@ -540,6 +564,7 @@ const fromSession = (r: any): ServiceSession => {
     discountHours: Number(r.discount_hours ?? 0),
     lunchHours,
     deductLunchFromClient,
+    downtimeHours,
     position: Number(r.position ?? 1),
   };
 };
@@ -548,6 +573,10 @@ const toSessionRow = (s: Omit<ServiceSession, "id">) => {
   let obs = cleanObservation(s.observation);
   if (s.lunchHours && s.lunchHours > 0) {
     const tag = `[LUNCH:${s.lunchHours}:${s.deductLunchFromClient ? "true" : "false"}]`;
+    obs = obs ? `${obs} ${tag}` : tag;
+  }
+  if (s.downtimeHours && s.downtimeHours > 0) {
+    const tag = `[DOWNTIME:${s.downtimeHours}]`;
     obs = obs ? `${obs} ${tag}` : tag;
   }
   return {
