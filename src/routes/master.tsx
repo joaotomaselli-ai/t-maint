@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import {
   Trash2, Plus, Loader2, ShieldAlert, CheckCircle2, AlertTriangle, XCircle,
   MessageCircle, RefreshCw, Edit, Lock, Unlock, Phone, Mail, Building,
-  Calendar, DollarSign, Users, ShieldCheck
+  Calendar, DollarSign, Users, ShieldCheck, Crown
 } from "lucide-react";
 import {
   listCompanies, createCompany, deleteCompany, updateCompany,
@@ -214,9 +214,9 @@ function MasterPage() {
   // KPIs
   const companies = q.data?.companies ?? [];
   const totalCompanies = companies.length;
-  const activeCompanies = companies.filter(c => c.subscription?.status === "active").length;
-  const expiringSoonCompanies = companies.filter(c => c.subscription?.status === "expiring_soon").length;
-  const blockedOrExpired = companies.filter(c => c.subscription?.status === "expired" || c.subscription?.status === "blocked").length;
+  const activeCompanies = companies.filter(c => c.isMasterAccount || c.subscription?.status === "active").length;
+  const expiringSoonCompanies = companies.filter(c => !c.isMasterAccount && c.subscription?.status === "expiring_soon").length;
+  const blockedOrExpired = companies.filter(c => !c.isMasterAccount && (c.subscription?.status === "expired" || c.subscription?.status === "blocked")).length;
   const totalRevenue = companies.reduce((acc, c) => acc + (c.subscriptionFee || 0), 0);
 
   if (access.isLoading) return <div className="p-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
@@ -469,26 +469,54 @@ function MasterPage() {
                 </TableHeader>
                 <TableBody>
                   {companies.map(c => {
+                    const isMaster = c.isMasterAccount;
                     const sub = c.subscription;
-                    const isBlocked = sub?.isBlocked || (sub?.autoBlockOnExpire && sub?.daysRemaining < 0);
-                    const formattedEnd = sub?.endDate ? sub.endDate.split("-").reverse().join("/") : "—";
+                    const isBlocked = !isMaster && (sub?.isBlocked || (sub?.autoBlockOnExpire && sub?.daysRemaining < 0));
+                    const formattedEnd = isMaster ? "Vitalício" : (sub?.endDate ? sub.endDate.split("-").reverse().join("/") : "—");
                     const formattedStart = sub?.startDate ? sub.startDate.split("-").reverse().join("/") : "—";
 
                     return (
-                      <TableRow key={c.id} className={isBlocked ? "bg-rose-50/40 dark:bg-rose-950/10" : undefined}>
+                      <TableRow
+                        key={c.id}
+                        className={
+                          isMaster
+                            ? "bg-indigo-50/70 dark:bg-indigo-950/25 border-l-4 border-l-indigo-600 hover:bg-indigo-100/50"
+                            : isBlocked
+                            ? "bg-rose-50/40 dark:bg-rose-950/10"
+                            : undefined
+                        }
+                      >
                         {/* Empresa & Plano */}
                         <TableCell>
-                          <div className="font-semibold text-foreground">{c.name}</div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-xs font-medium text-muted-foreground uppercase">{c.planType}</span>
-                            <span className="text-muted-foreground text-xs">·</span>
-                            <span className="text-xs text-muted-foreground">{c.usersCount} usuário(s)</span>
-                          </div>
+                          {isMaster ? (
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-indigo-950 dark:text-indigo-100 text-sm">{c.name}</span>
+                                <Badge className="bg-indigo-600 hover:bg-indigo-600 text-white text-[10px] gap-1 px-2 py-0.5 shadow-sm font-semibold">
+                                  <Crown className="h-3 w-3 text-amber-300 fill-amber-300" /> MASTER DO SISTEMA
+                                </Badge>
+                              </div>
+                              <div className="text-xs text-indigo-800/80 dark:text-indigo-300 font-medium mt-0.5">
+                                Acesso Total e Vitalício · {c.usersCount} usuário(s)
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="font-semibold text-foreground">{c.name}</div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-xs font-medium text-muted-foreground uppercase">{c.planType}</span>
+                                <span className="text-muted-foreground text-xs">·</span>
+                                <span className="text-xs text-muted-foreground">{c.usersCount} usuário(s)</span>
+                              </div>
+                            </div>
+                          )}
                         </TableCell>
 
                         {/* Administrador */}
                         <TableCell>
-                          <div className="text-xs font-medium text-foreground">{c.adminName || "Administrador"}</div>
+                          <div className={isMaster ? "text-xs font-bold text-indigo-950 dark:text-indigo-100" : "text-xs font-medium text-foreground"}>
+                            {c.adminName || (isMaster ? "João Tomaselli" : "Administrador")}
+                          </div>
                           <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Mail className="h-3 w-3" /> {c.ownerEmail}
                           </div>
@@ -501,27 +529,57 @@ function MasterPage() {
 
                         {/* Assinatura & Valor */}
                         <TableCell>
-                          <div className="font-semibold text-xs text-foreground">
-                            R$ {(c.subscriptionFee || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </div>
-                          <div className="text-xs text-muted-foreground capitalize mt-0.5">
-                            Ciclo {sub?.cycle || "Mensal"}
-                          </div>
+                          {isMaster ? (
+                            <div>
+                              <div className="font-bold text-xs text-indigo-900 dark:text-indigo-200">
+                                Gratuito / Master
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                Plano do Sistema
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="font-semibold text-xs text-foreground">
+                                R$ {(c.subscriptionFee || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </div>
+                              <div className="text-xs text-muted-foreground capitalize mt-0.5">
+                                Ciclo {sub?.cycle || "Mensal"}
+                              </div>
+                            </div>
+                          )}
                         </TableCell>
 
                         {/* Vigência / Vencimento */}
                         <TableCell>
-                          <div className="text-xs font-medium text-foreground">
-                            Vence: <span className="font-bold">{formattedEnd}</span>
-                          </div>
-                          <div className="text-[11px] text-muted-foreground mt-0.5">
-                            Início: {formattedStart}
-                          </div>
+                          {isMaster ? (
+                            <div>
+                              <div className="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                                <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" /> Acesso Vitalício
+                              </div>
+                              <div className="text-[11px] text-muted-foreground mt-0.5">
+                                Sem expiração
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="text-xs font-medium text-foreground">
+                                Vence: <span className="font-bold">{formattedEnd}</span>
+                              </div>
+                              <div className="text-[11px] text-muted-foreground mt-0.5">
+                                Início: {formattedStart}
+                              </div>
+                            </div>
+                          )}
                         </TableCell>
 
                         {/* Status Badge */}
                         <TableCell>
-                          {sub?.isBlocked ? (
+                          {isMaster ? (
+                            <Badge variant="outline" className="gap-1 text-[11px] bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/40 font-semibold">
+                              <Crown className="h-3 w-3 text-amber-500 fill-amber-500" /> Ativo Permanente
+                            </Badge>
+                          ) : sub?.isBlocked ? (
                             <Badge variant="destructive" className="gap-1 text-[11px]">
                               <Lock className="h-3 w-3" /> Bloqueado Manual
                             </Badge>
@@ -542,77 +600,100 @@ function MasterPage() {
 
                         {/* Switch Bloqueio Manual */}
                         <TableCell className="text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <Switch
-                              checked={!sub?.isBlocked}
-                              onCheckedChange={(checked) => {
-                                const newBlockedState = !checked;
-                                const actionText = newBlockedState ? `Bloquear o acesso de "${c.name}"?` : `Desbloquear o acesso de "${c.name}"?`;
-                                if (confirm(actionText)) {
-                                  toggleBlockMut.mutate({ companyId: c.id, isBlocked: newBlockedState });
-                                }
-                              }}
-                              title={sub?.isBlocked ? "Clique para desbloquear" : "Clique para bloquear"}
-                            />
-                            <span className="text-[10px] text-muted-foreground font-medium">
-                              {sub?.isBlocked ? "Bloqueado" : "Liberado"}
-                            </span>
-                          </div>
+                          {isMaster ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Badge variant="outline" className="bg-indigo-100/70 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 gap-1 text-[10px]">
+                                <ShieldCheck className="h-3 w-3 text-indigo-600" /> Permanente
+                              </Badge>
+                              <span className="text-[9px] text-muted-foreground">Inviolável</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center gap-1">
+                              <Switch
+                                checked={!sub?.isBlocked}
+                                onCheckedChange={(checked) => {
+                                  const newBlockedState = !checked;
+                                  const actionText = newBlockedState ? `Bloquear o acesso de "${c.name}"?` : `Desbloquear o acesso de "${c.name}"?`;
+                                  if (confirm(actionText)) {
+                                    toggleBlockMut.mutate({ companyId: c.id, isBlocked: newBlockedState });
+                                  }
+                                }}
+                                title={sub?.isBlocked ? "Clique para desbloquear" : "Clique para bloquear"}
+                              />
+                              <span className="text-[10px] text-muted-foreground font-medium">
+                                {sub?.isBlocked ? "Bloqueado" : "Liberado"}
+                              </span>
+                            </div>
+                          )}
                         </TableCell>
 
                         {/* Ações */}
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            {/* WhatsApp Reminder Button */}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 px-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-300 dark:border-emerald-800"
-                              onClick={() => handleSendWhatsAppReminder(c.id)}
-                              title="Enviar Lembrete de Renovação via WhatsApp"
-                            >
-                              <MessageCircle className="h-4 w-4 mr-1 text-emerald-600" />
-                              <span className="hidden sm:inline text-xs">Lembrar</span>
-                            </Button>
+                          {isMaster ? (
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100/60"
+                                onClick={() => openEditModal(c)}
+                                title="Editar Dados da Empresa Master"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-end gap-1">
+                              {/* WhatsApp Reminder Button */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-300 dark:border-emerald-800"
+                                onClick={() => handleSendWhatsAppReminder(c.id)}
+                                title="Enviar Lembrete de Renovação via WhatsApp"
+                              >
+                                <MessageCircle className="h-4 w-4 mr-1 text-emerald-600" />
+                                <span className="hidden sm:inline text-xs">Lembrar</span>
+                              </Button>
 
-                            {/* Renew Button */}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-300 dark:border-blue-800"
-                              onClick={() => openRenewModal(c)}
-                              title="Renovar Assinatura"
-                            >
-                              <RefreshCw className="h-4 w-4 mr-1 text-blue-600" />
-                              <span className="hidden sm:inline text-xs">Renovar</span>
-                            </Button>
+                              {/* Renew Button */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-300 dark:border-blue-800"
+                                onClick={() => openRenewModal(c)}
+                                title="Renovar Assinatura"
+                              >
+                                <RefreshCw className="h-4 w-4 mr-1 text-blue-600" />
+                                <span className="hidden sm:inline text-xs">Renovar</span>
+                              </Button>
 
-                            {/* Edit Button */}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              onClick={() => openEditModal(c)}
-                              title="Editar Detalhes da Empresa"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                              {/* Edit Button */}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                onClick={() => openEditModal(c)}
+                                title="Editar Detalhes da Empresa"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
 
-                            {/* Delete Button */}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                              onClick={() => {
-                                if (confirm(`ATENÇÃO: Excluir definitivamente a empresa "${c.name}" e todos os seus registros de clientes, técnicos, ordens de serviço e fotos?`)) {
-                                  deleteMut.mutate(c.id);
-                                }
-                              }}
-                              title="Excluir Empresa"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                              {/* Delete Button */}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                onClick={() => {
+                                  if (confirm(`ATENÇÃO: Excluir definitivamente a empresa "${c.name}" e todos os seus registros de clientes, técnicos, ordens de serviço e fotos?`)) {
+                                    deleteMut.mutate(c.id);
+                                  }
+                                }}
+                                title="Excluir Empresa"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
@@ -630,7 +711,7 @@ function MasterPage() {
           <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-primary" /> Editar Empresa & Assinatura: {editingCompany.name}
+                <Edit className="h-5 w-5 text-primary" /> Editar Empresa: {editingCompany.name}
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-2">
@@ -661,7 +742,7 @@ function MasterPage() {
                   />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>E-mail de Cobrança / Notificações</Label>
+                  <Label>E-mail de Contato / Login</Label>
                   <Input
                     type="email"
                     value={editForm.contactEmail}
@@ -670,101 +751,116 @@ function MasterPage() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label>Plano de Acesso</Label>
-                  <Select
-                    value={editForm.planType}
-                    onValueChange={(v: any) => setEditForm({ ...editForm, planType: v })}
-                  >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="basic">Básico (até 2 usuários)</SelectItem>
-                      <SelectItem value="pro">Pro (até 5 usuários)</SelectItem>
-                      <SelectItem value="elite">Elite (até 15 usuários)</SelectItem>
-                      <SelectItem value="elite_pro">Elite Pro (ilimitado)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Valor da Assinatura (R$)</Label>
-                  <Input
-                    type="number"
-                    step="1"
-                    min="0"
-                    value={editForm.subscriptionFee}
-                    onChange={e => setEditForm({ ...editForm, subscriptionFee: Number(e.target.value) })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-3 gap-3">
-                <div className="grid gap-1.5">
-                  <Label>Ciclo do Plano</Label>
-                  <Select
-                    value={editForm.subscriptionCycle}
-                    onValueChange={(v: any) => setEditForm({ ...editForm, subscriptionCycle: v })}
-                  >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="semestral">Semestral</SelectItem>
-                      <SelectItem value="anual">Anual</SelectItem>
-                      <SelectItem value="personalizado">Personalizado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Data de Início</Label>
-                  <Input
-                    type="date"
-                    value={editForm.subscriptionStartDate}
-                    onChange={e => setEditForm({ ...editForm, subscriptionStartDate: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Data de Vencimento</Label>
-                  <Input
-                    type="date"
-                    value={editForm.subscriptionEndDate}
-                    onChange={e => setEditForm({ ...editForm, subscriptionEndDate: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 bg-muted/40 rounded-lg space-y-3 border">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-sm font-semibold">Bloquear Acesso Administrativo</Label>
-                    <p className="text-xs text-muted-foreground">Suspende imediatamente o login desta empresa.</p>
+              {!editingCompany.isMasterAccount && (
+                <>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>Plano de Acesso</Label>
+                      <Select
+                        value={editForm.planType}
+                        onValueChange={(v: any) => setEditForm({ ...editForm, planType: v })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basic">Básico (até 2 usuários)</SelectItem>
+                          <SelectItem value="pro">Pro (até 5 usuários)</SelectItem>
+                          <SelectItem value="elite">Elite (até 15 usuários)</SelectItem>
+                          <SelectItem value="elite_pro">Elite Pro (ilimitado)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Valor da Assinatura (R$)</Label>
+                      <Input
+                        type="number"
+                        step="1"
+                        min="0"
+                        value={editForm.subscriptionFee}
+                        onChange={e => setEditForm({ ...editForm, subscriptionFee: Number(e.target.value) })}
+                      />
+                    </div>
                   </div>
-                  <Switch
-                    checked={editForm.isBlocked}
-                    onCheckedChange={checked => setEditForm({ ...editForm, isBlocked: checked })}
-                  />
-                </div>
-                {editForm.isBlocked && (
-                  <div className="grid gap-1.5 pt-1">
-                    <Label className="text-xs">Motivo do Bloqueio (exibido ao usuário)</Label>
-                    <Input
-                      placeholder="Ex: Assinatura suspensa por falta de pagamento"
-                      value={editForm.blockedReason}
-                      onChange={e => setEditForm({ ...editForm, blockedReason: e.target.value })}
+
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>Ciclo do Plano</Label>
+                      <Select
+                        value={editForm.subscriptionCycle}
+                        onValueChange={(v: any) => setEditForm({ ...editForm, subscriptionCycle: v })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mensal">Mensal</SelectItem>
+                          <SelectItem value="semestral">Semestral</SelectItem>
+                          <SelectItem value="anual">Anual</SelectItem>
+                          <SelectItem value="personalizado">Personalizado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Data de Início</Label>
+                      <Input
+                        type="date"
+                        value={editForm.subscriptionStartDate}
+                        onChange={e => setEditForm({ ...editForm, subscriptionStartDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Data de Vencimento</Label>
+                      <Input
+                        type="date"
+                        value={editForm.subscriptionEndDate}
+                        onChange={e => setEditForm({ ...editForm, subscriptionEndDate: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-muted/40 rounded-lg space-y-3 border">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-semibold">Bloquear Acesso Administrativo</Label>
+                        <p className="text-xs text-muted-foreground">Suspende imediatamente o login desta empresa.</p>
+                      </div>
+                      <Switch
+                        checked={editForm.isBlocked}
+                        onCheckedChange={checked => setEditForm({ ...editForm, isBlocked: checked })}
+                      />
+                    </div>
+                    {editForm.isBlocked && (
+                      <div className="grid gap-1.5 pt-1">
+                        <Label className="text-xs">Motivo do Bloqueio (exibido ao usuário)</Label>
+                        <Input
+                          placeholder="Ex: Assinatura suspensa por falta de pagamento"
+                          value={editForm.blockedReason}
+                          onChange={e => setEditForm({ ...editForm, blockedReason: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="edit-auto-block"
+                      checked={editForm.autoBlockOnExpire}
+                      onCheckedChange={checked => setEditForm({ ...editForm, autoBlockOnExpire: checked })}
                     />
+                    <Label htmlFor="edit-auto-block" className="cursor-pointer text-xs font-medium text-muted-foreground">
+                      Bloquear automaticamente ao ultrapassar a data de vencimento
+                    </Label>
                   </div>
-                )}
-              </div>
+                </>
+              )}
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="edit-auto-block"
-                  checked={editForm.autoBlockOnExpire}
-                  onCheckedChange={checked => setEditForm({ ...editForm, autoBlockOnExpire: checked })}
-                />
-                <Label htmlFor="edit-auto-block" className="cursor-pointer text-xs font-medium text-muted-foreground">
-                  Bloquear automaticamente ao ultrapassar a data de vencimento
-                </Label>
-              </div>
+              {editingCompany.isMasterAccount && (
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800 text-xs space-y-1 text-indigo-900 dark:text-indigo-200">
+                  <div className="font-bold flex items-center gap-1">
+                    <Crown className="h-4 w-4 text-amber-500 fill-amber-500" /> Conta Master do Sistema
+                  </div>
+                  <p className="text-indigo-700 dark:text-indigo-300">
+                    Esta conta possui privilégios máximos e acesso permanente vitalício. Ela não possui bloqueios ou cobranças de assinatura.
+                  </p>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingCompany(null)}>Cancelar</Button>

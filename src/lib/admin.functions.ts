@@ -474,6 +474,15 @@ export const listCompanies = createServerFn({ method: "GET" })
         .eq("role", "admin")
         .maybeSingle();
 
+      const { data: ownerRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", c.owner_user_id);
+
+      const isMasterAccount =
+        ownerRoles?.some((r) => r.role === "master") ||
+        c.name.trim().toLowerCase() === "t-maint";
+
       const { data: ownerProfile } = await supabaseAdmin
         .from("profiles")
         .select("technician_name, phone, email")
@@ -486,6 +495,11 @@ export const listCompanies = createServerFn({ method: "GET" })
         .eq("company_id", c.id);
 
       const sub = parseCompanySubscription(c, adminRole, ownerProfile, owner?.user);
+      if (isMasterAccount) {
+        sub.isBlocked = false;
+        sub.status = "active";
+        sub.daysRemaining = 999999;
+      }
 
       result.push({
         id: c.id,
@@ -495,8 +509,9 @@ export const listCompanies = createServerFn({ method: "GET" })
         usersCount: usersCount ?? 0,
         createdAt: c.created_at,
         subscriptionFee: c.subscription_fee ?? 0,
-        planType: c.plan_type ?? "basic",
+        planType: isMasterAccount ? "master" : (c.plan_type ?? "basic"),
         subscription: sub,
+        isMasterAccount,
       });
     }
     return { companies: result };
@@ -517,6 +532,21 @@ export const deleteCompany = createServerFn({ method: "POST" })
       .eq("role", "master")
       .maybeSingle();
     if (!master) throw new Error("Apenas o master pode excluir empresas.");
+
+    const { data: company } = await supabaseAdmin
+      .from("companies")
+      .select("owner_user_id, name")
+      .eq("id", data.companyId)
+      .single();
+    if (!company) throw new Error("Empresa não encontrada.");
+
+    const { data: ownerRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", company.owner_user_id);
+    if (ownerRoles?.some((r) => r.role === "master") || company.name.trim().toLowerCase() === "t-maint") {
+      throw new Error("A conta Master do sistema é protegida e não pode ser excluída.");
+    }
 
     const tables = [
       "client_payments",
@@ -586,11 +616,17 @@ export const updateCompany = createServerFn({ method: "POST" })
     // Get company owner
     const { data: company } = await supabaseAdmin
       .from("companies")
-      .select("owner_user_id")
+      .select("owner_user_id, name")
       .eq("id", data.companyId)
       .single();
 
     if (company) {
+      const { data: ownerRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", company.owner_user_id);
+      const isMasterComp = ownerRoles?.some((r) => r.role === "master") || company.name.trim().toLowerCase() === "t-maint";
+
       if (data.adminName !== undefined || data.contactPhone !== undefined || data.contactEmail !== undefined || data.name !== undefined) {
         const profPatch: any = {};
         if (data.adminName !== undefined) profPatch.technician_name = data.adminName;
@@ -603,30 +639,32 @@ export const updateCompany = createServerFn({ method: "POST" })
         });
       }
 
-      // Update admin role features with subscription tags
-      const { data: adminRole } = await supabaseAdmin
-        .from("user_roles")
-        .select("id, allowed_features")
-        .eq("company_id", data.companyId)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (adminRole) {
-        const updatedFeatures = mergeSubscriptionFeatures(adminRole.allowed_features, {
-          cycle: data.subscriptionCycle,
-          startDate: data.subscriptionStartDate,
-          endDate: data.subscriptionEndDate,
-          isBlocked: data.isBlocked,
-          blockedReason: data.blockedReason,
-          contactPhone: data.contactPhone,
-          contactEmail: data.contactEmail,
-          autoBlockOnExpire: data.autoBlockOnExpire,
-        });
-
-        await supabaseAdmin
+      // Update admin role features with subscription tags (if not master company)
+      if (!isMasterComp) {
+        const { data: adminRole } = await supabaseAdmin
           .from("user_roles")
-          .update({ allowed_features: updatedFeatures })
-          .eq("id", adminRole.id);
+          .select("id, allowed_features")
+          .eq("company_id", data.companyId)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        if (adminRole) {
+          const updatedFeatures = mergeSubscriptionFeatures(adminRole.allowed_features, {
+            cycle: data.subscriptionCycle,
+            startDate: data.subscriptionStartDate,
+            endDate: data.subscriptionEndDate,
+            isBlocked: data.isBlocked,
+            blockedReason: data.blockedReason,
+            contactPhone: data.contactPhone,
+            contactEmail: data.contactEmail,
+            autoBlockOnExpire: data.autoBlockOnExpire,
+          });
+
+          await supabaseAdmin
+            .from("user_roles")
+            .update({ allowed_features: updatedFeatures })
+            .eq("id", adminRole.id);
+        }
       }
     }
 
@@ -654,6 +692,21 @@ export const toggleCompanyBlock = createServerFn({ method: "POST" })
       .eq("role", "master")
       .maybeSingle();
     if (!master) throw new Error("Apenas o master pode bloquear ou desbloquear empresas.");
+
+    const { data: company } = await supabaseAdmin
+      .from("companies")
+      .select("owner_user_id, name")
+      .eq("id", data.companyId)
+      .single();
+    if (company) {
+      const { data: ownerRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", company.owner_user_id);
+      if (ownerRoles?.some((r) => r.role === "master") || company.name.trim().toLowerCase() === "t-maint") {
+        throw new Error("A conta Master do sistema é protegida e não pode ser bloqueada.");
+      }
+    }
 
     const { data: adminRole } = await supabaseAdmin
       .from("user_roles")
