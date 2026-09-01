@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TecnicosRouteImport } from './routes/tecnicos'
 import { Route as RequisicoesRouteImport } from './routes/requisicoes'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
+import { Route as OrcamentosRouteImport } from './routes/orcamentos'
 import { Route as MasterRouteImport } from './routes/master'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LandingRouteImport } from './routes/landing'
@@ -36,6 +37,11 @@ const RequisicoesRoute = RequisicoesRouteImport.update({
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrcamentosRoute = OrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MasterRoute = MasterRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
+  '/orcamentos': typeof OrcamentosRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
+  '/orcamentos': typeof OrcamentosRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
+  '/orcamentos': typeof OrcamentosRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/landing'
     | '/login'
     | '/master'
+    | '/orcamentos'
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/landing'
     | '/login'
     | '/master'
+    | '/orcamentos'
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/landing'
     | '/login'
     | '/master'
+    | '/orcamentos'
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
@@ -192,6 +204,7 @@ export interface RootRouteChildren {
   LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
   MasterRoute: typeof MasterRoute
+  OrcamentosRoute: typeof OrcamentosRoute
   RelatoriosRoute: typeof RelatoriosRoute
   RequisicoesRoute: typeof RequisicoesRoute
   TecnicosRoute: typeof TecnicosRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/relatorios'
       preLoaderRoute: typeof RelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orcamentos': {
+      id: '/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/orcamentos'
+      preLoaderRoute: typeof OrcamentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/master': {
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
   MasterRoute: MasterRoute,
+  OrcamentosRoute: OrcamentosRoute,
   RelatoriosRoute: RelatoriosRoute,
   RequisicoesRoute: RequisicoesRoute,
   TecnicosRoute: TecnicosRoute,

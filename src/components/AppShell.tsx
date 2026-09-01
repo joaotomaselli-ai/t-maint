@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff, ShoppingCart, Package, ShieldAlert, Lock, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Users, Wrench, FileText, Settings as SettingsIcon, LogOut, Loader2, HardHat, DollarSign, Eye, EyeOff, ShoppingCart, Package, ShieldAlert, Lock, MessageCircle, Calculator } from "lucide-react";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { useMoneyHidden, toggleMoneyHidden } from "@/hooks/use-money-visibility";
 import { useAccess } from "@/hooks/use-access";
 
-type NavItem = { to: string; label: string; icon: any; feature?: string; adminOnly?: boolean; masterOnly?: boolean };
+type NavItem = { to: string; label: string; icon: any; feature?: string; adminOnly?: boolean; masterOnly?: boolean; proOnly?: boolean };
 
 const ALL_NAV: NavItem[] = [
   { to: "/master", label: "Painel Master", icon: ShieldAlert, masterOnly: true },
   { to: "/", label: "Painel", icon: LayoutDashboard },
   { to: "/clientes", label: "Clientes", icon: Users, feature: "clientes" },
+  { to: "/orcamentos", label: "Orçamentos", icon: Calculator, feature: "orcamentos" },
   { to: "/tecnicos", label: "Técnicos", icon: HardHat, feature: "tecnicos" },
   { to: "/atividades", label: "Ordem de Serviço", icon: Wrench, feature: "atividades" },
   { to: "/relatorios", label: "Relatórios", icon: FileText, feature: "relatorios" },
