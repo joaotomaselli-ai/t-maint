@@ -512,7 +512,7 @@ export function LandingPage() {
                   className="w-full sm:w-auto"
                 >
                   <Button size="lg" className="w-full sm:w-auto gap-2 font-bold px-8 h-12 bg-cyan-500 hover:bg-cyan-600 text-slate-950 shadow-xl shadow-cyan-500/20">
-                    <Phone className="h-4 w-4" /> Conhecer Planos de Software
+                    <Phone className="h-4 w-4" /> Conhecer os Planos
                   </Button>
                 </a>
                 <p className="text-[11px] text-slate-400 text-center lg:text-right">
