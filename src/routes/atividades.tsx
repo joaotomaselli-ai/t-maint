@@ -58,7 +58,7 @@ type PdfChoice = {
 };
 
 function Atividades() {
-  const { isTechnician, isAdmin, isClient, clientId } = useAccess();
+  const { isTechnician, isAdmin, isMaster, isClient, clientId } = useAccess();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -814,7 +814,7 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
 }) {
   const money = useMoney();
   const { user } = useAuth();
-  const { isTechnician, isAdmin } = useAccess();
+  const { isTechnician, isAdmin, isMaster } = useAccess();
   const { activityTechnicians: allActivityTechnicians } = useAllActivityTechnicians();
   const client = clients.find((c) => c.id === editing.clientId);
   const isPreventive = editing.type === "preventiva";
