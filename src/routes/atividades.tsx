@@ -841,6 +841,10 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
   const t = reportTotalsWithSessions(editing as ServiceReport, effectiveSessions, client);
   const ttSingleBase = technicianTotals(editing as ServiceReport, singleTechnician);
 
+  const mainTravelOut = diffHoursLocal(editing.travelOutStart, editing.travelOutEnd);
+  const mainService = diffHoursLocal(editing.serviceStart, editing.serviceEnd);
+  const mainTravelBack = diffHoursLocal(editing.travelBackStart, editing.travelBackEnd);
+
   const sessionsTechTotal = useMemo(() => {
     return effectiveSessions.reduce((acc, s) => {
       if (isTechnician && myTechId && s.technicianId !== myTechId) return acc;
@@ -1135,11 +1139,11 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
             <div className="text-sm font-semibold">Horários</div>
             <div className="grid gap-4 sm:grid-cols-3">
               <TimeRange label="Viagem de ida" startVal={editing.travelOutStart} endVal={editing.travelOutEnd}
-                onStart={v => setEditing({ ...editing, travelOutStart: v })} onEnd={v => setEditing({ ...editing, travelOutEnd: v })} hours={t.travelOut} />
+                onStart={v => setEditing({ ...editing, travelOutStart: v })} onEnd={v => setEditing({ ...editing, travelOutEnd: v })} hours={mainTravelOut} />
               <TimeRange label="Serviço" startVal={editing.serviceStart} endVal={editing.serviceEnd}
-                onStart={v => setEditing({ ...editing, serviceStart: v })} onEnd={v => setEditing({ ...editing, serviceEnd: v })} hours={t.service} />
+                onStart={v => setEditing({ ...editing, serviceStart: v })} onEnd={v => setEditing({ ...editing, serviceEnd: v })} hours={mainService} />
               <TimeRange label="Viagem de volta" startVal={editing.travelBackStart} endVal={editing.travelBackEnd}
-                onStart={v => setEditing({ ...editing, travelBackStart: v })} onEnd={v => setEditing({ ...editing, travelBackEnd: v })} hours={t.travelBack} />
+                onStart={v => setEditing({ ...editing, travelBackStart: v })} onEnd={v => setEditing({ ...editing, travelBackEnd: v })} hours={mainTravelBack} />
             </div>
             <div className="grid gap-4 sm:grid-cols-5">
               <div className="grid gap-2">
