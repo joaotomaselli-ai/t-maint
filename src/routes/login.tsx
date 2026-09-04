@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { signInWithUsernameOrEmail, isEmailAllowed } from "@/lib/admin.functions";
+import { signInWithUsernameOrEmail } from "@/lib/admin.functions";
 import { Cog, Loader2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,7 +20,6 @@ function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const signInFn = useServerFn(signInWithUsernameOrEmail);
-  const checkEmail = useServerFn(isEmailAllowed);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/" });
@@ -43,28 +42,6 @@ function LoginPage() {
       setBusy(false);
     }
   };
-
-  // After login succeeds (Google or password), verify the e-mail is whitelisted.
-  useEffect(() => {
-    if (!user?.email) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await checkEmail({ data: { email: user.email! } });
-        if (cancelled) return;
-        if (!res.allowed) {
-          toast.error("E-mail não autorizado. Solicite acesso ao administrador.");
-          await supabase.auth.signOut();
-        }
-      } catch (e) {
-        if (cancelled) return;
-        console.error(e);
-        toast.error("Não foi possível validar o e-mail. Tente novamente.");
-        await supabase.auth.signOut();
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [user?.email, checkEmail]);
 
   return (
     <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#FFF8ED] via-[#F2F6FA] to-[#E6EEF6]">

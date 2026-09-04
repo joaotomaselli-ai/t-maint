@@ -60,7 +60,40 @@ export const signInWithUsernameOrEmail = createServerFn({ method: "POST" })
       email: email.toLowerCase(),
       password: data.password,
     });
-    if (signErr || !signIn.session) throw new Error("Credenciais inválidas.");
+    if (signErr || !signIn.session || !signIn.user) throw new Error("Credenciais inválidas.");
+
+    // Server-side Tenant and Block verification before issuing session
+    const { data: userRole } = await supabaseAdmin
+      .from("user_roles")
+      .select("role, company_id")
+      .eq("user_id", signIn.user.id)
+      .maybeSingle();
+
+    if (userRole && userRole.role !== "master" && userRole.company_id) {
+      const { data: comp } = await supabaseAdmin
+        .from("companies")
+        .select("*")
+        .eq("id", userRole.company_id)
+        .maybeSingle();
+
+      if (comp) {
+        const { data: adminRole } = await supabaseAdmin
+          .from("user_roles")
+          .select("allowed_features")
+          .eq("company_id", userRole.company_id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        const sub = parseCompanySubscription(comp, adminRole, null, null);
+        if (sub.isBlocked) {
+          throw new Error(sub.blockedReason || "Acesso temporariamente suspenso pela administração.");
+        }
+        if (sub.autoBlockOnExpire && sub.daysRemaining < 0) {
+          throw new Error("Assinatura do sistema expirada. Entre em contato com a administração.");
+        }
+      }
+    }
+
     return {
       accessToken: signIn.session.access_token,
       refreshToken: signIn.session.refresh_token,
@@ -335,8 +368,8 @@ export const createCompany = createServerFn({ method: "POST" })
     z
       .object({
         name: z.string().trim().min(1).max(120),
-        adminEmail: z.string().trim().email(),
-        adminPassword: z.string().min(6).max(128),
+        adminEmail: z.string().trim().email("E-mail inválido"),
+        adminPassword: z.string().min(8, "A senha deve ter no mínimo 8 caracteres").max(128),
         adminName: z.string().trim().max(120).optional(),
         contactPhone: z.string().trim().max(30).optional(),
         subscriptionFee: z.number().min(0).optional(),
