@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /landing
+Disallow: /admin
+Disallow: /master
+Disallow: /configuracoes
+
+Sitemap: https://t-maint.com.br/sitemap.xml

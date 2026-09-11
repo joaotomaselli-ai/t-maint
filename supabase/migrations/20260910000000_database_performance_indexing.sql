@@ -13,8 +13,8 @@ CREATE INDEX IF NOT EXISTS idx_service_reports_client_id
 CREATE INDEX IF NOT EXISTS idx_service_reports_user_id
   ON public.service_reports (user_id);
 
-CREATE INDEX IF NOT EXISTS idx_service_reports_company_status
-  ON public.service_reports (company_id, status);
+CREATE INDEX IF NOT EXISTS idx_service_reports_company_type
+  ON public.service_reports (company_id, type);
 
 -- 2. Service Sessions (Sessões / Apontamentos por Ordem de Serviço)
 -- Otimiza o carregamento de todas as sessões vinculadas a uma OS
@@ -87,10 +87,6 @@ CREATE INDEX IF NOT EXISTS idx_technician_payments_technician_id
 CREATE INDEX IF NOT EXISTS idx_technician_payments_company_id
   ON public.technician_payments (company_id);
 
--- 9. Technician Monthly Closures (Fechamentos Mensais)
-CREATE INDEX IF NOT EXISTS idx_tech_closures_company_tech
-  ON public.technician_monthly_closures (company_id, technician_id);
-
 -- 10. Inventory & Stock Movements (Catálogo de Peças e Movimentações de Estoque)
 CREATE INDEX IF NOT EXISTS idx_inventory_items_company_name
   ON public.inventory_items (company_id, name);
@@ -111,12 +107,12 @@ CREATE INDEX IF NOT EXISTS idx_commercial_quotes_client_id
 CREATE INDEX IF NOT EXISTS idx_commercial_quotes_status
   ON public.commercial_quotes (status);
 
--- 12. Agenda Events (Agendamentos e Calendário de Serviços)
-CREATE INDEX IF NOT EXISTS idx_agenda_events_company_time
-  ON public.agenda_events (company_id, start_time);
+-- 12. Agenda Events & Participants (Agendamentos e Calendário de Serviços)
+CREATE INDEX IF NOT EXISTS idx_agenda_events_company_date
+  ON public.agenda_events (company_id, start_date);
 
-CREATE INDEX IF NOT EXISTS idx_agenda_events_technician_id
-  ON public.agenda_events (technician_id);
+CREATE INDEX IF NOT EXISTS idx_agenda_event_participants_user
+  ON public.agenda_event_participants (user_id);
 
 -- 13. Allowed Emails (Lista de Acesso Permitido)
 CREATE INDEX IF NOT EXISTS idx_allowed_emails_company_id
