@@ -1,14 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
 import {
   Wrench,
   Cpu,
   CheckCircle2,
-  ShieldCheck,
   FileText,
   Clock,
   ArrowRight,
@@ -33,6 +31,9 @@ import {
   FileCheck2,
   HardDrive,
   Share2,
+  Settings,
+  Cog,
+  Handshake,
 } from "lucide-react";
 
 export const Route = createFileRoute("/landing")({ component: LandingPage });
@@ -42,41 +43,45 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
-  const whatsappUrlService = "https://wa.me/5547988485668?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20de%20manuten%C3%A7%C3%A3o%20eletr%C3%B4nica%20para%20minha%20m%C3%A1quina%20CNC.";
+  const whatsappUrlService = "https://wa.me/5547988485668?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20de%20manuten%C3%A7%C3%A3o%20para%20minha%20m%C3%A1quina%20CNC.";
   const whatsappUrlSoftware = "https://wa.me/5547988485668?text=Ol%C3%A1!%20Tenho%20interesse%20em%20conhecer%20os%20planos%20da%20plataforma%20T-MAINT%20para%20minha%20empresa.";
 
   const faqs = [
     {
-      q: "Quais marcas de comando e eletrônica CNC são atendidas no serviço técnico?",
-      a: "Atendemos os principais fabricantes globais de comando e acionamento, incluindo Okuma (OSP), Fanuc, Siemens (Sinumerik), Fagor, Yaskawa, Mazak (Mazatrol), Mitsubishi, Romi e MCS, abrangendo fontes chaveadas, servodrives, encoders e placas de controle.",
+      q: "Como funciona o atendimento de manutenção em máquinas CNC?",
+      a: "Realizamos o atendimento técnico direto em campo para diagnóstico de falhas elétricas, parametrização e testes operacionais. Para intervenções mecânicas complexas e reparos de placas/servodrives, atuamos em conjunto com parceiros técnicos homologados e de extrema confiança.",
     },
     {
-      q: "Como funciona a plataforma de software T-MAINT para outras empresas?",
-      a: "O T-Maint é disponibilizado como SaaS (Software as a Service). Empresas de assistência técnica, prestadores de serviços industriais e equipes de manutenção interna podem contratar para gerenciar técnicos, clientes, emissão de O.S., orçamentos no WhatsApp e relatórios em PDF.",
+      q: "Quais marcas e comandos CNC são atendidos?",
+      a: "Atendemos os principais fabricantes e comandos do mercado, incluindo Okuma (OSP), Fanuc, Siemens (Sinumerik), Fagor, Yaskawa, Mazak, Mitsubishi, Romi e MCS.",
     },
     {
-      q: "O cliente da minha empresa pode acompanhar os históricos?",
-      a: "Sim. O T-Maint possui o Portal do Cliente, onde as indústrias acessam fichas técnicas de cada máquina, fotos de evidências antes/depois, relatórios assinados digitalmente e cronograma de manutenções preventivas.",
+      q: "Como funciona a contratação do software T-MAINT para outras empresas?",
+      a: "O T-Maint é disponibilizado como serviço em nuvem. Empresas de manutenção, assistências técnicas e equipes internas podem contratar para gerenciar técnicos em campo, ordens de serviço, clientes, orçamentos rápidos e controle de estoque.",
+    },
+    {
+      q: "O cliente da minha empresa pode acompanhar o histórico dos serviços?",
+      a: "Sim. O T-Maint conta com o Portal do Cliente, onde as indústrias acessam o histórico das máquinas, fotos antes/depois, relatórios técnicos em PDF com assinatura digital e cronograma de preventivas.",
     },
     {
       q: "Como é feita a emissão de orçamentos e relatórios técnicos?",
-      a: "Em menos de 1 minuto, o técnico ou gestor preenche peças, serviços e deslocamento. O sistema calcula impostos/totais e gera uma proposta profissional com botão de compartilhamento direto no WhatsApp do cliente.",
+      a: "Em menos de 1 minuto, o técnico ou gestor preenche peças, serviços e deslocamento. O sistema calcula os totais e gera uma proposta profissional com botão para envio direto no WhatsApp do cliente.",
     },
     {
       q: "O software funciona em tablets e celulares no campo?",
-      a: "Sim, 100% responsivo e otimizado para navegadores mobile. O técnico faz o apontamento de horas no local, fotografa as máquinas e colhe a assinatura digital do cliente diretamente na tela do smartphone ou tablet.",
+      a: "Sim, 100% otimizado para celulares e tablets. O técnico faz o apontamento de horas no local, fotografa a máquina e colhe a assinatura digital do cliente diretamente na tela.",
     },
   ];
 
   const cncBrands = [
-    { name: "Okuma", tag: "OSP Series" },
-    { name: "Fanuc", tag: "Alpha/i Series" },
+    { name: "Okuma", tag: "Comandos OSP" },
+    { name: "Fanuc", tag: "Séries Alpha / i" },
     { name: "Siemens", tag: "Sinumerik" },
-    { name: "Yaskawa", tag: "Sigma Drivers" },
+    { name: "Yaskawa", tag: "Servodrives Sigma" },
     { name: "Fagor", tag: "8055 / 8065" },
-    { name: "Mitsubishi", tag: "Meldas" },
+    { name: "Mitsubishi", tag: "Meldas / M70" },
     { name: "Mazak", tag: "Mazatrol" },
-    { name: "Romi", tag: "CNC Machines" },
+    { name: "Romi", tag: "Tornos e Centros" },
   ];
 
   return (
@@ -94,17 +99,17 @@ export function LandingPage() {
                 </span>
               </span>
               <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
-                CNC Electronics & Maintenance SaaS
+                Manutenção Especializada CNC & Software de Gestão
               </span>
             </div>
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
             <a href="#solucoes" className="hover:text-[#00F5D4] transition-colors">Soluções</a>
-            <a href="#bento" className="hover:text-[#00F5D4] transition-colors">Plataforma</a>
-            <a href="#cnc" className="hover:text-[#00F5D4] transition-colors">Manutenção CNC</a>
+            <a href="#manutencao-cnc" className="hover:text-[#00F5D4] transition-colors">Manutenção CNC</a>
+            <a href="#plataforma" className="hover:text-[#00F5D4] transition-colors">Plataforma T-Maint</a>
             <a href="#planos" className="hover:text-[#00F5D4] text-[#00F5D4] transition-colors flex items-center gap-1">
-              <Laptop className="h-3.5 w-3.5" /> Planos SaaS
+              <Laptop className="h-3.5 w-3.5" /> Planos do Sistema
             </a>
             <a href="#faq" className="hover:text-[#00F5D4] transition-colors">Dúvidas</a>
           </nav>
@@ -131,32 +136,31 @@ export function LandingPage() {
 
       {/* HERO SECTION */}
       <section className="relative pt-16 pb-24 overflow-hidden border-b border-[#1F293D]">
-        {/* Subtle Engineering Grid Background */}
         <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#1F293D_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          {/* Live Telemetry Pill */}
+          {/* Live Status Pill */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#131A26] border border-[#1F293D] text-xs font-mono text-slate-300 shadow-inner">
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00F5D4] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00F5D4]"></span>
               </span>
-              <span className="text-[#00F5D4] font-semibold">ONLINE</span>
+              <span className="text-[#00F5D4] font-semibold">SISTEMA ATIVO</span>
               <span className="text-slate-600">|</span>
-              <span>TELEMETRIA & MANUTENÇÃO INDUSTRIAL DE PRECISÃO</span>
+              <span>ORDENS DE SERVIÇO & ATENDIMENTO TÉCNICO CNC</span>
             </div>
           </div>
 
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08]">
-              Manutenção Eletrônica CNC & <br className="hidden sm:inline" />
+              Manutenção Especializada CNC & <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F5D4] via-teal-200 to-cyan-400">
                 Plataforma de Gestão
               </span>
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-normal">
-              Diagnóstico de alta precisão em servodrives, tornos e centros de usinagem combinado ao software definitivo para controle de O.S., orçamentos no WhatsApp e relatórios técnicos.
+              Atendimento técnico em campo para tornos e centros de usinagem CNC, suporte mecânico/eletrônico integrado e software definitivo para controle de O.S., orçamentos no WhatsApp e relatórios padronizados.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 font-mono text-sm">
@@ -166,7 +170,7 @@ export function LandingPage() {
                 rel="noreferrer"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-md bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(0,245,212,0.3)] hover:shadow-[0_0_35px_rgba(0,245,212,0.45)] transition-all"
               >
-                <Wrench className="h-4 w-4" /> Solicitar Manutenção CNC
+                <Wrench className="h-4 w-4" /> Solicitar Atendimento CNC
               </a>
               <a
                 href="#planos"
@@ -177,7 +181,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* COCKPIT HERO WIDGET (Interactive Mockup) */}
+          {/* COCKPIT HERO WIDGET (Mockup Operacional em Português) */}
           <div className="mt-16 max-w-5xl mx-auto">
             <div className="rounded-lg border border-[#1F293D] bg-[#131A26]/90 p-4 sm:p-6 shadow-2xl backdrop-blur-md">
               {/* Cockpit Header */}
@@ -186,39 +190,39 @@ export function LandingPage() {
                   <div className="h-3 w-3 rounded-full bg-red-500/80" />
                   <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
                   <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
-                  <span className="ml-2 text-slate-300 font-semibold">T-MAINT_LIVE_COCKPIT // v2.6.4</span>
+                  <span className="ml-2 text-slate-300 font-semibold">PAINEL OPERACIONAL T-MAINT</span>
                 </div>
                 <div className="flex items-center gap-4 text-[11px]">
-                  <span className="text-[#00F5D4]">● LATÊNCIA: 18ms</span>
-                  <span>SSL: ATIVO</span>
-                  <span>BANCO: POSTGRES_OK</span>
+                  <span className="text-[#00F5D4]">● SERVIÇOS EM ANDAMENTO</span>
+                  <span>CONEXÃO SEGURA</span>
+                  <span>DADOS EM NUVEM</span>
                 </div>
               </div>
 
               {/* Cockpit Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D]/80">
-                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Última O.S. Gerada</div>
+                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Última Ordem de Serviço</div>
                   <div className="mt-1 text-lg font-mono font-bold text-white">#OS-2026-0912</div>
                   <div className="mt-2 text-xs text-slate-300">Torno CNC Okuma LB3000</div>
                   <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                    <CheckCircle2 className="h-3 w-3" /> Assinatura Digital OK
+                    <CheckCircle2 className="h-3 w-3" /> Assinatura Digital Coletada
                   </div>
                 </div>
 
                 <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D]/80">
-                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Diagnóstico Eletrônico</div>
-                  <div className="mt-1 text-lg font-mono font-bold text-[#00F5D4]">SERVODRIVE FANUC</div>
-                  <div className="mt-2 text-xs text-slate-300">Alarme 401 / IGBT Substituído</div>
+                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Diagnóstico Especializado</div>
+                  <div className="mt-1 text-lg font-mono font-bold text-[#00F5D4]">MÁQUINA CNC FANUC</div>
+                  <div className="mt-2 text-xs text-slate-300">Alarme de Eixo / Ajuste Mecânico</div>
                   <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-[#00F5D4]/10 text-[#00F5D4] border border-[#00F5D4]/30">
-                    <Zap className="h-3 w-3" /> Bancada de Teste 100%
+                    <Zap className="h-3 w-3" /> Diagnóstico Concluído
                   </div>
                 </div>
 
                 <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D]/80">
                   <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Orçamento Comercial</div>
                   <div className="mt-1 text-lg font-mono font-bold text-white">R$ 4.850,00</div>
-                  <div className="mt-2 text-xs text-slate-300">Envio WhatsApp Instantâneo</div>
+                  <div className="mt-2 text-xs text-slate-300">Envio Direto no WhatsApp</div>
                   <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
                     <Share2 className="h-3 w-3" /> Proposta Aprovada
                   </div>
@@ -233,7 +237,7 @@ export function LandingPage() {
       <section className="py-10 border-b border-[#1F293D] bg-[#0B0F17]/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-xs font-mono uppercase tracking-widest text-slate-500 mb-6">
-            Especialistas Multimarcas em Automação e Eletrônica Industrial
+            Comandos e Fabricantes Atendidos
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
             {cncBrands.map((b, i) => (
@@ -246,39 +250,39 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* BENTO GRID SECTION (THE CORE INDUSTRIAL HIGHLIGHT) */}
-      <section id="bento" className="py-24 border-b border-[#1F293D] bg-[#0B0F17]">
+      {/* SECTION: SOLUÇÕES / BENTO GRID */}
+      <section id="solucoes" className="py-24 border-b border-[#1F293D] bg-[#0B0F17]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-16">
             <span className="text-xs font-mono uppercase font-bold tracking-widest text-[#00F5D4] border border-[#00F5D4]/30 px-2.5 py-1 rounded bg-[#00F5D4]/10">
-              Arquitetura de Alta Performance
+              Soluções Integradas
             </span>
             <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              A Solução Completa para o Chão de Fábrica e Equipes Técnicas
+              Manutenção Prática no Chão de Fábrica & Gestão Completa em Software
             </h2>
             <p className="mt-3 text-base text-slate-400">
-              Desenvolvido com o rigor e a precisão exigidos pela indústria moderna.
+              Unindo a experiência de campo com a tecnologia necessária para organizar sua rotina de manutenção.
             </p>
           </div>
 
           {/* THE BENTO GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div id="plataforma" className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* BENTO CARD 1 (Large - 2 Cols) */}
             <div className="md:col-span-2 rounded-lg bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 relative overflow-hidden hover:border-[#00F5D4]/50 transition-all group">
               <div className="flex items-center justify-between mb-6">
                 <div className="p-2.5 rounded-md bg-[#00F5D4]/10 text-[#00F5D4] border border-[#00F5D4]/20">
                   <FileCheck2 className="h-6 w-6" />
                 </div>
-                <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Módulo O.S. Digital</span>
+                <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Módulo de O.S. Digital</span>
               </div>
-              <h3 className="text-2xl font-bold text-white">Ordens de Serviço & Apontamento em Tempo Real</h3>
+              <h3 className="text-2xl font-bold text-white">Ordens de Serviço & Apontamento de Horas</h3>
               <p className="mt-2 text-slate-400 text-sm max-w-xl">
-                Controle exato de horas normais, extras, deslocamento e fotos de evidências. Assinatura do cliente colhida digitalmente no encerramento da intervenção com PDF padronizado.
+                Controle exato de horas trabalhadas, deslocamento em quilômetros e fotos de evidências. Assinatura do cliente colhida digitalmente no encerramento do serviço com geração de relatório em PDF.
               </p>
 
               <div className="mt-6 p-4 rounded-md bg-[#0B0F17] border border-[#1F293D] font-mono text-xs space-y-2">
                 <div className="flex justify-between text-slate-300">
-                  <span>⏱️ TEMPO DE SERVIÇO: <strong className="text-white">04h 30m</strong></span>
+                  <span>⏱️ TEMPO DE ATENDIMENTO: <strong className="text-white">04h 30m</strong></span>
                   <span>🚗 DESLOCAMENTO: <strong className="text-white">120 km</strong></span>
                 </div>
                 <div className="flex justify-between text-slate-400 pt-2 border-t border-[#1F293D]/60">
@@ -288,21 +292,26 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* BENTO CARD 2 (1 Col) */}
-            <div className="rounded-lg bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 hover:border-[#00F5D4]/50 transition-all group">
+            {/* BENTO CARD 2 (1 Col) - MANUTENÇÃO CNC & PARCERIAS TÉCNICAS */}
+            <div id="manutencao-cnc" className="rounded-lg bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 hover:border-[#00F5D4]/50 transition-all group">
               <div className="flex items-center justify-between mb-6">
                 <div className="p-2.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                  <Cpu className="h-6 w-6" />
+                  <Wrench className="h-6 w-6" />
                 </div>
-                <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Laboratório CNC</span>
+                <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Atendimento Especializado</span>
               </div>
-              <h3 className="text-xl font-bold text-white">Reparo Eletrônico CNC</h3>
-              <p className="mt-2 text-slate-400 text-sm">
-                Manutenção e reparo em bancada para servodrives, placas de comando, módulos IGBT, fontes chaveadas e encoders multimarcas com testes sob carga.
+              <h3 className="text-xl font-bold text-white">Manutenção Mecânica & Eletrônica CNC</h3>
+              <p className="mt-2 text-slate-400 text-sm leading-relaxed">
+                Diagnóstico técnico em campo para tornos e centros de usinagem. Atuação conjunta com parceiros homologados para manutenção mecânica pesada e reparo eletrônico de servodrives, fontes e placas de comando.
               </p>
-              <div className="mt-6 font-mono text-xs text-[#00F5D4] flex items-center gap-1">
-                <span>VER PROTOCOLO DE TESTES</span> <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
+              <a 
+                href={whatsappUrlService} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="mt-6 font-mono text-xs text-[#00F5D4] inline-flex items-center gap-1 hover:underline"
+              >
+                <span>SOLICITAR AVALIAÇÃO TÉCNICA</span> <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+              </a>
             </div>
 
             {/* BENTO CARD 3 (1 Col) */}
@@ -311,14 +320,14 @@ export function LandingPage() {
                 <div className="p-2.5 rounded-md bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
                   <Package className="h-6 w-6" />
                 </div>
-                <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Estoque Inteligente</span>
+                <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Controle de Materiais</span>
               </div>
-              <h3 className="text-xl font-bold text-white">Peças Críticas & QR Code</h3>
+              <h3 className="text-xl font-bold text-white">Estoque de Peças & QR Code</h3>
               <p className="mt-2 text-slate-400 text-sm">
-                Kardex digital, aviso automático de estoque mínimo para reposição e rastreamento de peças por máquina através de etiquetas com QR Code.
+                Histórico de peças utilizadas, aviso automático de estoque mínimo para reposição e identificação rápida das máquinas através de QR Code.
               </p>
               <div className="mt-6 font-mono text-xs text-yellow-400 flex items-center gap-1">
-                <span>CONTROLE DE ALMOXARIFADO</span> <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                <span>GESTÃO DE ALMOXARIFADO</span> <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 
@@ -332,19 +341,86 @@ export function LandingPage() {
               </div>
               <h3 className="text-2xl font-bold text-white">Orçamentos Rápidos com Envio no WhatsApp</h3>
               <p className="mt-2 text-slate-400 text-sm max-w-xl">
-                Crie orçamentos detalhados em menos de 1 minuto, com cálculo automático de serviços, peças, km e prazos de garantia. Converta orçamentos em Ordens de Serviço com apenas 1 clique.
+                Crie orçamentos detalhados em menos de 1 minuto, com cálculo automático de serviços, peças, deslocamento e prazos de garantia. Converta orçamentos aprovados em Ordens de Serviço com apenas 1 clique.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2 font-mono text-xs">
                 <span className="px-3 py-1.5 rounded bg-[#0B0F17] border border-[#1F293D] text-slate-300">
-                  ✓ DISPARO NO WHATSAPP COM LINK DIRETO
+                  ✓ ENVIO DIRETO NO WHATSAPP
                 </span>
                 <span className="px-3 py-1.5 rounded bg-[#0B0F17] border border-[#1F293D] text-[#00F5D4]">
                   ✓ CONVERSÃO IMEDIATA EM O.S.
                 </span>
                 <span className="px-3 py-1.5 rounded bg-[#0B0F17] border border-[#1F293D] text-slate-300">
-                  ✓ EXPORTAÇÃO PDF CORPORATIVO
+                  ✓ RELATÓRIO PDF CORPORATIVO
                 </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION: DETALHES DE MANUTENÇÃO CNC */}
+      <section className="py-20 border-b border-[#1F293D] bg-[#0B0F17]/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            <div>
+              <span className="text-xs font-mono uppercase font-bold tracking-widest text-[#00F5D4] border border-[#00F5D4]/30 px-2.5 py-1 rounded bg-[#00F5D4]/10">
+                Atendimento Técnico Integrado
+              </span>
+              <h3 className="mt-4 text-2xl sm:text-3xl font-bold text-white">
+                Diagnóstico em Campo & Parcerias Especializadas
+              </h3>
+              <p className="mt-3 text-slate-400 text-sm leading-relaxed">
+                Combinamos experiência prática no diagnóstico de alarmes e falhas elétricas com uma rede sólida de parceiros para intervenções mecânicas e manutenção eletrônica avançada.
+              </p>
+              <div className="mt-6">
+                <a
+                  href={whatsappUrlService}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-[#00F5D4] text-[#0B0F17] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#00F5D4]/90 transition-all"
+                >
+                  <Phone className="h-4 w-4" /> Chamar no WhatsApp
+                </a>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-5 rounded-lg bg-[#131A26] border border-[#1F293D]">
+                <div className="flex items-center gap-2.5 text-[#00F5D4] font-semibold text-sm">
+                  <Zap className="h-4 w-4" /> Diagnóstico Elétrico & Alarmes
+                </div>
+                <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                  Identificação precisa de falhas em réguas ópticas, encoders, sensores, relés e comandos de segurança em tornos e centros CNC.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-lg bg-[#131A26] border border-[#1F293D]">
+                <div className="flex items-center gap-2.5 text-cyan-400 font-semibold text-sm">
+                  <Cog className="h-4 w-4" /> Mecânica com Parceiros Sólidos
+                </div>
+                <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                  Atuação em conjunto com especialistas para ajustes de eixos, fusos de esferas, guias lineares, cabeçotes e trocadores de ferramentas.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-lg bg-[#131A26] border border-[#1F293D]">
+                <div className="flex items-center gap-2.5 text-yellow-400 font-semibold text-sm">
+                  <Cpu className="h-4 w-4" /> Gestão de Reparo Eletrônico
+                </div>
+                <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                  Intermediação e envio seguro de servodrives, placas e fontes para reparo em bancada com parceiro técnico altamente confiável.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-lg bg-[#131A26] border border-[#1F293D]">
+                <div className="flex items-center gap-2.5 text-emerald-400 font-semibold text-sm">
+                  <FileText className="h-4 w-4" /> Relatório Técnico Detalhado
+                </div>
+                <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                  Toda intervenção é registrada na plataforma T-Maint com fotos, causas-raiz e recomendações preventivas para a sua indústria.
+                </p>
               </div>
             </div>
           </div>
@@ -356,13 +432,13 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="text-xs font-mono uppercase font-bold tracking-widest text-[#00F5D4] border border-[#00F5D4]/30 px-2.5 py-1 rounded bg-[#00F5D4]/10">
-              Planos & Licenciamento
+              Planos do Sistema
             </span>
             <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Adquira a Plataforma T-MAINT para a sua Empresa
+              Adquira a Plataforma T-MAINT para sua Empresa
             </h2>
             <p className="mt-3 text-base text-slate-400">
-              Escolha a versão ideal para digitalizar e acelerar a sua equipe de manutenção.
+              Escolha o plano ideal para digitalizar e organizar o atendimento da sua equipe técnica.
             </p>
           </div>
 
@@ -380,8 +456,8 @@ export function LandingPage() {
                 <ul className="mt-8 space-y-3 text-sm text-slate-300 font-mono">
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Até 2 Técnicos</li>
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Emissão de O.S. Ilimitada</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Relatórios em PDF</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Cadastro de Clientes</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Relatórios Técnicos em PDF</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Cadastro de Clientes e Máquinas</li>
                 </ul>
               </div>
 
@@ -412,7 +488,7 @@ export function LandingPage() {
                 <ul className="mt-8 space-y-3 text-sm text-slate-200 font-mono">
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Até 10 Técnicos</li>
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Módulo Orçamentos no WhatsApp</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Controle de Estoque com QR Code</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Controle de Peças com QR Code</li>
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Painel Financeiro de Horas & Km</li>
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Portal do Cliente Liberado</li>
                 </ul>
@@ -440,9 +516,9 @@ export function LandingPage() {
 
                 <ul className="mt-8 space-y-3 text-sm text-slate-300 font-mono">
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Técnicos Ilimitados</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Todos os Recursos do Pro</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Suporte Técnico Prioritário</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Consultoria em Eletrônica CNC</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Todos os Recursos do Plano Pro</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Suporte Prioritário no WhatsApp</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-[#00F5D4]" /> Treinamento e Implantação VIP</li>
                 </ul>
               </div>
 
@@ -499,12 +575,12 @@ export function LandingPage() {
           <div className="flex items-center gap-3">
             <img src={logoTmaint} alt="T-MAINT" className="h-8 w-8 object-contain" />
             <span className="text-white font-bold tracking-tight">T-MAINT INDUSTRIAL</span>
-            <span>— Soluções em Manutenção CNC & SaaS</span>
+            <span>— Soluções em Manutenção CNC & Software de Gestão</span>
           </div>
 
           <div className="flex items-center gap-6 text-slate-400">
             <a href="https://t-maint.com.br" className="hover:text-[#00F5D4] transition-colors">t-maint.com.br</a>
-            <a href={whatsappUrlService} target="_blank" rel="noreferrer" className="hover:text-[#00F5D4] transition-colors">WhatsApp Suporte</a>
+            <a href={whatsappUrlService} target="_blank" rel="noreferrer" className="hover:text-[#00F5D4] transition-colors">WhatsApp de Atendimento</a>
           </div>
 
           <div>
