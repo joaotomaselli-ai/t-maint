@@ -36,6 +36,8 @@ import {
   Handshake,
 } from "lucide-react";
 
+import { NoiseGridBackground } from "@/components/ui/noise-grid-background";
+
 export const Route = createFileRoute("/landing")({ component: LandingPage });
 
 export function LandingPage() {
@@ -85,7 +87,10 @@ export function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-[#F3F4F6] font-sans selection:bg-[#00F5D4] selection:text-[#0B0F17]">
+    <div className="min-h-screen relative bg-[#0B0F17] text-[#F3F4F6] font-sans selection:bg-[#00F5D4] selection:text-[#0B0F17] overflow-x-hidden">
+      {/* 21st.dev Interactive Industrial Canvas Background */}
+      <NoiseGridBackground />
+
       {/* HEADER / NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-[#1F293D] bg-[#0B0F17]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
