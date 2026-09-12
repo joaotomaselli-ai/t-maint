@@ -38,9 +38,12 @@ import {
   RotateCcw,
   PenTool,
   Download,
+  MessageCircle,
 } from "lucide-react";
 import { NoiseGridBackground } from "@/components/ui/noise-grid-background";
 import { BorderBeam } from "@/components/ui/border-beam";
+import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { InteractiveComparison } from "@/components/ui/interactive-comparison";
 
 export const Route = createFileRoute("/landing")({ component: LandingPage });
 
@@ -49,9 +52,9 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
-  // Live Interactive Simulator State (Opção 2 - 21st.dev)
+  // Live Interactive Simulator State
   const [simStep, setSimStep] = useState<"idle" | "running" | "signed" | "done">("idle");
-  const [simSeconds, setSimSeconds] = useState(145); // Começa com 02m 25s para dinamismo
+  const [simSeconds, setSimSeconds] = useState(145);
   const [simKm, setSimKm] = useState(48);
 
   useEffect(() => {
@@ -113,8 +116,27 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen relative bg-[#0B0F17] text-[#F3F4F6] font-sans selection:bg-[#00F5D4] selection:text-[#0B0F17] overflow-x-hidden">
-      {/* 21st.dev Interactive Industrial Canvas Background */}
+      {/* Background Interativo 21st.dev */}
       <NoiseGridBackground />
+
+      {/* FLOATING WHATSAPP CTA COM GLOW */}
+      <aside aria-label="Atendimento Rápido" className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+        <a
+          href={whatsappUrlService}
+          target="_blank"
+          rel="noreferrer"
+          className="group relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-[#131A26]/95 border border-[#00F5D4]/40 backdrop-blur-md shadow-[0_0_30px_rgba(0,245,212,0.25)] hover:shadow-[0_0_40px_rgba(0,245,212,0.45)] hover:border-[#00F5D4] transition-all"
+        >
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-[#25D366]"></span>
+          </span>
+          <MessageCircle className="h-4 w-4 text-[#25D366]" />
+          <span className="text-xs font-mono font-bold text-white group-hover:text-[#00F5D4] transition-colors hidden sm:inline">
+            Plantão Técnico CNC
+          </span>
+        </a>
+      </aside>
 
       {/* HEADER / NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-[#1F293D] bg-[#0B0F17]/90 backdrop-blur-md">
@@ -136,6 +158,7 @@ export function LandingPage() {
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
             <a href="#solucoes" className="hover:text-[#00F5D4] transition-colors">Soluções</a>
+            <a href="#comparativo" className="hover:text-[#00F5D4] transition-colors">Antes vs. Depois</a>
             <a href="#manutencao-cnc" className="hover:text-[#00F5D4] transition-colors">Manutenção CNC</a>
             <a href="#plataforma" className="hover:text-[#00F5D4] transition-colors">Plataforma T-Maint</a>
             <a href="#planos" className="hover:text-[#00F5D4] text-[#00F5D4] transition-colors flex items-center gap-1">
@@ -191,27 +214,44 @@ export function LandingPage() {
               Atendimento técnico em campo para tornos e centros de usinagem CNC, suporte mecânico/eletrônico integrado e software definitivo para controle de O.S., orçamentos no WhatsApp e relatórios padronizados.
             </p>
 
+            {/* CTAs COM SHIMMER BUTTON & GLOW */}
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 font-mono text-sm">
               <a
                 href={whatsappUrlService}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-md bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(0,245,212,0.3)] hover:shadow-[0_0_35px_rgba(0,245,212,0.45)] transition-all"
+                className="w-full sm:w-auto"
               >
-                <Wrench className="h-4 w-4" /> Solicitar Atendimento CNC
+                <ShimmerButton
+                  shimmerColor="#00F5D4"
+                  shimmerDuration="2.2s"
+                  glow={true}
+                  className="w-full sm:w-auto bg-[#00F5D4] text-[#0B0F17] hover:text-[#0B0F17] font-bold text-xs uppercase tracking-wider py-4 px-8 shadow-[0_0_30px_rgba(0,245,212,0.35)]"
+                >
+                  <Wrench className="h-4 w-4 mr-2" /> Solicitar Atendimento CNC
+                </ShimmerButton>
               </a>
+
               <a
                 href="#planos"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-md bg-[#131A26] hover:bg-[#182232] text-[#F3F4F6] border border-[#1F293D] hover:border-[#00F5D4]/60 uppercase tracking-wider transition-all"
+                className="w-full sm:w-auto"
               >
-                <Laptop className="h-4 w-4 text-[#00F5D4]" /> Conhecer o Software T-Maint
+                <ShimmerButton
+                  shimmerColor="#38BDF8"
+                  shimmerDuration="3s"
+                  background="rgba(19, 26, 38, 0.95)"
+                  glow={false}
+                  className="w-full sm:w-auto text-[#F3F4F6] font-semibold text-xs uppercase tracking-wider py-4 px-8 border border-[#1F293D] hover:border-[#00F5D4]/60"
+                >
+                  <Laptop className="h-4 w-4 mr-2 text-[#00F5D4]" /> Conhecer o Software T-Maint
+                </ShimmerButton>
               </a>
             </div>
           </div>
 
-          {/* SIMULADOR INTERATIVO DE O.S. (OPÇÃO 2) COM FEIXE LASER BORDER BEAM (OPÇÃO 1) */}
+          {/* SIMULADOR INTERATIVO DE O.S. COM FEIXE LASER BORDER BEAM */}
           <div className="mt-16 max-w-5xl mx-auto">
-            <div className="relative rounded-lg border border-[#1F293D] bg-[#131A26]/90 p-5 sm:p-7 shadow-2xl backdrop-blur-md overflow-hidden">
+            <div className="relative rounded-2xl border border-[#1F293D] bg-[#131A26]/90 p-5 sm:p-7 shadow-2xl backdrop-blur-md overflow-hidden">
               {/* Feixe Laser BorderBeam percorrendo o cockpit */}
               <BorderBeam size={280} duration={10} colorFrom="#00F5D4" colorTo="#06B6D4" />
 
@@ -236,7 +276,7 @@ export function LandingPage() {
               {/* Interactive Simulator Cockpit */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Coluna 1: Dados da Máquina & Cronômetro */}
-                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
+                <div className="p-4 rounded-xl bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
                   <div>
                     <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Equipamento em Atendimento</div>
                     <div className="mt-1 text-base font-bold text-white flex items-center gap-2">
@@ -261,14 +301,14 @@ export function LandingPage() {
                 </div>
 
                 {/* Coluna 2: Assinatura Digital & Evidências */}
-                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
+                <div className="p-4 rounded-xl bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
                   <div>
                     <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Assinatura Digital do Cliente</div>
-                    <div className="mt-2 h-20 rounded border border-dashed border-[#1F293D] bg-[#131A26]/50 flex items-center justify-center relative overflow-hidden">
+                    <div className="mt-2 h-20 rounded-lg border border-dashed border-[#1F293D] bg-[#131A26]/50 flex items-center justify-center relative overflow-hidden">
                       {simStep === "signed" || simStep === "done" ? (
                         <div className="text-center font-mono">
                           <span className="text-xs text-emerald-400 font-bold block">✓ Assinatura Validada na Tela</span>
-                          <span className="text-[10px] text-slate-400 italic">Eng. Roberto M. (Gerente)</span>
+                          <span className="text-[10px] text-slate-400 italic">Eng. Roberto M. (Gerente de Manutenção)</span>
                         </div>
                       ) : (
                         <div className="text-center text-xs text-slate-500 font-mono flex items-center gap-1.5">
@@ -280,12 +320,12 @@ export function LandingPage() {
 
                   <div className="mt-4 text-[11px] font-mono text-slate-300 flex items-center justify-between">
                     <span>Fotos de Evidências: <strong className="text-white">3 Fotos Anexadas</strong></span>
-                    <span className="text-emerald-400">OK</span>
+                    <span className="text-emerald-400 font-bold">OK</span>
                   </div>
                 </div>
 
                 {/* Coluna 3: Painel de Controle de Ações Interativas */}
-                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
+                <div className="p-4 rounded-xl bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
                   <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-2">
                     Controle de Ações do Técnico
                   </div>
@@ -294,7 +334,7 @@ export function LandingPage() {
                     {simStep === "idle" && (
                       <button
                         onClick={() => setSimStep("running")}
-                        className="w-full py-2.5 px-3 rounded bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,245,212,0.3)] transition-all"
+                        className="w-full py-2.5 px-3 rounded-lg bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,245,212,0.3)] transition-all"
                       >
                         <Play className="h-3.5 w-3.5 fill-current" /> 1. Iniciar Atendimento
                       </button>
@@ -303,7 +343,7 @@ export function LandingPage() {
                     {simStep === "running" && (
                       <button
                         onClick={() => setSimStep("signed")}
-                        className="w-full py-2.5 px-3 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all animate-pulse"
+                        className="w-full py-2.5 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all animate-pulse"
                       >
                         <PenTool className="h-3.5 w-3.5" /> 2. Coletar Assinatura
                       </button>
@@ -312,14 +352,14 @@ export function LandingPage() {
                     {simStep === "signed" && (
                       <button
                         onClick={() => setSimStep("done")}
-                        className="w-full py-2.5 px-3 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
+                        className="w-full py-2.5 px-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
                       >
                         <FileCheck2 className="h-3.5 w-3.5" /> 3. Gerar Relatório PDF
                       </button>
                     )}
 
                     {simStep === "done" && (
-                      <div className="p-2.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-center font-bold text-xs">
+                      <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-center font-bold text-xs">
                         ✓ Relatório #OS-2026-0912 Gerado & Pronto para Envio!
                       </div>
                     )}
@@ -330,7 +370,7 @@ export function LandingPage() {
                           setSimStep("idle");
                           setSimSeconds(145);
                         }}
-                        className="w-full py-1.5 px-3 rounded bg-[#131A26] hover:bg-[#182232] text-slate-400 border border-[#1F293D] flex items-center justify-center gap-1.5 text-[11px] transition-colors"
+                        className="w-full py-1.5 px-3 rounded-lg bg-[#131A26] hover:bg-[#182232] text-slate-400 border border-[#1F293D] flex items-center justify-center gap-1.5 text-[11px] transition-colors"
                       >
                         <RotateCcw className="h-3 w-3" /> Reiniciar Teste
                       </button>
@@ -355,7 +395,7 @@ export function LandingPage() {
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
             {cncBrands.map((b, i) => (
-              <div key={i} className="p-3 rounded-md bg-[#131A26]/60 border border-[#1F293D] text-center hover:border-[#00F5D4]/40 transition-colors">
+              <div key={i} className="p-3 rounded-xl bg-[#131A26]/60 border border-[#1F293D] text-center hover:border-[#00F5D4]/40 transition-colors">
                 <div className="text-sm font-bold text-white">{b.name}</div>
                 <div className="text-[10px] font-mono text-slate-400 mt-0.5">{b.tag}</div>
               </div>
@@ -382,9 +422,9 @@ export function LandingPage() {
           {/* THE BENTO GRID */}
           <div id="plataforma" className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* BENTO CARD 1 (Large - 2 Cols) */}
-            <div className="md:col-span-2 rounded-lg bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 relative overflow-hidden hover:border-[#00F5D4]/50 transition-all group">
+            <div className="md:col-span-2 rounded-2xl bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 relative overflow-hidden hover:border-[#00F5D4]/50 transition-all group">
               <div className="flex items-center justify-between mb-6">
-                <div className="p-2.5 rounded-md bg-[#00F5D4]/10 text-[#00F5D4] border border-[#00F5D4]/20">
+                <div className="p-2.5 rounded-xl bg-[#00F5D4]/10 text-[#00F5D4] border border-[#00F5D4]/20">
                   <FileCheck2 className="h-6 w-6" />
                 </div>
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Módulo de O.S. Digital</span>
@@ -394,7 +434,7 @@ export function LandingPage() {
                 Controle exato de horas trabalhadas, deslocamento em quilômetros e fotos de evidências. Assinatura do cliente colhida digitalmente no encerramento do serviço com geração de relatório em PDF.
               </p>
 
-              <div className="mt-6 p-4 rounded-md bg-[#0B0F17] border border-[#1F293D] font-mono text-xs space-y-2">
+              <div className="mt-6 p-4 rounded-xl bg-[#0B0F17] border border-[#1F293D] font-mono text-xs space-y-2">
                 <div className="flex justify-between text-slate-300">
                   <span>⏱️ TEMPO DE ATENDIMENTO: <strong className="text-white">04h 30m</strong></span>
                   <span>🚗 DESLOCAMENTO: <strong className="text-white">120 km</strong></span>
@@ -407,9 +447,9 @@ export function LandingPage() {
             </div>
 
             {/* BENTO CARD 2 (1 Col) - MANUTENÇÃO CNC & PARCERIAS TÉCNICAS */}
-            <div id="manutencao-cnc" className="rounded-lg bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 hover:border-[#00F5D4]/50 transition-all group">
+            <div id="manutencao-cnc" className="rounded-2xl bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 hover:border-[#00F5D4]/50 transition-all group">
               <div className="flex items-center justify-between mb-6">
-                <div className="p-2.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                   <Wrench className="h-6 w-6" />
                 </div>
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Atendimento Especializado</span>
@@ -429,9 +469,9 @@ export function LandingPage() {
             </div>
 
             {/* BENTO CARD 3 (1 Col) */}
-            <div className="rounded-lg bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 hover:border-[#00F5D4]/50 transition-all group">
+            <div className="rounded-2xl bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 hover:border-[#00F5D4]/50 transition-all group">
               <div className="flex items-center justify-between mb-6">
-                <div className="p-2.5 rounded-md bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                <div className="p-2.5 rounded-xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
                   <Package className="h-6 w-6" />
                 </div>
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Controle de Materiais</span>
@@ -446,9 +486,9 @@ export function LandingPage() {
             </div>
 
             {/* BENTO CARD 4 (Large - 2 Cols) */}
-            <div className="md:col-span-2 rounded-lg bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 relative overflow-hidden hover:border-[#00F5D4]/50 transition-all group">
+            <div className="md:col-span-2 rounded-2xl bg-[#131A26] border border-[#1F293D] p-6 sm:p-8 relative overflow-hidden hover:border-[#00F5D4]/50 transition-all group">
               <div className="flex items-center justify-between mb-6">
-                <div className="p-2.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   <Share2 className="h-6 w-6" />
                 </div>
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Comercial & Propostas</span>
@@ -459,13 +499,13 @@ export function LandingPage() {
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2 font-mono text-xs">
-                <span className="px-3 py-1.5 rounded bg-[#0B0F17] border border-[#1F293D] text-slate-300">
+                <span className="px-3 py-1.5 rounded-lg bg-[#0B0F17] border border-[#1F293D] text-slate-300">
                   ✓ ENVIO DIRETO NO WHATSAPP
                 </span>
-                <span className="px-3 py-1.5 rounded bg-[#0B0F17] border border-[#1F293D] text-[#00F5D4]">
+                <span className="px-3 py-1.5 rounded-lg bg-[#0B0F17] border border-[#1F293D] text-[#00F5D4]">
                   ✓ CONVERSÃO IMEDIATA EM O.S.
                 </span>
-                <span className="px-3 py-1.5 rounded bg-[#0B0F17] border border-[#1F293D] text-slate-300">
+                <span className="px-3 py-1.5 rounded-lg bg-[#0B0F17] border border-[#1F293D] text-slate-300">
                   ✓ RELATÓRIO PDF CORPORATIVO
                 </span>
               </div>
@@ -474,7 +514,26 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* SECTION: DETALHES DE MANUTENÇÃO CNC */}
+      {/* SECTION: COMPARADOR INTERATIVO ANTES VS DEPOIS */}
+      <section id="comparativo" className="py-24 border-b border-[#1F293D] bg-[#0B0F17]/90">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="text-xs font-mono uppercase font-bold tracking-widest text-[#00F5D4] border border-[#00F5D4]/30 px-2.5 py-1 rounded bg-[#00F5D4]/10">
+              Transformação Operacional
+            </span>
+            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              A Diferença Prática na Sua Operação Diária
+            </h2>
+            <p className="mt-3 text-base text-slate-400">
+              Compare como a digitalização do T-MAINT elimina perdas de faturamento, retrabalho e desorganização.
+            </p>
+          </div>
+
+          <InteractiveComparison />
+        </div>
+      </section>
+
+      {/* SECTION: DETALHES DE MANUTENÇÃO CNC COM BORDER BEAM */}
       <section className="py-20 border-b border-[#1F293D] bg-[#0B0F17]/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
@@ -493,15 +552,20 @@ export function LandingPage() {
                   href={whatsappUrlService}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-[#00F5D4] text-[#0B0F17] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#00F5D4]/90 transition-all"
                 >
-                  <Phone className="h-4 w-4" /> Chamar no WhatsApp
+                  <ShimmerButton
+                    shimmerColor="#00F5D4"
+                    shimmerDuration="2.5s"
+                    className="bg-[#00F5D4] text-[#0B0F17] hover:text-[#0B0F17] font-bold text-xs uppercase tracking-wider py-3.5 px-6 shadow-[0_0_20px_rgba(0,245,212,0.3)]"
+                  >
+                    <Phone className="h-4 w-4 mr-2" /> Chamar Especialista no WhatsApp
+                  </ShimmerButton>
                 </a>
               </div>
             </div>
 
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-5 rounded-lg bg-[#131A26] border border-[#1F293D]">
+              <div className="p-5 rounded-2xl bg-[#131A26] border border-[#1F293D]">
                 <div className="flex items-center gap-2.5 text-[#00F5D4] font-semibold text-sm">
                   <Zap className="h-4 w-4" /> Diagnóstico Elétrico & Alarmes
                 </div>
@@ -510,7 +574,7 @@ export function LandingPage() {
                 </p>
               </div>
 
-              <div className="p-5 rounded-lg bg-[#131A26] border border-[#1F293D]">
+              <div className="p-5 rounded-2xl bg-[#131A26] border border-[#1F293D]">
                 <div className="flex items-center gap-2.5 text-cyan-400 font-semibold text-sm">
                   <Cog className="h-4 w-4" /> Mecânica com Parceiros Sólidos
                 </div>
@@ -519,7 +583,7 @@ export function LandingPage() {
                 </p>
               </div>
 
-              <div className="p-5 rounded-lg bg-[#131A26] border border-[#1F293D]">
+              <div className="p-5 rounded-2xl bg-[#131A26] border border-[#1F293D]">
                 <div className="flex items-center gap-2.5 text-yellow-400 font-semibold text-sm">
                   <Cpu className="h-4 w-4" /> Gestão de Reparo Eletrônico
                 </div>
@@ -528,7 +592,7 @@ export function LandingPage() {
                 </p>
               </div>
 
-              <div className="p-5 rounded-lg bg-[#131A26] border border-[#1F293D]">
+              <div className="p-5 rounded-2xl bg-[#131A26] border border-[#1F293D]">
                 <div className="flex items-center gap-2.5 text-emerald-400 font-semibold text-sm">
                   <FileText className="h-4 w-4" /> Relatório Técnico Detalhado
                 </div>
@@ -558,7 +622,7 @@ export function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* PLANO BÁSICO */}
-            <div className="rounded-lg bg-[#131A26] border border-[#1F293D] p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
+            <div className="rounded-2xl bg-[#131A26] border border-[#1F293D] p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
               <div>
                 <div className="text-xs font-mono uppercase tracking-wider text-slate-400">Essencial</div>
                 <h3 className="text-2xl font-bold text-white mt-1">Básico</h3>
@@ -579,18 +643,18 @@ export function LandingPage() {
                 href={whatsappUrlSoftware}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-8 w-full block text-center py-3 rounded-md bg-[#0B0F17] hover:bg-[#182232] text-white border border-[#1F293D] hover:border-[#00F5D4]/50 font-mono text-xs uppercase tracking-wider transition-all"
+                className="mt-8 w-full block text-center py-3 rounded-xl bg-[#0B0F17] hover:bg-[#182232] text-white border border-[#1F293D] hover:border-[#00F5D4]/50 font-mono text-xs uppercase tracking-wider transition-all"
               >
                 Contratar Plano
               </a>
             </div>
 
-            {/* PLANO PRO (DESTAQUE COM BORDER BEAM) */}
-            <div className="relative rounded-lg bg-[#131A26] border-2 border-[#00F5D4] p-8 flex flex-col justify-between shadow-[0_0_30px_rgba(0,245,212,0.15)] overflow-hidden">
+            {/* PLANO PRO (DESTAQUE COM BORDER BEAM E SHIMMER BUTTON) */}
+            <div className="relative rounded-2xl bg-[#131A26] border-2 border-[#00F5D4] p-8 flex flex-col justify-between shadow-[0_0_30px_rgba(0,245,212,0.15)] overflow-hidden">
               {/* Feixe Laser BorderBeam */}
-              <BorderBeam size={220} duration={8} colorFrom="#00F5D4" colorTo="#06B6D4" />
+              <BorderBeam size={240} duration={8} colorFrom="#00F5D4" colorTo="#06B6D4" />
 
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded bg-[#00F5D4] text-[#0B0F17] text-[10px] font-mono font-bold uppercase tracking-widest z-10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#00F5D4] text-[#0B0F17] text-[10px] font-mono font-bold uppercase tracking-widest z-10 shadow-md">
                 Mais Recomendado
               </div>
 
@@ -615,14 +679,21 @@ export function LandingPage() {
                 href={whatsappUrlSoftware}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-8 w-full block text-center py-3.5 rounded-md bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold font-mono text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(0,245,212,0.3)] transition-all z-10"
+                className="mt-8 block z-10"
               >
-                Conhecer os Planos
+                <ShimmerButton
+                  shimmerColor="#00F5D4"
+                  shimmerDuration="2s"
+                  glow={true}
+                  className="w-full bg-[#00F5D4] text-[#0B0F17] hover:text-[#0B0F17] font-bold text-xs uppercase tracking-wider py-3.5 shadow-[0_0_25px_rgba(0,245,212,0.35)]"
+                >
+                  Assinar Plano Pro
+                </ShimmerButton>
               </a>
             </div>
 
             {/* PLANO ELITE */}
-            <div className="rounded-lg bg-[#131A26] border border-[#1F293D] p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
+            <div className="rounded-2xl bg-[#131A26] border border-[#1F293D] p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
               <div>
                 <div className="text-xs font-mono uppercase tracking-wider text-slate-400">Corporativo</div>
                 <h3 className="text-2xl font-bold text-white mt-1">Elite Enterprise</h3>
@@ -643,7 +714,7 @@ export function LandingPage() {
                 href={whatsappUrlSoftware}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-8 w-full block text-center py-3 rounded-md bg-[#0B0F17] hover:bg-[#182232] text-white border border-[#1F293D] hover:border-[#00F5D4]/50 font-mono text-xs uppercase tracking-wider transition-all"
+                className="mt-8 w-full block text-center py-3 rounded-xl bg-[#0B0F17] hover:bg-[#182232] text-white border border-[#1F293D] hover:border-[#00F5D4]/50 font-mono text-xs uppercase tracking-wider transition-all"
               >
                 Falar com Especialista
               </a>
@@ -666,7 +737,7 @@ export function LandingPage() {
             {faqs.map((f, i) => (
               <div 
                 key={i} 
-                className="rounded-lg bg-[#131A26] border border-[#1F293D] overflow-hidden transition-colors"
+                className="rounded-2xl bg-[#131A26] border border-[#1F293D] overflow-hidden transition-colors"
               >
                 <button
                   onClick={() => setActiveFaq(activeFaq === i ? null : i)}

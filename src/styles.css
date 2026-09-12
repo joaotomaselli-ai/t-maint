@@ -111,3 +111,15 @@
 .animate-border-beam {
   animation: border-beam calc(var(--duration) * 1s) infinite linear;
 }
+
+@keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+  }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+  }
+}
+.animate-spin-around {
+  animation: spin-around calc(var(--speed, 3s)) infinite linear;
+}
