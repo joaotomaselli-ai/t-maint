@@ -155,16 +155,16 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
           {/* Logo Brand */}
           <div className="flex items-center gap-3 shrink-0">
-            <img src={logoTmaint} alt="T-MAINT" className="h-9 w-9 object-contain drop-shadow-[0_0_12px_rgba(0,245,212,0.3)]" />
+            <img src={logoTmaint} alt="T-MAINT" className="h-10 w-10 object-contain drop-shadow-[0_0_12px_rgba(0,245,212,0.3)]" />
             <div className="flex flex-col">
-              <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
+              <span className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
                 T-MAINT
-                <span className="text-[9px] font-mono uppercase font-bold tracking-wider px-1.5 py-0.5 rounded border border-[#00F5D4]/40 bg-[#00F5D4]/10 text-[#00F5D4]">
+                <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-2 py-0.5 rounded border border-[#00F5D4]/40 bg-[#00F5D4]/10 text-[#00F5D4]">
                   Industrial
                 </span>
               </span>
-              <span className="text-[10px] text-slate-400 font-mono hidden xl:inline">
-                Manutenção CNC & Gestão
+              <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
+                Manutenção Especializada CNC & Software de Gestão
               </span>
             </div>
           </div>
