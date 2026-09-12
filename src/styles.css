@@ -102,3 +102,12 @@
     font-feature-settings: "cv02","cv03","cv04","cv11";
   }
 }
+
+@keyframes border-beam {
+  100% {
+    offset-distance: 100%;
+  }
+}
+.animate-border-beam {
+  animation: border-beam calc(var(--duration) * 1s) infinite linear;
+}

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
@@ -34,9 +34,13 @@ import {
   Settings,
   Cog,
   Handshake,
+  Play,
+  RotateCcw,
+  PenTool,
+  Download,
 } from "lucide-react";
-
 import { NoiseGridBackground } from "@/components/ui/noise-grid-background";
+import { BorderBeam } from "@/components/ui/border-beam";
 
 export const Route = createFileRoute("/landing")({ component: LandingPage });
 
@@ -44,6 +48,27 @@ export function LandingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  // Live Interactive Simulator State (Opção 2 - 21st.dev)
+  const [simStep, setSimStep] = useState<"idle" | "running" | "signed" | "done">("idle");
+  const [simSeconds, setSimSeconds] = useState(145); // Começa com 02m 25s para dinamismo
+  const [simKm, setSimKm] = useState(48);
+
+  useEffect(() => {
+    let interval: any;
+    if (simStep === "running") {
+      interval = setInterval(() => {
+        setSimSeconds((s) => s + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [simStep]);
+
+  const formatTime = (totalSec: number) => {
+    const mins = Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    return `00h ${mins.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`;
+  };
 
   const whatsappUrlService = "https://wa.me/5547988485668?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20de%20manuten%C3%A7%C3%A3o%20para%20minha%20m%C3%A1quina%20CNC.";
   const whatsappUrlSoftware = "https://wa.me/5547988485668?text=Ol%C3%A1!%20Tenho%20interesse%20em%20conhecer%20os%20planos%20da%20plataforma%20T-MAINT%20para%20minha%20empresa.";
@@ -141,8 +166,6 @@ export function LandingPage() {
 
       {/* HERO SECTION */}
       <section className="relative pt-16 pb-24 overflow-hidden border-b border-[#1F293D]">
-        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#1F293D_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
-        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           {/* Live Status Pill */}
           <div className="flex justify-center mb-6">
@@ -186,50 +209,136 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* COCKPIT HERO WIDGET (Mockup Operacional em Português) */}
+          {/* SIMULADOR INTERATIVO DE O.S. (OPÇÃO 2) COM FEIXE LASER BORDER BEAM (OPÇÃO 1) */}
           <div className="mt-16 max-w-5xl mx-auto">
-            <div className="rounded-lg border border-[#1F293D] bg-[#131A26]/90 p-4 sm:p-6 shadow-2xl backdrop-blur-md">
-              {/* Cockpit Header */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1F293D] pb-4 mb-4 font-mono text-xs text-slate-400">
+            <div className="relative rounded-lg border border-[#1F293D] bg-[#131A26]/90 p-5 sm:p-7 shadow-2xl backdrop-blur-md overflow-hidden">
+              {/* Feixe Laser BorderBeam percorrendo o cockpit */}
+              <BorderBeam size={280} duration={10} colorFrom="#00F5D4" colorTo="#06B6D4" />
+
+              {/* Cockpit Top Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1F293D] pb-4 mb-5 font-mono text-xs text-slate-400">
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-red-500/80" />
                   <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
                   <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
-                  <span className="ml-2 text-slate-300 font-semibold">PAINEL OPERACIONAL T-MAINT</span>
+                  <span className="ml-2 text-white font-semibold flex items-center gap-1.5">
+                    <Terminal className="h-3.5 w-3.5 text-[#00F5D4]" />
+                    SIMULADOR INTERATIVO DE O.S. EM TEMPO REAL
+                  </span>
                 </div>
-                <div className="flex items-center gap-4 text-[11px]">
-                  <span className="text-[#00F5D4]">● SERVIÇOS EM ANDAMENTO</span>
-                  <span>CONEXÃO SEGURA</span>
-                  <span>DADOS EM NUVEM</span>
+                <div className="flex items-center gap-3 text-[11px]">
+                  <span className="px-2 py-0.5 rounded bg-teal-500/10 text-[#00F5D4] border border-teal-500/30">
+                    TESTE O FLUXO AO VIVO
+                  </span>
                 </div>
               </div>
 
-              {/* Cockpit Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D]/80">
-                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Última Ordem de Serviço</div>
-                  <div className="mt-1 text-lg font-mono font-bold text-white">#OS-2026-0912</div>
-                  <div className="mt-2 text-xs text-slate-300">Torno CNC Okuma LB3000</div>
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                    <CheckCircle2 className="h-3 w-3" /> Assinatura Digital Coletada
+              {/* Interactive Simulator Cockpit */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Coluna 1: Dados da Máquina & Cronômetro */}
+                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
+                  <div>
+                    <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Equipamento em Atendimento</div>
+                    <div className="mt-1 text-base font-bold text-white flex items-center gap-2">
+                      <Cog className="h-4 w-4 text-[#00F5D4]" /> Torno CNC Okuma LB3000
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1 font-mono">CLIENTE: Usinagem Vale do Itajaí</div>
+                  </div>
+
+                  <div className="mt-5 pt-4 border-t border-[#1F293D]/80">
+                    <div className="text-[10px] font-mono text-slate-400 uppercase">Apontamento de Horas</div>
+                    <div className="text-2xl font-mono font-extrabold text-[#00F5D4] tracking-tight mt-0.5">
+                      {formatTime(simSeconds)}
+                    </div>
+                    <div className="text-[11px] font-mono text-slate-400 mt-1 flex items-center gap-2">
+                      <span>Deslocamento: <strong className="text-slate-200">{simKm} km</strong></span>
+                      <span className="text-slate-600">•</span>
+                      <span>Status: <strong className={simStep === "idle" ? "text-yellow-400" : "text-emerald-400"}>
+                        {simStep === "idle" ? "Pendente" : simStep === "running" ? "Em Execução" : "Concluído"}
+                      </strong></span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D]/80">
-                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Diagnóstico Especializado</div>
-                  <div className="mt-1 text-lg font-mono font-bold text-[#00F5D4]">MÁQUINA CNC FANUC</div>
-                  <div className="mt-2 text-xs text-slate-300">Alarme de Eixo / Ajuste Mecânico</div>
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-[#00F5D4]/10 text-[#00F5D4] border border-[#00F5D4]/30">
-                    <Zap className="h-3 w-3" /> Diagnóstico Concluído
+                {/* Coluna 2: Assinatura Digital & Evidências */}
+                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
+                  <div>
+                    <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Assinatura Digital do Cliente</div>
+                    <div className="mt-2 h-20 rounded border border-dashed border-[#1F293D] bg-[#131A26]/50 flex items-center justify-center relative overflow-hidden">
+                      {simStep === "signed" || simStep === "done" ? (
+                        <div className="text-center font-mono">
+                          <span className="text-xs text-emerald-400 font-bold block">✓ Assinatura Validada na Tela</span>
+                          <span className="text-[10px] text-slate-400 italic">Eng. Roberto M. (Gerente)</span>
+                        </div>
+                      ) : (
+                        <div className="text-center text-xs text-slate-500 font-mono flex items-center gap-1.5">
+                          <PenTool className="h-3.5 w-3.5" /> Aguardando coleta de assinatura
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 text-[11px] font-mono text-slate-300 flex items-center justify-between">
+                    <span>Fotos de Evidências: <strong className="text-white">3 Fotos Anexadas</strong></span>
+                    <span className="text-emerald-400">OK</span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D]/80">
-                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Orçamento Comercial</div>
-                  <div className="mt-1 text-lg font-mono font-bold text-white">R$ 4.850,00</div>
-                  <div className="mt-2 text-xs text-slate-300">Envio Direto no WhatsApp</div>
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-                    <Share2 className="h-3 w-3" /> Proposta Aprovada
+                {/* Coluna 3: Painel de Controle de Ações Interativas */}
+                <div className="p-4 rounded-md bg-[#0B0F17] border border-[#1F293D] flex flex-col justify-between">
+                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-2">
+                    Controle de Ações do Técnico
+                  </div>
+
+                  <div className="space-y-2 font-mono text-xs">
+                    {simStep === "idle" && (
+                      <button
+                        onClick={() => setSimStep("running")}
+                        className="w-full py-2.5 px-3 rounded bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,245,212,0.3)] transition-all"
+                      >
+                        <Play className="h-3.5 w-3.5 fill-current" /> 1. Iniciar Atendimento
+                      </button>
+                    )}
+
+                    {simStep === "running" && (
+                      <button
+                        onClick={() => setSimStep("signed")}
+                        className="w-full py-2.5 px-3 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all animate-pulse"
+                      >
+                        <PenTool className="h-3.5 w-3.5" /> 2. Coletar Assinatura
+                      </button>
+                    )}
+
+                    {simStep === "signed" && (
+                      <button
+                        onClick={() => setSimStep("done")}
+                        className="w-full py-2.5 px-3 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
+                      >
+                        <FileCheck2 className="h-3.5 w-3.5" /> 3. Gerar Relatório PDF
+                      </button>
+                    )}
+
+                    {simStep === "done" && (
+                      <div className="p-2.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-center font-bold text-xs">
+                        ✓ Relatório #OS-2026-0912 Gerado & Pronto para Envio!
+                      </div>
+                    )}
+
+                    {simStep !== "idle" && (
+                      <button
+                        onClick={() => {
+                          setSimStep("idle");
+                          setSimSeconds(145);
+                        }}
+                        className="w-full py-1.5 px-3 rounded bg-[#131A26] hover:bg-[#182232] text-slate-400 border border-[#1F293D] flex items-center justify-center gap-1.5 text-[11px] transition-colors"
+                      >
+                        <RotateCcw className="h-3 w-3" /> Reiniciar Teste
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-3 text-[10px] font-mono text-slate-500 text-center">
+                    Clique nos botões acima para simular a rapidez do fluxo
                   </div>
                 </div>
               </div>
@@ -432,7 +541,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* PLANS & PRICING (SAAS) */}
+      {/* PLANS & PRICING (SAAS) COM BORDER BEAM NO PLANO PRO */}
       <section id="planos" className="py-24 border-b border-[#1F293D] bg-[#0B0F17]/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -476,9 +585,12 @@ export function LandingPage() {
               </a>
             </div>
 
-            {/* PLANO PRO (DESTAQUE) */}
-            <div className="rounded-lg bg-[#131A26] border-2 border-[#00F5D4] p-8 flex flex-col justify-between shadow-[0_0_30px_rgba(0,245,212,0.15)] relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded bg-[#00F5D4] text-[#0B0F17] text-[10px] font-mono font-bold uppercase tracking-widest">
+            {/* PLANO PRO (DESTAQUE COM BORDER BEAM) */}
+            <div className="relative rounded-lg bg-[#131A26] border-2 border-[#00F5D4] p-8 flex flex-col justify-between shadow-[0_0_30px_rgba(0,245,212,0.15)] overflow-hidden">
+              {/* Feixe Laser BorderBeam */}
+              <BorderBeam size={220} duration={8} colorFrom="#00F5D4" colorTo="#06B6D4" />
+
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded bg-[#00F5D4] text-[#0B0F17] text-[10px] font-mono font-bold uppercase tracking-widest z-10">
                 Mais Recomendado
               </div>
 
@@ -503,7 +615,7 @@ export function LandingPage() {
                 href={whatsappUrlSoftware}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-8 w-full block text-center py-3.5 rounded-md bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold font-mono text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(0,245,212,0.3)] transition-all"
+                className="mt-8 w-full block text-center py-3.5 rounded-md bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold font-mono text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(0,245,212,0.3)] transition-all z-10"
               >
                 Conhecer os Planos
               </a>
