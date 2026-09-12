@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useClients, useReports, useTechnicians, useAllSessions, useAllActivityTechnicians } from "@/hooks/use-data";
 import { reportTotalsWithSessions, technicianPayForReport, fmtHours, type ServiceReport } from "@/lib/api";
 import { useOSStatus, type ServiceReportStatus, type ServiceReportPriority } from "@/hooks/use-os-status";
@@ -12,11 +11,32 @@ import { useMoney } from "@/hooks/use-money-visibility";
 import { useAccess } from "@/hooks/use-access";
 import { useAuth } from "@/hooks/use-auth";
 import { MasterPanel } from "@/components/MasterPanel";
-import { Wrench, Users, Clock, DollarSign, Plus, TrendingUp, Loader2, Search, ArrowLeft, Check, Eye, CheckCircle2 } from "lucide-react";
+import { 
+  Wrench, 
+  Users, 
+  Clock, 
+  DollarSign, 
+  Plus, 
+  TrendingUp, 
+  Loader2, 
+  Search, 
+  ArrowLeft, 
+  Check, 
+  Eye, 
+  CheckCircle2, 
+  Activity, 
+  Zap, 
+  Share2, 
+  FileText, 
+  Calculator,
+  Compass
+} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClientPortalDashboard } from "@/components/ClientPortalDashboard";
 import { AgendaWidget } from "@/components/agenda/AgendaWidget";
+import { CockpitAnalytics } from "@/components/dashboard/CockpitAnalytics";
+import { BorderBeam } from "@/components/ui/border-beam";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({ component: Dashboard });
@@ -24,7 +44,11 @@ export const Route = createFileRoute("/")({ component: Dashboard });
 function Dashboard() {
   const { isLoading, isMaster, isClient } = useAccess();
   if (isLoading) {
-    return <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+    return (
+      <div className="grid place-items-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-[#00F5D4]" />
+      </div>
+    );
   }
   if (isMaster) return <MasterPanel />;
   if (isClient) return <ClientPortalDashboard />;
@@ -81,58 +105,161 @@ function CompanyDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div className="space-y-8 font-sans">
+      {/* COCKPIT HEADER & QUICK ACTIONS */}
+      <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-[#1F293D]">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Painel</h1>
-          <p className="text-muted-foreground mt-1 capitalize">Resumo de {monthLabel}</p>
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00F5D4] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00F5D4]"></span>
+            </span>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#00F5D4]">
+              COCKPIT OPERACIONAL
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
+            Painel de Controle
+          </h1>
+          <p className="text-xs text-slate-400 font-mono mt-0.5 capitalize">
+            Resumo consolidado • {monthLabel}
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
           <Button
-            variant={pendingReports.length > 0 ? "default" : "outline"}
-            size="lg"
-            className="gap-2 font-semibold shadow-sm"
+            variant="outline"
+            size="sm"
             onClick={() => setViewMode("pending_queue")}
+            className="gap-2 bg-[#131A26] border-[#1F293D] hover:border-amber-500/50 text-slate-200 hover:text-white py-2 px-3.5 rounded-xl transition-all"
           >
-            <Clock className="h-4 w-4" /> Fila de Ordens Pendentes
+            <Clock className="h-3.5 w-3.5 text-amber-400" />
+            <span>Fila Pendente</span>
             {pendingReports.length > 0 && (
-              <span className="ml-1 px-2 py-0.5 text-xs font-black bg-amber-500 text-slate-950 rounded-full">
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-md">
                 {pendingReports.length}
               </span>
             )}
           </Button>
 
+          <Link to="/orcamentos">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="gap-1.5 bg-[#131A26] border-[#1F293D] hover:border-[#00F5D4]/50 text-slate-200 hover:text-white py-2 px-3.5 rounded-xl transition-all"
+            >
+              <Calculator className="h-3.5 w-3.5 text-cyan-400" /> + Orçamento
+            </Button>
+          </Link>
+
           <Link to="/atividades">
-            <Button size="lg" variant="outline" className="gap-2">
-              <Plus className="h-4 w-4" /> Nova OS
+            <Button 
+              size="sm" 
+              className="gap-1.5 bg-[#00F5D4] hover:bg-[#00F5D4]/90 text-[#0B0F17] font-bold py-2 px-4 rounded-xl shadow-[0_0_20px_rgba(0,245,212,0.3)] transition-all"
+            >
+              <Plus className="h-4 w-4 font-bold" /> + Nova O.S.
             </Button>
           </Link>
         </div>
       </header>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Wrench} label="Atendimentos no mês" value={String(monthReports.length)} accent="primary" />
-        {isAdmin && <StatCard icon={Users} label="Clientes" value={String(clients.length)} accent="accent" />}
-        <StatCard icon={Clock} label="Horas no mês" value={fmtHours(stats.hours)} accent="warning" />
-        <StatCard icon={DollarSign} label={!isAdmin ? "Ganhos do mês" : "Faturamento do mês"} value={money(stats.value)} accent="success" />
+      {/* TELEMETRY KPI STATS GRID */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Atendimentos no Mês */}
+        <div className="relative rounded-2xl bg-[#131A26] border border-[#1F293D] p-5 shadow-lg backdrop-blur-md flex flex-col justify-between hover:border-[#00F5D4]/40 transition-all">
+          <div className="flex items-center justify-between text-slate-400 mb-3">
+            <span className="text-xs font-mono uppercase tracking-wider">Atendimentos no Mês</span>
+            <div className="p-2 rounded-xl bg-[#00F5D4]/10 text-[#00F5D4] border border-[#00F5D4]/20">
+              <Wrench className="h-4 w-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-3xl font-extrabold text-white font-mono">{monthReports.length}</div>
+            <div className="text-[11px] font-mono text-[#00F5D4] mt-1 flex items-center gap-1">
+              <span>{pendingReports.length} em aberto / andamento</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Clientes Atendidos */}
+        <div className="relative rounded-2xl bg-[#131A26] border border-[#1F293D] p-5 shadow-lg backdrop-blur-md flex flex-col justify-between hover:border-cyan-500/40 transition-all">
+          <div className="flex items-center justify-between text-slate-400 mb-3">
+            <span className="text-xs font-mono uppercase tracking-wider">{isAdmin ? "Indústrias / Clientes" : "Técnico Responsável"}</span>
+            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <Users className="h-4 w-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-3xl font-extrabold text-white font-mono">
+              {isAdmin ? clients.length : "Ativo"}
+            </div>
+            <div className="text-[11px] font-mono text-cyan-400 mt-1">
+              {isAdmin ? "Parque de Máquinas Cadastrado" : user?.email}
+            </div>
+          </div>
+        </div>
+
+        {/* Horas Técnicas no Mês */}
+        <div className="relative rounded-2xl bg-[#131A26] border border-[#1F293D] p-5 shadow-lg backdrop-blur-md flex flex-col justify-between hover:border-amber-500/40 transition-all">
+          <div className="flex items-center justify-between text-slate-400 mb-3">
+            <span className="text-xs font-mono uppercase tracking-wider">Horas em Campo</span>
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <Clock className="h-4 w-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-3xl font-extrabold text-amber-400 font-mono">{fmtHours(stats.hours)}</div>
+            <div className="text-[11px] font-mono text-slate-400 mt-1 flex items-center gap-2">
+              <span>Deslocamento: <strong className="text-white">{stats.km} km</strong></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Faturamento / Ganhos do Mês */}
+        <div className="relative rounded-2xl bg-[#131A26] border border-[#1F293D] p-5 shadow-lg backdrop-blur-md flex flex-col justify-between hover:border-emerald-500/40 transition-all">
+          <div className="flex items-center justify-between text-slate-400 mb-3">
+            <span className="text-xs font-mono uppercase tracking-wider">{!isAdmin ? "Ganhos do Mês" : "Faturamento Total"}</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <DollarSign className="h-4 w-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-3xl font-extrabold text-emerald-400 font-mono">{money(stats.value)}</div>
+            <div className="text-[11px] font-mono text-slate-400 mt-1">
+              Serviços + Peças + KM
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* ANALYTICS SECTION (GRÁFICOS ANALÍTICOS) */}
+      <CockpitAnalytics 
+        totalHoursMonth={stats.hours} 
+        totalOrdersMonth={monthReports.length} 
+      />
+
+      {/* AGENDA OU OS RECENTES */}
       {planType === "basic" ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> OS Recentes do Mês</CardTitle>
+        <Card className="rounded-2xl bg-[#131A26] border border-[#1F293D] overflow-hidden">
+          <CardHeader className="border-b border-[#1F293D] pb-4">
+            <CardTitle className="flex items-center gap-2 text-white font-mono text-sm">
+              <TrendingUp className="h-4 w-4 text-[#00F5D4]" /> OS Recentes do Mês
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            {recent.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma OS recente encontrada no mês.</p> : (
-              <div className="space-y-4">
+          <CardContent className="p-5 font-mono text-xs">
+            {recent.length === 0 ? (
+              <p className="text-sm text-slate-400">Nenhuma OS recente encontrada no mês.</p>
+            ) : (
+              <div className="space-y-3">
                 {recent.map(r => (
-                  <div key={r.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
+                  <div key={r.id} className="flex justify-between items-center p-3 rounded-xl bg-[#0B0F17] border border-[#1F293D]">
                     <div>
-                      <p className="font-medium text-sm">OS #{r.orderNumber}</p>
-                      <p className="text-xs text-muted-foreground">{clientMap.get(r.clientId)?.name ?? 'Desconhecido'}</p>
+                      <p className="font-bold text-white">OS #{r.orderNumber}</p>
+                      <p className="text-[11px] text-slate-400">{clientMap.get(r.clientId)?.name ?? 'Desconhecido'}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm">{format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy")}</p>
+                      <p className="text-slate-300">{format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy")}</p>
                     </div>
                   </div>
                 ))}
@@ -159,7 +286,6 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
 
-  // Filter open & pending orders (excluding "fechada")
   const pendingReports = useMemo(() => {
     return reports
       .filter(r => getStatus(r.id) !== "fechada")
@@ -175,7 +301,6 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
           (c && c.name.toLowerCase().includes(s))
         );
       })
-      // Organized chronologically from OLDEST to NEWEST (mais velhas primeiro)
       .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
   }, [reports, getStatus, search, clientMap]);
 
@@ -195,21 +320,21 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
       return;
     }
     updateStatus.mutate({ activityId: r.id, status: "fechada" });
-    toast.success(`OS #${r.orderNumber || r.id} fechada!`);
+    toast.success(`OS #${r.orderNumber || r.id} fechada com sucesso!`);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 font-mono">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1F293D] pb-4">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={onBack} className="gap-2 text-xs">
+          <Button variant="outline" size="sm" onClick={onBack} className="gap-2 text-xs bg-[#131A26] border-[#1F293D] text-slate-300">
             <ArrowLeft className="h-4 w-4" /> Voltar ao Painel
           </Button>
           <div>
-            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+            <h1 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
               Fila de Atendimento Pendente
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300">
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">
                 {pendingReports.length} {pendingReports.length === 1 ? "OS" : "OSs"}
               </span>
             </h1>
@@ -217,17 +342,17 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
         </div>
 
         {/* Priority Summary Chips */}
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-          <span className="px-2 py-0.5 rounded-md bg-red-500/15 text-red-700 dark:text-red-400 font-bold border border-red-300">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 font-bold border border-red-500/30">
             🔴 Urgentes: {priorityCounts.urgente}
           </span>
-          <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 font-bold border border-amber-300">
+          <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-400 font-bold border border-amber-500/30">
             🟠 Altas: {priorityCounts.alta}
           </span>
-          <span className="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-700 dark:text-blue-400 font-bold border border-blue-300">
+          <span className="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-400 font-bold border border-blue-500/30">
             🔵 Normais: {priorityCounts.normal}
           </span>
-          <span className="px-2 py-0.5 rounded-md bg-slate-500/15 text-slate-700 dark:text-slate-400 border border-slate-300">
+          <span className="px-2.5 py-1 rounded-lg bg-slate-500/15 text-slate-400 border border-slate-600/40">
             ⚪ Baixas: {priorityCounts.baixa}
           </span>
         </div>
@@ -235,24 +360,24 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar por OS, cliente, máquina..."
-          className="pl-9 h-9 text-sm"
+          placeholder="Buscar por OS, cliente, máquina CNC..."
+          className="pl-10 h-11 bg-[#131A26] border-[#1F293D] text-white placeholder:text-slate-500 rounded-xl text-xs"
         />
       </div>
 
-      {/* Ultra-compact Table / List */}
+      {/* Pending Reports List */}
       {pendingReports.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-2 opacity-80" />
-          <p className="font-semibold text-foreground">Nenhuma ordem de serviço pendente!</p>
-          <p className="text-xs mt-0.5">Todas as OSs foram concluídas.</p>
+        <Card className="p-10 text-center bg-[#131A26] border-[#1F293D] rounded-2xl">
+          <CheckCircle2 className="h-12 w-12 text-[#00F5D4] mx-auto mb-3" />
+          <p className="font-bold text-white text-base">Nenhuma ordem de serviço pendente!</p>
+          <p className="text-xs text-slate-400 mt-1">Todas as manutenções foram finalizadas e auditadas.</p>
         </Card>
       ) : (
-        <div className="border rounded-lg overflow-hidden bg-card divide-y shadow-sm">
+        <div className="border border-[#1F293D] rounded-2xl overflow-hidden bg-[#131A26] divide-y divide-[#1F293D] shadow-xl">
           {pendingReports.map(r => {
             const client = clientMap.get(r.clientId);
             const status = getStatus(r.id);
@@ -261,111 +386,49 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
             const borderColors = {
               urgente: "border-l-red-500 bg-red-500/5 hover:bg-red-500/10",
               alta: "border-l-amber-500 bg-amber-500/5 hover:bg-amber-500/10",
-              normal: "border-l-blue-500 hover:bg-muted/40",
-              baixa: "border-l-slate-400 hover:bg-muted/40",
+              normal: "border-l-blue-500 hover:bg-[#182232]",
+              baixa: "border-l-slate-400 hover:bg-[#182232]",
             }[priority];
 
             return (
               <div
                 key={r.id}
                 onClick={() => setSelectedReport(r)}
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3 py-2 text-sm cursor-pointer border-l-4 transition-colors ${borderColors}`}
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 text-xs cursor-pointer border-l-4 transition-colors ${borderColors}`}
               >
-                {/* OS Number, Date, Priority dot, Client, Machine */}
-                <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
-                  
-                  {/* Priority Selector Pill */}
-                  <div onClick={e => e.stopPropagation()}>
-                    <Select
-                      disabled={!canManagePriority}
-                      value={priority}
-                      onValueChange={(val) => {
-                        if (!canManagePriority) {
-                          toast.error("Somente administradores podem alterar a prioridade da ordem.");
-                          return;
-                        }
-                        updateStatus.mutate({ activityId: r.id, priority: val as ServiceReportPriority });
-                      }}
-                    >
-                      <SelectTrigger
-                        className={`w-auto shrink-0 inline-flex h-6 px-1.5 text-[11px] font-bold border-0 bg-transparent rounded gap-0.5 ${
-                          !canManagePriority ? "cursor-default opacity-90" : "hover:bg-muted/60"
-                        }`}
-                        title={!canManagePriority ? "Apenas administradores podem alterar a prioridade" : undefined}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="urgente">🔴 Urgente</SelectItem>
-                        <SelectItem value="alta">🟠 Alta</SelectItem>
-                        <SelectItem value="normal">🔵 Normal</SelectItem>
-                        <SelectItem value="baixa">⚪ Baixa</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <span className="font-mono text-xs font-bold bg-muted px-2 py-0.5 rounded border shrink-0">
+                <div className="flex flex-wrap items-center gap-2.5 min-w-0 flex-1">
+                  <span className="font-mono text-xs font-extrabold bg-[#0B0F17] text-[#00F5D4] px-2.5 py-1 rounded-lg border border-[#1F293D] shrink-0">
                     OS #{r.orderNumber || "—"}
                   </span>
 
-                  <span className="text-xs text-muted-foreground shrink-0 font-medium">
-                    {format(new Date(r.date + "T00:00:00"), "dd/MM")}
+                  <span className="text-slate-400 shrink-0 font-medium">
+                    {format(new Date(r.date + "T00:00:00"), "dd/MM/yyyy")}
                   </span>
 
-                  <span className="font-semibold text-foreground truncate max-w-[200px]">
-                    {client?.name || "Cliente indisponível"}
+                  <span className="font-bold text-white truncate max-w-[220px]">
+                    {client?.name || "Cliente não informado"}
                   </span>
 
-                  <span className="text-xs text-muted-foreground truncate max-w-[220px]">
+                  <span className="text-slate-400 truncate max-w-[240px]">
                     • {r.machine} {r.requester && `(${r.requester})`}
                   </span>
                 </div>
 
-                {/* Status Selector & Actions */}
                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-center" onClick={e => e.stopPropagation()}>
-                  {/* Status Dropdown */}
-                  <Select
-                    value={status}
-                    onValueChange={(val) => {
-                      if (val === "fechada" && !canCloseOS) {
-                        toast.error("Somente administradores podem fechar a Ordem de Serviço.");
-                        return;
-                      }
-                      updateStatus.mutate({ activityId: r.id, status: val as ServiceReportStatus });
-                    }}
-                  >
-                    <SelectTrigger className="w-auto shrink-0 inline-flex h-6 text-[11px] px-2.5 border font-semibold rounded-full gap-1 bg-muted/40 text-foreground border-border">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="aguardando">⏳ Aguardando</SelectItem>
-                      <SelectItem value="iniciada">🚀 Iniciada</SelectItem>
-                      {canCloseOS ? (
-                        <SelectItem value="fechada">✅ Fechada</SelectItem>
-                      ) : (
-                        <SelectItem value="fechada" disabled className="opacity-50">
-                          🔒 Fechada (Apenas Admins)
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-
-                  {/* Eye / View Details Button */}
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className="h-8 w-8 text-slate-400 hover:text-white hover:bg-[#0B0F17]"
                     title="Ver detalhes da OS"
                     onClick={() => setSelectedReport(r)}
                   >
-                    <Eye className="h-3.5 w-3.5" />
+                    <Eye className="h-4 w-4" />
                   </Button>
 
-                  {/* Quick Concluir Button (Admins only) */}
                   {canCloseOS && (
                     <Button
                       size="sm"
-                      className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-1"
+                      className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg gap-1"
                       onClick={(e) => markClosed(r, e)}
                     >
                       <Check className="h-3.5 w-3.5" /> Fechar
@@ -377,153 +440,6 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
           })}
         </div>
       )}
-
-      {/* OS Detail Modal */}
-      {selectedReport && (
-        <OSDetailModal
-          report={selectedReport}
-          clientName={clientMap.get(selectedReport.clientId)?.name}
-          status={getStatus(selectedReport.id)}
-          priority={getPriority(selectedReport.id)}
-          canCloseOS={canCloseOS}
-          onClose={() => setSelectedReport(null)}
-          onCloseOS={() => {
-            markClosed(selectedReport);
-            setSelectedReport(null);
-          }}
-        />
-      )}
     </div>
-  );
-}
-
-function OSDetailModal({
-  report,
-  clientName,
-  status,
-  priority,
-  canCloseOS,
-  onClose,
-  onCloseOS,
-}: {
-  report: ServiceReport;
-  clientName?: string;
-  status: ServiceReportStatus;
-  priority: ServiceReportPriority;
-  canCloseOS?: boolean;
-  onClose: () => void;
-  onCloseOS: () => void;
-}) {
-  return (
-    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between gap-3">
-            <DialogTitle className="text-xl">OS #{report.orderNumber}</DialogTitle>
-            <div className="flex items-center gap-2">
-              <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${
-                status === "aguardando"
-                  ? "bg-amber-500/15 text-amber-700 border-amber-300"
-                  : status === "iniciada"
-                  ? "bg-blue-500/15 text-blue-700 border-blue-300"
-                  : "bg-emerald-500/15 text-emerald-700 border-emerald-300"
-              }`}>
-                {status === "aguardando" ? "⏳ Aguardando" : status === "iniciada" ? "🚀 Iniciada" : "✅ Fechada"}
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded-md font-bold bg-muted border">
-                {priority === "urgente" ? "🔴 Urgente" : priority === "alta" ? "🟠 Alta" : priority === "normal" ? "🔵 Normal" : "⚪ Baixa"}
-              </span>
-            </div>
-          </div>
-          <DialogDescription>Detalhes da ordem de serviço pendente</DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 text-sm py-2">
-          <div className="grid grid-cols-2 gap-3 bg-muted/30 p-3 rounded-lg border">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase font-semibold">Cliente</p>
-              <p className="font-bold text-foreground text-base">{clientName || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase font-semibold">Data</p>
-              <p className="font-bold text-foreground">{format(new Date(report.date + "T00:00:00"), "dd/MM/yyyy")}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase font-semibold">Máquina</p>
-              <p className="font-medium text-foreground">{report.machine || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase font-semibold">Solicitante</p>
-              <p className="font-medium text-foreground">{report.requester || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase font-semibold">Tipo</p>
-              <p className="font-medium text-foreground capitalize">{report.type}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase font-semibold">Técnico Responsável</p>
-              <p className="font-medium text-foreground">{report.technician || "—"}</p>
-            </div>
-          </div>
-
-          {report.description && (
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-muted-foreground uppercase">Descrição do Problema / Serviço</p>
-              <div className="p-3 bg-background border rounded-lg whitespace-pre-wrap text-foreground/90">
-                {report.description}
-              </div>
-            </div>
-          )}
-
-          {report.summary && (
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-muted-foreground uppercase">Resumo / Solução Executada</p>
-              <div className="p-3 bg-background border rounded-lg whitespace-pre-wrap text-foreground/90">
-                {report.summary}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between gap-3 pt-3 border-t">
-          <Link to="/atividades" onClick={onClose}>
-            <Button variant="outline" size="sm" className="gap-1 text-xs">
-              Editar na Aba OS
-            </Button>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              Fechar Janela
-            </Button>
-            {canCloseOS && (
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 font-semibold" onClick={onCloseOS}>
-                <Check className="h-4 w-4" /> Marcar como Fechada
-              </Button>
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string; accent: "primary" | "accent" | "warning" | "success" }) {
-  const colors: Record<string, string> = {
-    primary: "bg-primary/10 text-primary",
-    accent: "bg-accent text-accent-foreground",
-    warning: "bg-warning/15 text-warning",
-    success: "bg-success/10 text-success",
-  };
-  return (
-    <Card>
-      <CardContent className="p-5">
-        <div className={`h-10 w-10 rounded-lg grid place-items-center mb-3 ${colors[accent]}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="text-2xl font-bold tracking-tight">{value}</div>
-        <div className="text-sm text-muted-foreground mt-0.5">{label}</div>
-      </CardContent>
-    </Card>
   );
 }

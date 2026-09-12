@@ -45,53 +45,90 @@
   --shadow-card: 0 1px 3px 0 oklch(0 0 0 / 0.06), 0 1px 2px 0 oklch(0 0 0 / 0.04);
 }
 
+/* Light Mode (High Contrast for Daytime/Fieldwork) */
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.98 0.01 240);
-  --foreground: oklch(0.2 0.05 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.05 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.05 255);
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
   
-  /* Primary - Industrial Dark Blue (#003B73) */
-  --primary: oklch(0.38 0.1 255);
-  --primary-foreground: oklch(1 0 0);
+  --primary: #0F766E;
+  --primary-foreground: #FFFFFF;
   
-  /* Secondary - Grayish Blue */
-  --secondary: oklch(0.94 0.02 240);
-  --secondary-foreground: oklch(0.38 0.1 255);
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
   
-  /* Muted */
-  --muted: oklch(0.96 0.01 240);
-  --muted-foreground: oklch(0.55 0.02 255);
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
   
-  /* Accent - Turquoise (#20B2AA) */
-  --accent: oklch(0.68 0.12 185);
-  --accent-foreground: oklch(1 0 0);
+  --accent: #00F5D4;
+  --accent-foreground: #0B0F17;
   
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(1 0 0);
-  --success: oklch(0.6 0.15 155);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.72 0.16 75);
-  --warning-foreground: oklch(0.2 0.05 75);
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --success: #10B981;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #0B0F17;
   
-  --border: oklch(0.9 0.02 240);
-  --input: oklch(0.9 0.02 240);
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #00F5D4;
   
-  /* Ring - Turquoise focus */
-  --ring: oklch(0.68 0.12 185);
+  --sidebar: #0B0F17;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #00F5D4;
+  --sidebar-primary-foreground: #0B0F17;
+  --sidebar-accent: #131A26;
+  --sidebar-accent-foreground: #00F5D4;
+  --sidebar-border: #1F293D;
+  --sidebar-ring: #00F5D4;
+}
+
+/* Dark Industrial Theme (Cockpit Telemetry #0B0F17) */
+.dark, :root:has(.dark) {
+  --radius: 0.75rem;
+  --background: #0B0F17;
+  --foreground: #F3F4F6;
+  --card: #131A26;
+  --card-foreground: #F3F4F6;
+  --popover: #131A26;
+  --popover-foreground: #F3F4F6;
   
-  /* Sidebar - Darker Blue (#002B5E) */
-  --sidebar: oklch(0.3 0.08 255);
-  --sidebar-foreground: oklch(0.98 0.01 240);
-  --sidebar-primary: oklch(0.68 0.12 185);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.38 0.1 255);
-  --sidebar-accent-foreground: oklch(0.98 0.01 240);
-  --sidebar-border: oklch(0.38 0.1 255);
-  --sidebar-ring: oklch(0.68 0.12 185);
+  --primary: #00F5D4;
+  --primary-foreground: #0B0F17;
+  
+  --secondary: #1F293D;
+  --secondary-foreground: #F3F4F6;
+  
+  --muted: #182232;
+  --muted-foreground: #94A3B8;
+  
+  --accent: #00F5D4;
+  --accent-foreground: #0B0F17;
+  
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --success: #10B981;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #0B0F17;
+  
+  --border: #1F293D;
+  --input: #1F293D;
+  --ring: #00F5D4;
+  
+  --sidebar: #0B0F17;
+  --sidebar-foreground: #F3F4F6;
+  --sidebar-primary: #00F5D4;
+  --sidebar-primary-foreground: #0B0F17;
+  --sidebar-accent: #131A26;
+  --sidebar-accent-foreground: #00F5D4;
+  --sidebar-border: #1F293D;
+  --sidebar-ring: #00F5D4;
 }
 
 @layer base {
