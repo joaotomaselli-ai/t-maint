@@ -804,7 +804,7 @@ function BulletedTextarea({ value, onChange, ...props }: Omit<React.ComponentPro
     }
   };
 
-  return <Textarea value={value} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleFocus} onBlur={handleBlur} {...props} />;
+  return <Textarea value={value || ""} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleFocus} onBlur={handleBlur} {...props} />;
 }
 
 function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave, isSaving, formStatus, setFormStatus, formPriority, setFormPriority }: {
@@ -1664,11 +1664,11 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
       </div>
       <div className="flex items-center space-x-2 pt-1">
         <Switch
-          id={`deduct-lunch-session-${s.id}`}
+          id={`deduct-lunch-session-${(s as any).id || "new"}`}
           checked={!!s.deductLunchFromClient}
           onCheckedChange={(checked) => onChange({ deductLunchFromClient: checked })}
         />
-        <Label htmlFor={`deduct-lunch-session-${s.id}`} className="text-xs font-medium cursor-pointer">
+        <Label htmlFor={`deduct-lunch-session-${(s as any).id || "new"}`} className="text-xs font-medium cursor-pointer">
           Não cobrar horário de almoço do cliente nesta sessão
         </Label>
       </div>

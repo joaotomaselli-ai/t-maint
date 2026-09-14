@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { useInventory, useReports, useAuth } from "@/hooks/use-data";
+import { useInventory, useReports } from "@/hooks/use-data";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { listInventoryMovements } from "@/lib/api";
 import { useAccess } from "@/hooks/use-access";
@@ -144,7 +145,7 @@ function EstoqueItemPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             {item.name}
-            {isLow && <AlertTriangle className="h-5 w-5 text-destructive" title="Estoque Baixo" />}
+            {isLow && <AlertTriangle className="h-5 w-5 text-destructive"  />}
           </h1>
           <p className="text-muted-foreground">{item.sku ? `SKU: ${item.sku}` : "Sem código"} • {item.location || "Sem local"}</p>
         </div>

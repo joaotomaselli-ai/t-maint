@@ -247,7 +247,7 @@ function QuotesDialog({ req, open, onOpenChange, report }: { req: Requisition, o
   const { quotes, isLoading, addQuote, deleteQuote } = useRequisitionQuotes(req.id);
   const { data: attachments = [], isLoading: loadingAtts } = useQuery({
     queryKey: ["attachments", req.activityId],
-    queryFn: () => listAttachments(req.activityId),
+    queryFn: () => listAttachments(req.activityId || ""),
     enabled: !!req.activityId,
   });
   const requisitionImages = attachments.filter(a => a.kind === "future_replacements");

@@ -51,8 +51,7 @@ export type CommercialQuote = {
 };
 
 async function getCallerCompany(userId: string) {
-  const { data: role } = await supabaseAdmin
-    .from("user_roles")
+  const { data: role } = await (supabaseAdmin as any).from("user_roles")
     .select("company_id, role")
     .eq("user_id", userId)
     .maybeSingle();
@@ -63,8 +62,7 @@ async function getCallerCompany(userId: string) {
 // Fallback storage helpers using company_settings or profiles
 async function getFallbackQuotes(companyId: string): Promise<CommercialQuote[]> {
   try {
-    const { data: comp } = await supabaseAdmin
-      .from("companies")
+    const { data: comp } = await (supabaseAdmin as any).from("companies")
       .select("allowed_features")
       .eq("id", companyId)
       .maybeSingle();
@@ -78,8 +76,7 @@ async function getFallbackQuotes(companyId: string): Promise<CommercialQuote[]> 
 }
 
 async function saveFallbackQuotes(companyId: string, quotes: CommercialQuote[]) {
-  const { data: comp } = await supabaseAdmin
-    .from("companies")
+  const { data: comp } = await (supabaseAdmin as any).from("companies")
     .select("allowed_features")
     .eq("id", companyId)
     .maybeSingle();
@@ -87,8 +84,7 @@ async function saveFallbackQuotes(companyId: string, quotes: CommercialQuote[]) 
   const allowed = (comp?.allowed_features as any) || {};
   allowed._commercial_quotes = quotes;
 
-  await supabaseAdmin
-    .from("companies")
+  await (supabaseAdmin as any).from("companies")
     .update({ allowed_features: allowed })
     .eq("id", companyId);
 }
@@ -104,8 +100,7 @@ export const listCommercialQuotes = createServerFn({ method: "GET" })
 
     // Try primary table first
     try {
-      const { data: quotes, error } = await supabaseAdmin
-        .from("commercial_quotes")
+      const { data: quotes, error } = await (supabaseAdmin as any).from("commercial_quotes")
         .select(`
           *,
           client:clients(id, name, cnpj, phone, address, contact)
@@ -156,15 +151,14 @@ export const listCommercialQuotes = createServerFn({ method: "GET" })
     const fallbackList = await getFallbackQuotes(companyId);
     
     // Enrich with client names
-    const { data: clients } = await supabaseAdmin
-      .from("clients")
+    const { data: clients } = await (supabaseAdmin as any).from("clients")
       .select("id, name, cnpj, phone, address, contact")
       .eq("user_id", userId);
 
-    const clientMap = new Map((clients || []).map(c => [c.id, c]));
+    const clientMap = new Map((clients || []).map((c: any) => [c.id, c]));
 
     return fallbackList.map(q => {
-      const cl = clientMap.get(q.clientId);
+      const cl = clientMap.get(q.clientId) as any;
       return {
         ...q,
         clientName: q.clientName || cl?.name || "Cliente",
@@ -222,8 +216,7 @@ export const saveCommercialQuote = createServerFn({ method: "POST" })
     const year = new Date().getFullYear();
 
     // Fetch client details
-    const { data: client } = await supabaseAdmin
-      .from("clients")
+    const { data: client } = await (supabaseAdmin as any).from("clients")
       .select("id, name, cnpj, phone, address, contact")
       .eq("id", data.clientId)
       .maybeSingle();
@@ -234,8 +227,7 @@ export const saveCommercialQuote = createServerFn({ method: "POST" })
 
     try {
       if (data.id) {
-        const { data: updated, error } = await supabaseAdmin
-          .from("commercial_quotes")
+        const { data: updated, error } = await (supabaseAdmin as any).from("commercial_quotes")
           .update({
             client_id: data.clientId,
             machine: data.machine,
@@ -268,16 +260,14 @@ export const saveCommercialQuote = createServerFn({ method: "POST" })
           result = updated;
         }
       } else {
-        const { count } = await supabaseAdmin
-          .from("commercial_quotes")
+        const { count } = await (supabaseAdmin as any).from("commercial_quotes")
           .select("id", { count: "exact", head: true })
           .eq("company_id", companyId);
 
         const nextNum = (count ?? 0) + 1;
         const quoteNumber = `ORC-${year}-${String(nextNum).padStart(3, "0")}`;
 
-        const { data: created, error } = await supabaseAdmin
-          .from("commercial_quotes")
+        const { data: created, error } = await (supabaseAdmin as any).from("commercial_quotes")
           .insert({
             company_id: companyId,
             quote_number: quoteNumber,
@@ -412,8 +402,7 @@ export const updateCommercialQuoteStatus = createServerFn({ method: "POST" })
     const { companyId } = await getCallerCompany(userId);
 
     try {
-      const { error } = await supabaseAdmin
-        .from("commercial_quotes")
+      const { error } = await (supabaseAdmin as any).from("commercial_quotes")
         .update({ status: data.status, updated_at: new Date().toISOString() })
         .eq("id", data.quoteId)
         .eq("company_id", companyId);
@@ -443,8 +432,7 @@ export const deleteCommercialQuote = createServerFn({ method: "POST" })
     const { companyId } = await getCallerCompany(userId);
 
     try {
-      const { error } = await supabaseAdmin
-        .from("commercial_quotes")
+      const { error } = await (supabaseAdmin as any).from("commercial_quotes")
         .delete()
         .eq("id", data.quoteId)
         .eq("company_id", companyId);
@@ -473,8 +461,7 @@ export const duplicateCommercialQuote = createServerFn({ method: "POST" })
     // Try finding in DB or fallback
     let original: any = null;
     try {
-      const { data: dbItem } = await supabaseAdmin
-        .from("commercial_quotes")
+      const { data: dbItem } = await (supabaseAdmin as any).from("commercial_quotes")
         .select("*")
         .eq("id", data.quoteId)
         .eq("company_id", companyId)
@@ -523,7 +510,7 @@ export const duplicateCommercialQuote = createServerFn({ method: "POST" })
     };
 
     try {
-      await supabaseAdmin.from("commercial_quotes").insert({
+      await (supabaseAdmin as any).from('commercial_quotes').insert({
         company_id: companyId,
         quote_number: quoteNumber,
         client_id: newQuote.clientId,
@@ -565,8 +552,7 @@ export const convertCommercialQuoteToOS = createServerFn({ method: "POST" })
 
     let quote: any = null;
     try {
-      const { data: dbItem } = await supabaseAdmin
-        .from("commercial_quotes")
+      const { data: dbItem } = await (supabaseAdmin as any).from("commercial_quotes")
         .select(`*, client:clients(name)`)
         .eq("id", data.quoteId)
         .eq("company_id", companyId)
@@ -582,8 +568,7 @@ export const convertCommercialQuoteToOS = createServerFn({ method: "POST" })
     if (!quote) throw new Error("Orçamento não encontrado.");
 
     // Generate OS number
-    const { count } = await supabaseAdmin
-      .from("service_reports")
+    const { count } = await (supabaseAdmin as any).from("service_reports")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId);
 
@@ -603,8 +588,7 @@ export const convertCommercialQuoteToOS = createServerFn({ method: "POST" })
     const clientId = quote.client_id || quote.clientId;
     const clientName = quote.client?.name || quote.clientName || "Cliente";
 
-    const { data: report, error: repErr } = await supabaseAdmin
-      .from("service_reports")
+    const { data: report, error: repErr } = await (supabaseAdmin as any).from("service_reports")
       .insert({
         user_id: userId,
         client_id: clientId,
@@ -627,8 +611,7 @@ export const convertCommercialQuoteToOS = createServerFn({ method: "POST" })
 
     // Mark as approved in DB and Fallback
     try {
-      await supabaseAdmin
-        .from("commercial_quotes")
+      await (supabaseAdmin as any).from("commercial_quotes")
         .update({
           status: "approved",
           converted_activity_id: report.id,

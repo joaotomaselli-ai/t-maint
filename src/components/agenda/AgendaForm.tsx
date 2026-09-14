@@ -77,7 +77,7 @@ export function AgendaForm({
               setRecurrence("weekly");
               if (rule.options.byweekday) {
                 const map = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
-                setWeekDays(rule.options.byweekday.map(n => typeof n === "number" ? map[n] : map[n.weekday]));
+                setWeekDays((rule.options.byweekday as any[]).map((n: any) => typeof n === "number" ? map[n] : map[n.weekday]));
               }
             }
             else if (rule.options.freq === RRule.MONTHLY) setRecurrence("monthly");

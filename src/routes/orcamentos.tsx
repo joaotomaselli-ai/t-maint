@@ -322,7 +322,7 @@ function OrcamentosPage() {
   const duplicateMutation = useMutation({
     mutationFn: (quoteId: string) => duplicateQuoteFn({ data: { quoteId } }),
     onSuccess: (newQuote) => {
-      toast.success(`Orçamento duplicado como ${newQuote.quote_number}!`);
+      toast.success(`Orçamento duplicado como ${(newQuote as any).quote_number || (newQuote as any).quoteNumber || ""}!`);
       qc.invalidateQueries({ queryKey: ["commercial_quotes"] });
     },
     onError: (err: any) => toast.error(err?.message || "Erro ao duplicar orçamento"),
@@ -435,7 +435,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total em Aberto</p>
-              <p className="text-2xl font-black text-amber-600 mt-1">{money(fmtCurrency(totalOpen))}</p>
+              <p className="text-2xl font-black text-amber-600 mt-1">{money(totalOpen)}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">Aguardando aprovação</p>
             </div>
             <div className="h-11 w-11 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
@@ -448,7 +448,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Aprovado</p>
-              <p className="text-2xl font-black text-emerald-600 mt-1">{money(fmtCurrency(totalApproved))}</p>
+              <p className="text-2xl font-black text-emerald-600 mt-1">{money(totalApproved)}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">Fechados & Em execução</p>
             </div>
             <div className="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
@@ -601,7 +601,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
                         {/* Total Amount */}
                         <TableCell>
                           <div className="font-black text-sm text-foreground">
-                            {money(fmtCurrency(quote.totalAmount))}
+                            {money(quote.totalAmount)}
                           </div>
                           {quote.discountAmount > 0 && (
                             <div className="text-[10px] text-emerald-600 font-medium">
