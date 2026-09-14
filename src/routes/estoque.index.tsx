@@ -22,6 +22,8 @@ function EstoquePage() {
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newItem, setNewItem] = useState({ name: "", sku: "", minQuantity: "", unit: "Un", location: "", initialQuantity: "", initialCost: "" });
+  const [isSaving, setIsSaving] = useState(false);
+  
 
   if (planType === "basic") {
     return (
@@ -33,7 +35,7 @@ function EstoquePage() {
     );
   }
 
-  const [isSaving, setIsSaving] = useState(false);
+  
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

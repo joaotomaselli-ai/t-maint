@@ -63,14 +63,8 @@ function Atividades() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isClient) {
-      navigate({ to: "/" });
-    }
   }, [isClient, navigate]);
 
-  if (isClient) {
-    return <ClientPortalDashboard />;
-  }
 
   const money = useMoney();
   const { clients } = useClients();
@@ -350,6 +344,9 @@ function Atividades() {
       return acc;
     }, { hours: 0, value: 0, km: 0 });
   }, [filtered, clientMap, sessionsByActivity, actByActivity, isTechnician, myTechId, technicians]);
+
+  if (isClient) return <ClientPortalDashboard />;
+  if (reportsLoading && (!reports || reports.length === 0)) return <OSListSkeleton />;
 
   return (
     <div className="space-y-6">

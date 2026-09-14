@@ -120,7 +120,7 @@ function EstoqueItemPage() {
           <h2>${item.name}</h2>
           <p>${item.sku ? 'SKU: ' + item.sku : ''}</p>
           <div id="qr-placeholder"></div>
-          <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"><\/script>
+          <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
           <script>
             var typeNumber = 0;
             var errorCorrectionLevel = 'M';
@@ -128,7 +128,7 @@ function EstoqueItemPage() {
             qr.addData("${item.qrCodeValue}");
             qr.make();
             document.getElementById('qr-placeholder').innerHTML = qr.createImgTag(5);
-          <\/script>
+          </script>
         </body>
       </html>
     `);
