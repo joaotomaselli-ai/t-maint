@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import { OSReportPrint } from "@/components/reports/OSReportPrint";
 import { MachineHistoryReportPrint } from "@/components/reports/MachineHistoryReportPrint";
+import { MachineQRModal } from "@/components/machines/MachineQRModal";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ export function ClientPortalDashboard() {
   }, [companySettings, settings]);
 
   const [selectedMachine, setSelectedMachine] = useState<string>("todas");
+  const [qrModal, setQrModal] = useState<{ open: boolean; machine: string; client: string }>({ open: false, machine: "", client: "" });
   const [selectedType, setSelectedType] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
@@ -587,6 +589,13 @@ export function ClientPortalDashboard() {
           />
         )}
       </div>
+    
+      <MachineQRModal
+        isOpen={qrModal.open}
+        onClose={() => setQrModal({ ...qrModal, open: false })}
+        machineName={qrModal.machine}
+        clientName={qrModal.client}
+      />
     </div>
   );
 }

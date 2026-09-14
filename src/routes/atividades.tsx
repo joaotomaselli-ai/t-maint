@@ -14,6 +14,7 @@ import { useClients, useReports, useSettings, useCompanySettings, useTechnicians
 import { useAuth } from "@/hooks/use-auth";
 import { useAccess } from "@/hooks/use-access";
 import { ClientPortalDashboard } from "@/components/ClientPortalDashboard";
+import { MachineQRModal } from "@/components/machines/MachineQRModal";
 import {
   reportTotals, technicianTotals, fmtCurrency, fmtHours,
   listAttachments, uploadAttachment, deleteAttachment,
@@ -26,7 +27,7 @@ import {
 } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useOSStatus, type ServiceReportStatus, type ServiceReportPriority } from "@/hooks/use-os-status";
-import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus , Loader2} from "lucide-react";
+import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus , Loader2, QrCode } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -110,6 +111,7 @@ function Atividades() {
   const [pageSize, setPageSize] = useState<number>(20);
   const [page, setPage] = useState<number>(1);
   const [pdfChoice, setPdfChoice] = useState<PdfChoice>({ open: false });
+  const [qrModal, setQrModal] = useState<{ open: boolean; machine: string; client: string }>({ open: false, machine: "", client: "" });
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
   const techMap = useMemo(() => new Map(technicians.map(t => [t.id, t])), [technicians]);
@@ -545,7 +547,19 @@ function Atividades() {
                         })()}
                       </div>
                       <h3 className="font-semibold text-lg mt-2">{c?.name || "Cliente removido"}</h3>
-                      <p className="text-sm text-muted-foreground">{r.machine} {r.requester && `· Sol.: ${r.requester}`}</p>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                        <span>{r.machine} {r.requester && `· Sol.: ${r.requester}`}</span>
+                        {r.machine && (
+                          <button
+                            type="button"
+                            onClick={() => setQrModal({ open: true, machine: r.machine, client: c?.name || "Cliente" })}
+                            className="inline-flex items-center text-primary/70 hover:text-primary transition-colors p-0.5 rounded hover:bg-muted"
+                            title="Gerar Etiqueta Machine QR Tag"
+                          >
+                            <QrCode className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </p>
                       {r.description && <p className="text-sm mt-2 line-clamp-2">{r.description}</p>}
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span>Serviço: <b className="text-foreground">{fmtHours(baseT.service)}</b></span>
@@ -1725,7 +1739,7 @@ function OSListSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    
+      </div>
   );
 }
-
