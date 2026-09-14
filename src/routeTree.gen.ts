@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as TecnicosRouteImport } from './routes/tecnicos'
 import { Route as RequisicoesRouteImport } from './routes/requisicoes'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as OrcamentosRouteImport } from './routes/orcamentos'
 import { Route as MasterRouteImport } from './routes/master'
 import { Route as LoginRouteImport } from './routes/login'
@@ -24,6 +26,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as EstoqueIndexRouteImport } from './routes/estoque.index'
 import { Route as EstoqueItemIdRouteImport } from './routes/estoque.$itemId'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TecnicosRoute = TecnicosRouteImport.update({
   id: '/tecnicos',
   path: '/tecnicos',
@@ -37,6 +44,11 @@ const RequisicoesRoute = RequisicoesRouteImport.update({
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrcamentosRoute = OrcamentosRouteImport.update({
@@ -105,9 +117,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
   '/orcamentos': typeof OrcamentosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
+  '/termos': typeof TermosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
   '/estoque/': typeof EstoqueIndexRoute
 }
@@ -121,9 +135,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
   '/orcamentos': typeof OrcamentosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
+  '/termos': typeof TermosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
   '/estoque': typeof EstoqueIndexRoute
 }
@@ -138,9 +154,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/master': typeof MasterRoute
   '/orcamentos': typeof OrcamentosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
   '/tecnicos': typeof TecnicosRoute
+  '/termos': typeof TermosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
   '/estoque/': typeof EstoqueIndexRoute
 }
@@ -156,9 +174,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/master'
     | '/orcamentos'
+    | '/privacidade'
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
+    | '/termos'
     | '/estoque/$itemId'
     | '/estoque/'
   fileRoutesByTo: FileRoutesByTo
@@ -172,9 +192,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/master'
     | '/orcamentos'
+    | '/privacidade'
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
+    | '/termos'
     | '/estoque/$itemId'
     | '/estoque'
   id:
@@ -188,9 +210,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/master'
     | '/orcamentos'
+    | '/privacidade'
     | '/relatorios'
     | '/requisicoes'
     | '/tecnicos'
+    | '/termos'
     | '/estoque/$itemId'
     | '/estoque/'
   fileRoutesById: FileRoutesById
@@ -205,15 +229,24 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MasterRoute: typeof MasterRoute
   OrcamentosRoute: typeof OrcamentosRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RelatoriosRoute: typeof RelatoriosRoute
   RequisicoesRoute: typeof RequisicoesRoute
   TecnicosRoute: typeof TecnicosRoute
+  TermosRoute: typeof TermosRoute
   EstoqueItemIdRoute: typeof EstoqueItemIdRoute
   EstoqueIndexRoute: typeof EstoqueIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tecnicos': {
       id: '/tecnicos'
       path: '/tecnicos'
@@ -233,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/relatorios'
       preLoaderRoute: typeof RelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orcamentos': {
@@ -325,9 +365,11 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MasterRoute: MasterRoute,
   OrcamentosRoute: OrcamentosRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RelatoriosRoute: RelatoriosRoute,
   RequisicoesRoute: RequisicoesRoute,
   TecnicosRoute: TecnicosRoute,
+  TermosRoute: TermosRoute,
   EstoqueItemIdRoute: EstoqueItemIdRoute,
   EstoqueIndexRoute: EstoqueIndexRoute,
 }
