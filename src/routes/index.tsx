@@ -76,29 +76,119 @@ function CompanyDashboard() {
   const monthLabel = format(now, "MMMM 'de' yyyy", { locale: ptBR });
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
-  const monthReports = reports.filter(r => {
-    const d = new Date(r.date + "T00:00:00");
-    return d >= monthStart && d < monthEnd;
-  });
+  
+  const monthReports = useMemo(() => {
+    return reports.filter(r => {
+      if (!r.date) return false;
+      const d = new Date(r.date + "T00:00:00");
+      return d >= monthStart && d < monthEnd;
+    });
+  }, [reports, monthStart, monthEnd]);
 
   const pendingReports = useMemo(() => {
     return reports.filter(r => getStatus(r.id) !== "fechada");
   }, [reports, getStatus]);
 
-  const stats = monthReports.reduce((acc, r) => {
-    const sess = sessions.filter(s => s.activityId === r.id);
-    const acts = activityTechnicians.filter(a => a.activityId === r.id);
-    const c = clientMap.get(r.clientId);
-    const t = !isAdmin
-      ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
-      : reportTotalsWithSessions(r, sess, c);
-    acc.hours += t.totalHours;
-    acc.value += t.total;
-    acc.km += "km" in t ? (t as any).km : (r.km || 0);
-    return acc;
-  }, { hours: 0, value: 0, km: 0 });
+  const stats = useMemo(() => {
+    return monthReports.reduce((acc, r) => {
+      const sess = sessions.filter(s => s.activityId === r.id);
+      const acts = activityTechnicians.filter(a => a.activityId === r.id);
+      const c = clientMap.get(r.clientId);
+      const t = !isAdmin
+        ? technicianPayForReport(r, sess, technicians.find(tc => tc.id === myTechId), acts)
+        : reportTotalsWithSessions(r, sess, c);
+      acc.hours += t.totalHours;
+      acc.value += t.total;
+      acc.km += "km" in t ? (t as any).km : (r.km || 0);
+      return acc;
+    }, { hours: 0, value: 0, km: 0 });
+  }, [monthReports, sessions, activityTechnicians, clientMap, isAdmin, myTechId, technicians]);
 
-  const recent = [...monthReports].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
+  // 6-month historical calculations for productivity graph (Real DB aggregation)
+  const monthlyHistory = useMemo(() => {
+    const result: { month: string; hours: number; orders: number }[] = [];
+    const currentDate = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const rawMonth = format(d, "MMM", { locale: ptBR }).replace(".", "");
+      const formattedMonth = rawMonth.charAt(0).toUpperCase() + rawMonth.slice(1);
+
+      const inMonthReports = reports.filter((r) => {
+        if (!r.date) return false;
+        const rDate = new Date(r.date + "T00:00:00");
+        return rDate >= mStart && rDate < mEnd;
+      });
+
+      let totalMonthHours = 0;
+      for (const r of inMonthReports) {
+        const sess = sessions.filter((s) => s.activityId === r.id);
+        const acts = activityTechnicians.filter((a) => a.activityId === r.id);
+        const c = clientMap.get(r.clientId);
+        const t = !isAdmin
+          ? technicianPayForReport(r, sess, technicians.find((tc) => tc.id === myTechId), acts)
+          : reportTotalsWithSessions(r, sess, c);
+        totalMonthHours += t.totalHours;
+      }
+
+      result.push({
+        month: formattedMonth,
+        hours: Math.round(totalMonthHours * 10) / 10,
+        orders: inMonthReports.length,
+      });
+    }
+
+    return result;
+  }, [reports, sessions, activityTechnicians, clientMap, isAdmin, myTechId, technicians]);
+
+  // Machine / Demand distribution calculated directly from real database records
+  const categoryBreakdown = useMemo(() => {
+    if (reports.length === 0) return [];
+
+    const counts: Record<string, number> = {};
+    for (const r of reports) {
+      const rawMachine = (r.machine || "").trim();
+      const machineName = rawMachine || (r.type === "preventiva" ? "Preventiva Periódica" : "Manutenção Mecânica / Elétrica");
+      counts[machineName] = (counts[machineName] || 0) + 1;
+    }
+
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const totalCount = reports.length;
+    const colors = ["#00F5D4", "#38BDF8", "#F59E0B", "#A855F7", "#10B981", "#EC4899"];
+
+    if (sorted.length <= 4) {
+      return sorted.map(([name, count], idx) => ({
+        name,
+        count: Math.round((count / totalCount) * 100),
+        color: colors[idx % colors.length],
+      }));
+    }
+
+    const top4 = sorted.slice(0, 4);
+    const othersCount = sorted.slice(4).reduce((sum, [, c]) => sum + c, 0);
+
+    const result = top4.map(([name, count], idx) => ({
+      name,
+      count: Math.round((count / totalCount) * 100),
+      color: colors[idx % colors.length],
+    }));
+
+    if (othersCount > 0) {
+      result.push({
+        name: "Outras Máquinas",
+        count: Math.round((othersCount / totalCount) * 100),
+        color: "#94A3B8",
+      });
+    }
+
+    return result;
+  }, [reports]);
+
+  const recent = useMemo(() => {
+    return [...monthReports].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
+  }, [monthReports]);
 
   if (viewMode === "pending_queue") {
     return <PendingQueueView onBack={() => setViewMode("standard")} />;
@@ -233,8 +323,10 @@ function CompanyDashboard() {
         </div>
       </div>
 
-      {/* ANALYTICS SECTION (GRÁFICOS ANALÍTICOS) */}
+      {/* ANALYTICS SECTION (GRÁFICOS ANALÍTICOS DINÂMICOS CONECTADOS AO SUPABASE) */}
       <CockpitAnalytics 
+        monthlyHistory={monthlyHistory}
+        categoryBreakdown={categoryBreakdown}
         totalHoursMonth={stats.hours} 
         totalOrdersMonth={monthReports.length} 
       />
