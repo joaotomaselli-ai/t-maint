@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -528,7 +529,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="py-16 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            <QuotesTableSkeleton />
           ) : filteredQuotes.length === 0 ? (
             <div className="py-16 text-center text-muted-foreground">
               <Calculator className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
@@ -1077,6 +1078,29 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
           />
         )}
       </div>
+    </div>
+  );
+}
+
+function QuotesTableSkeleton() {
+  return (
+    <div className="space-y-3 py-2 animate-fade-in-up">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="flex justify-between items-center p-3 rounded-lg border border-border/50 bg-muted/20">
+          <div className="flex items-center gap-4 flex-1">
+            <Skeleton className="h-5 w-16" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-8 w-20 rounded-lg" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

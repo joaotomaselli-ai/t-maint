@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -363,7 +364,7 @@ function Clientes() {
       </header>
 
       {isLoading ? (
-        <Card><CardContent className="py-16 text-center text-muted-foreground">Carregando...</CardContent></Card>
+        <ClientGridSkeleton />
       ) : clients.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center text-muted-foreground">
@@ -501,5 +502,34 @@ function ClientCardItem({
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function ClientGridSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 animate-fade-in-up">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className="p-5 rounded-2xl bg-card border border-border space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-1.5">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-lg" />
+          </div>
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
+            <Skeleton className="h-10 rounded-lg" />
+            <Skeleton className="h-10 rounded-lg" />
+          </div>
+          <div className="flex justify-between items-center pt-2">
+            <Skeleton className="h-4 w-24" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

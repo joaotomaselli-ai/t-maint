@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,7 +75,7 @@ function Atividades() {
   const money = useMoney();
   const { clients } = useClients();
   const { technicians } = useTechnicians();
-  const { reports, addReport, updateReport, deleteReport } = useReports();
+  const { reports, addReport, updateReport, deleteReport, isLoading: reportsLoading } = useReports();
   const { settings } = useSettings();
   const { companySettings } = useCompanySettings();
   const { sessions: allSessions } = useAllSessions();
@@ -438,7 +439,9 @@ function Atividades() {
         </div>
       )}
 
-      {filtered.length === 0 ? (
+      {reportsLoading ? (
+        <OSListSkeleton />
+      ) : filtered.length === 0 ? (
         <Card><CardContent className="py-16 text-center text-muted-foreground">
           <Wrench className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p className="font-medium">Nenhuma OS encontrada</p>
@@ -1692,3 +1695,40 @@ function diffHoursLocal(start: string, end: string): number {
   if (mins < 0) mins += 24 * 60;
   return mins / 60;
 }
+
+
+function OSListSkeleton() {
+  return (
+    <div className="space-y-4 animate-fade-in-up">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="p-4 rounded-xl bg-card border border-border space-y-2">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-7 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="p-5 rounded-2xl bg-card border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-20 rounded" />
+                <Skeleton className="h-5 w-24 rounded-full" />
+                <Skeleton className="h-5 w-28 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+            <div className="flex gap-2 self-end sm:self-center">
+              <Skeleton className="h-9 w-9 rounded-lg" />
+              <Skeleton className="h-9 w-9 rounded-lg" />
+              <Skeleton className="h-9 w-20 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

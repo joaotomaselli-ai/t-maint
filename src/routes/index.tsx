@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,11 +45,7 @@ export const Route = createFileRoute("/")({ component: Dashboard });
 function Dashboard() {
   const { isLoading, isMaster, isClient } = useAccess();
   if (isLoading) {
-    return (
-      <div className="grid place-items-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-[#00F5D4]" />
-      </div>
-    );
+    return <CockpitDashboardSkeleton />;
   }
   if (isMaster) return <MasterPanel />;
   if (isClient) return <ClientPortalDashboard />;
@@ -535,3 +532,87 @@ function PendingQueueView({ onBack }: { onBack: () => void }) {
     </div>
   );
 }
+
+
+function CockpitDashboardSkeleton() {
+  return (
+    <div className="space-y-8 font-sans animate-fade-in-up">
+      {/* Header Skeleton */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-[#1F293D]">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-36 bg-[#182232]" />
+          <Skeleton className="h-8 w-56 bg-[#182232]" />
+          <Skeleton className="h-3 w-40 bg-[#182232]" />
+        </div>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-32 rounded-xl bg-[#182232]" />
+          <Skeleton className="h-9 w-28 rounded-xl bg-[#182232]" />
+          <Skeleton className="h-9 w-32 rounded-xl bg-[#182232]" />
+        </div>
+      </div>
+
+      {/* 4 Metric Cards Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-2xl bg-[#131A26] border border-[#1F293D] p-5 space-y-4">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-3.5 w-28 bg-[#182232]" />
+              <Skeleton className="h-8 w-8 rounded-xl bg-[#182232]" />
+            </div>
+            <Skeleton className="h-9 w-24 bg-[#182232]" />
+            <Skeleton className="h-3 w-36 bg-[#182232]" />
+          </div>
+        ))}
+      </div>
+
+      {/* Charts Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 rounded-2xl bg-[#131A26] border border-[#1F293D] p-6 space-y-6">
+          <div className="flex justify-between items-center pb-4 border-b border-[#1F293D]">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-lg bg-[#182232]" />
+              <div className="space-y-1.5">
+                <Skeleton className="h-4 w-48 bg-[#182232]" />
+                <Skeleton className="h-3 w-32 bg-[#182232]" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Skeleton className="h-4 w-20 bg-[#182232]" />
+              <Skeleton className="h-4 w-20 bg-[#182232]" />
+            </div>
+          </div>
+          <div className="h-44 flex items-end justify-between gap-4 pt-4 px-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                <Skeleton className={`w-full max-w-[38px] rounded-lg bg-[#182232] ${['h-20', 'h-28', 'h-32', 'h-24', 'h-36', 'h-40'][i - 1]}`} />
+                <Skeleton className="h-3 w-8 bg-[#182232]" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-[#131A26] border border-[#1F293D] p-6 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-[#1F293D]">
+            <Skeleton className="h-8 w-8 rounded-lg bg-[#182232]" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-40 bg-[#182232]" />
+              <Skeleton className="h-3 w-28 bg-[#182232]" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-between">
+                  <Skeleton className="h-3 w-32 bg-[#182232]" />
+                  <Skeleton className="h-3 w-8 bg-[#182232]" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full bg-[#182232]" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
