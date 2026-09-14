@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -260,7 +261,7 @@ function Tecnicos() {
       </header>
 
       {isLoading ? (
-        <Card><CardContent className="py-16 text-center text-muted-foreground">Carregando...</CardContent></Card>
+        <TechnicianGridSkeleton />
       ) : technicians.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center text-muted-foreground">
@@ -403,5 +404,37 @@ function TechnicianCardItem({
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function TechnicianGridSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 animate-fade-in-up">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className="p-5 rounded-2xl bg-card border border-border space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-xl" />
+              <div className="space-y-1.5">
+                <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+            <Skeleton className="h-8 w-8 rounded-lg" />
+          </div>
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
+            <Skeleton className="h-10 rounded-lg" />
+            <Skeleton className="h-10 rounded-lg" />
+          </div>
+          <div className="flex justify-between items-center pt-2">
+            <Skeleton className="h-5 w-28 rounded-full" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
