@@ -216,7 +216,7 @@ export function AgendaWidget() {
                         )}
                         {isTask && completed && (
                           <CheckCircle2 
-                            title={isFuture ? "" : "Desmarcar tarefa (Reabrir)"}
+                            
                             className={cn("h-3 w-3 shrink-0 transition-colors",
                               isFuture ? "text-green-600/50 cursor-not-allowed" : "text-green-600 hover:text-red-500"
                             )} 

@@ -104,7 +104,7 @@ export function useSettings() {
     mutationFn: (s: Settings) => upsertProfile(user!.id, s),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", user?.id] }),
   });
-  const settings: Settings = q.data ?? { companyName: "", technicianName: "" };
+  const settings: Settings = (q.data as Settings) ?? { companyName: "", technicianName: "" };
   return { settings, isLoading: q.isLoading, saveSettings: save };
 }
 
@@ -113,7 +113,7 @@ export function useCompanySettings() {
   const fetchProfile = useServerFn(getCompanyProfileData);
   const q = useQuery({
     queryKey: ["profile", companyId],
-    queryFn: () => companyId ? fetchProfile({ data: { companyId } }) : Promise.resolve({ companyName: "", technicianName: "" }),
+    queryFn: async (): Promise<Settings> => { if (!companyId) return { companyName: "", technicianName: "" }; const res = await fetchProfile({ data: { companyId } }); return (res || { companyName: "", technicianName: "" }) as Settings; },
     enabled: !!companyId,
   });
   const settings: Settings = q.data ?? { companyName: "", technicianName: "" };

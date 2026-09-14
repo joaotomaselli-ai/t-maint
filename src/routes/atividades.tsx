@@ -63,14 +63,8 @@ function Atividades() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isClient) {
-      navigate({ to: "/" });
-    }
   }, [isClient, navigate]);
 
-  if (isClient) {
-    return <ClientPortalDashboard />;
-  }
 
   const money = useMoney();
   const { clients } = useClients();
@@ -350,6 +344,9 @@ function Atividades() {
       return acc;
     }, { hours: 0, value: 0, km: 0 });
   }, [filtered, clientMap, sessionsByActivity, actByActivity, isTechnician, myTechId, technicians]);
+
+  if (isClient) return <ClientPortalDashboard />;
+  if (reportsLoading && (!reports || reports.length === 0)) return <OSListSkeleton />;
 
   return (
     <div className="space-y-6">
@@ -804,7 +801,7 @@ function BulletedTextarea({ value, onChange, ...props }: Omit<React.ComponentPro
     }
   };
 
-  return <Textarea value={value} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleFocus} onBlur={handleBlur} {...props} />;
+  return <Textarea value={value || ""} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleFocus} onBlur={handleBlur} {...props} />;
 }
 
 function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setExtras, clients, technicians, onSave, isSaving, formStatus, setFormStatus, formPriority, setFormPriority }: {
@@ -1664,11 +1661,11 @@ function SessionCard({ session, technicians, techMap, isNew, onChange, onRemove 
       </div>
       <div className="flex items-center space-x-2 pt-1">
         <Switch
-          id={`deduct-lunch-session-${s.id}`}
+          id={`deduct-lunch-session-${(s as any).id || "new"}`}
           checked={!!s.deductLunchFromClient}
           onCheckedChange={(checked) => onChange({ deductLunchFromClient: checked })}
         />
-        <Label htmlFor={`deduct-lunch-session-${s.id}`} className="text-xs font-medium cursor-pointer">
+        <Label htmlFor={`deduct-lunch-session-${(s as any).id || "new"}`} className="text-xs font-medium cursor-pointer">
           Não cobrar horário de almoço do cliente nesta sessão
         </Label>
       </div>

@@ -656,7 +656,7 @@ const fromTechClosure = (r: any): TechnicianMonthlyClosure => ({
 });
 
 export async function listTechnicianMonthlyClosures(): Promise<TechnicianMonthlyClosure[]> {
-  const { data, error } = await supabase.from("technician_monthly_closures").select("*");
+  const { data, error } = await (supabase as any).from("technician_monthly_closures").select("*");
   if (error) throw error;
   return (data ?? []).map(fromTechClosure);
 }
@@ -672,7 +672,7 @@ export async function upsertTechnicianMonthlyClosure(
   totalAmount: number,
   note?: string
 ): Promise<TechnicianMonthlyClosure> {
-  const { data, error } = await supabase.from("technician_monthly_closures")
+  const { data, error } = await (supabase as any).from("technician_monthly_closures")
     .upsert(
       { 
         company_id: companyId, 
@@ -693,7 +693,7 @@ export async function upsertTechnicianMonthlyClosure(
 }
 
 export async function deleteTechnicianMonthlyClosure(id: string): Promise<void> {
-  const { error } = await supabase.from("technician_monthly_closures").delete().eq("id", id);
+  const { error } = await (supabase as any).from("technician_monthly_closures").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -785,7 +785,7 @@ const fromPreventivePay = (r: any): PreventivePayment => ({
 });
 
 export async function listPreventivePayments(): Promise<PreventivePayment[]> {
-  const { data, error } = await supabase.from("preventive_payments").select("*");
+  const { data, error } = await (supabase as any).from("preventive_payments").select("*");
   if (error) throw error;
   return (data ?? []).map(fromPreventivePay);
 }
@@ -793,7 +793,7 @@ export async function listPreventivePayments(): Promise<PreventivePayment[]> {
 export async function upsertPreventivePayment(
   companyId: string, clientId: string, referenceMonth: string, amount: number, note?: string
 ): Promise<PreventivePayment> {
-  const { data, error } = await supabase.from("preventive_payments")
+  const { data, error } = await (supabase as any).from("preventive_payments")
     .upsert(
       { company_id: companyId, client_id: clientId, reference_month: referenceMonth, amount, note: note || null, paid_at: new Date().toISOString() },
       { onConflict: "company_id,client_id,reference_month" }
@@ -803,7 +803,7 @@ export async function upsertPreventivePayment(
 }
 
 export async function deletePreventivePayment(id: string): Promise<void> {
-  const { error } = await supabase.from("preventive_payments").delete().eq("id", id);
+  const { error } = await (supabase as any).from("preventive_payments").delete().eq("id", id);
   if (error) throw error;
 }
 

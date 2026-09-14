@@ -155,7 +155,7 @@ export function ClientPortalDashboard() {
 
   // Operational metrics (Zero financial data)
   const totalHours = useMemo(() => {
-    return myReports.reduce((acc, r) => acc + reportTotalsWithSessions(r, sessions).hours, 0);
+    return myReports.reduce((acc, r) => acc + reportTotalsWithSessions(r, sessions).totalHours, 0);
   }, [myReports, sessions]);
 
   const currentMonthReports = useMemo(() => {
@@ -427,7 +427,7 @@ export function ClientPortalDashboard() {
                         </span>
                         {report.requester && <span>Solicitante: {report.requester}</span>}
                         {report.technician && <span>Técnico: {report.technician}</span>}
-                        <span>Tempo: <strong>{fmtHours(totals.hours)}</strong></span>
+                        <span>Tempo: <strong>{fmtHours(totals.totalHours)}</strong></span>
                       </div>
 
                       <p className="text-xs text-foreground/80 line-clamp-2 mt-1">

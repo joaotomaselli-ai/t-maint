@@ -84,3 +84,33 @@ Antes de abrir qualquer Pull Request, certifique-se de que o build compila com 0
 ```bash
 npm run build
 ```
+
+
+## 🛡️ Padrão de Qualidade & CI/CD (Obrigatório para Todos os Agentes)
+
+Antes de qualquer alteração ser mesclada na branch `main`, ela deve passar pelos seguintes critérios de integridade:
+
+1. **Esteira de CI/CD (`.github/workflows/ci.yml`)**:
+   - `npm run test` (Vitest): Todos os testes unitários e de integração devem passar.
+   - `npx tsc --noEmit`: Zero erros de tipagem TypeScript.
+   - `npm run lint`: Conformidade de código e formatação.
+   - `npm run build`: Validação de build do Vite / TanStack Start.
+
+2. **Observabilidade & Tratamento de Erros (`src/lib/observability.ts`)**:
+   - Todas as capturas de exceção críticas devem registrar contexto via `telemetry.captureException(error)`.
+   - Fallback resiliente para operação local sem travamento.
+
+3. **Segurança & Rate Limit (`src/lib/rate-limit.ts`)**:
+   - Ações de mutação e envios de formulário com risco de flood devem utilizar `checkRateLimit` ou `withRateLimit`.
+
+4. **Conformidade Jurídica (LGPD)**:
+   - Rotas públicas de compliance: `/termos` (Termos de Uso) e `/privacidade` (Política de Privacidade LGPD).
+
+5. **Governança Git & Pull Requests**:
+   - Todo trabalho deve ter uma **Issue** categorizada como `[Nova Função]`, `[Melhoria]` ou `[Correção]`.
+   - Criar branch de feature (`feat/...` ou `fix/...`).
+   - Abrir **Pull Request** contendo as 4 seções obrigatórias:
+     1. Issue Relacionada
+     2. O que mudou
+     3. Como foi validado
+     4. Riscos, Limitações e Próximos Passos.

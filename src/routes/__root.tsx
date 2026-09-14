@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { telemetry } from '@/lib/observability';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -37,6 +39,7 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
+  telemetry.captureException(error);
   const router = useRouter();
 
   return (
@@ -125,6 +128,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => {
+    telemetry.init();
+  }, []);
+
   const { queryClient } = Route.useRouteContext();
 
   return (

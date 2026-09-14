@@ -22,6 +22,8 @@ function EstoquePage() {
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newItem, setNewItem] = useState({ name: "", sku: "", minQuantity: "", unit: "Un", location: "", initialQuantity: "", initialCost: "" });
+  const [isSaving, setIsSaving] = useState(false);
+  
 
   if (planType === "basic") {
     return (
@@ -33,7 +35,7 @@ function EstoquePage() {
     );
   }
 
-  const [isSaving, setIsSaving] = useState(false);
+  
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +126,7 @@ function EstoquePage() {
                     <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-lg">{item.name}</h3>
-                        {isLow && <AlertTriangle className="h-4 w-4 text-destructive" title="Estoque Baixo" />}
+                        {isLow && <AlertTriangle className="h-4 w-4 text-destructive"  />}
                       </div>
                       <p className="text-sm text-muted-foreground">{item.sku ? `SKU: ${item.sku}` : "Sem código"}</p>
                       <p className="text-sm text-muted-foreground">Local: {item.location || "Não informado"}</p>

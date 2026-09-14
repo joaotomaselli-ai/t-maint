@@ -684,8 +684,8 @@ export const updateCompany = createServerFn({ method: "POST" })
         if (adminRole) {
           const updatedFeatures = mergeSubscriptionFeatures(adminRole.allowed_features, {
             cycle: data.subscriptionCycle,
-            startDate: data.subscriptionStartDate,
-            endDate: data.subscriptionEndDate,
+            startDate: data.subscriptionStartDate || undefined,
+            endDate: data.subscriptionEndDate || undefined,
             isBlocked: data.isBlocked,
             blockedReason: data.blockedReason,
             contactPhone: data.contactPhone,
