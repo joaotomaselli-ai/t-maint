@@ -33,25 +33,25 @@ export function CockpitAnalytics({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Gráfico de Evolução Mensal (2 Cols) */}
-      <div className="lg:col-span-2 rounded-2xl bg-[#131A26] border border-[#1F293D] p-5 sm:p-6 relative overflow-hidden shadow-lg backdrop-blur-md">
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b border-[#1F293D]">
+      <div className="lg:col-span-2 rounded-2xl bg-card border border-border p-5 sm:p-6 relative overflow-hidden shadow-sm dark:shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b border-border">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-[#00F5D4]/10 text-[#00F5D4] border border-[#00F5D4]/20">
+            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
               <TrendingUp className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+              <h3 className="text-sm font-bold text-foreground font-mono uppercase tracking-wider">
                 EVOLUÇÃO DE ATENDIMENTOS & HORAS
               </h3>
-              <p className="text-[11px] text-slate-400">Histórico semestral consolidado do banco de dados</p>
+              <p className="text-[11px] text-muted-foreground">Histórico semestral consolidado do banco de dados</p>
             </div>
           </div>
           <div className="flex items-center gap-4 text-[11px] font-mono">
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <span className="w-2.5 h-2.5 rounded bg-[#00F5D4]" /> Horas Técnicas
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="w-2.5 h-2.5 rounded bg-cyan-500 dark:bg-cyan-400" /> Horas Técnicas
             </span>
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <span className="w-2.5 h-2.5 rounded bg-[#38BDF8]" /> Ordens de Serviço
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="w-2.5 h-2.5 rounded bg-sky-500 dark:bg-sky-400" /> Ordens de Serviço
             </span>
           </div>
         </div>
@@ -65,27 +65,27 @@ export function CockpitAnalytics({
             return (
               <div key={idx} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
                 {/* Tooltip on hover */}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono text-white bg-[#0B0F17] px-2 py-0.5 rounded border border-[#1F293D] whitespace-nowrap pointer-events-none mb-1 shadow-md z-10">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono text-popover-foreground bg-popover px-2 py-0.5 rounded border border-border whitespace-nowrap pointer-events-none mb-1 shadow-md z-10">
                   {item.hours}h • {item.orders} OS{item.orders === 1 ? "" : "s"}
                 </div>
 
                 {/* Bars Container */}
-                <div className="w-full max-w-[38px] flex items-end justify-center gap-1 h-36 bg-[#0B0F17]/60 rounded-lg p-1 border border-[#1F293D]/50">
+                <div className="w-full max-w-[38px] flex items-end justify-center gap-1 h-36 bg-muted/50 dark:bg-[#0B0F17]/60 rounded-lg p-1 border border-border/60 dark:border-[#1F293D]/50">
                   {/* Hours Bar */}
                   <div
                     style={{ height: `${heightPercent}%` }}
                     className={`w-full rounded-sm transition-all duration-500 ${
                       item.hours > 0
                         ? isCurrent
-                          ? "bg-gradient-to-t from-[#00F5D4]/80 to-[#00F5D4] shadow-[0_0_12px_rgba(0,245,212,0.4)]"
-                          : "bg-slate-600 hover:bg-[#00F5D4]/70"
-                        : "bg-slate-800/60"
+                          ? "bg-gradient-to-t from-cyan-600 to-cyan-400 dark:from-cyan-500 dark:to-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.35)]"
+                          : "bg-slate-300 hover:bg-cyan-500/70 dark:bg-slate-600 dark:hover:bg-cyan-500/70"
+                        : "bg-muted-foreground/20 dark:bg-slate-800/60"
                     }`}
                   />
                 </div>
 
                 {/* Month Label */}
-                <span className={`text-[11px] font-mono ${isCurrent ? "text-[#00F5D4] font-bold" : "text-slate-400"}`}>
+                <span className={`text-[11px] font-mono ${isCurrent ? "text-cyan-600 dark:text-cyan-400 font-bold" : "text-muted-foreground"}`}>
                   {item.month}
                 </span>
               </div>
@@ -95,26 +95,26 @@ export function CockpitAnalytics({
       </div>
 
       {/* Distribuição por Categoria CNC / Serviços (1 Col) */}
-      <div className="rounded-2xl bg-[#131A26] border border-[#1F293D] p-5 sm:p-6 flex flex-col justify-between shadow-lg backdrop-blur-md">
+      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 flex flex-col justify-between shadow-sm dark:shadow-md">
         <div>
-          <div className="flex items-center gap-2.5 pb-4 mb-4 border-b border-[#1F293D]">
-            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+          <div className="flex items-center gap-2.5 pb-4 mb-4 border-b border-border">
+            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
               <Cpu className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">DISTRIBUIÇÃO POR MÁQUINA</h3>
-              <p className="text-[11px] text-slate-400">Demandas mais frequentes registradas</p>
+              <h3 className="text-sm font-bold text-foreground font-mono uppercase tracking-wider">DISTRIBUIÇÃO POR MÁQUINA</h3>
+              <p className="text-[11px] text-muted-foreground">Demandas mais frequentes registradas</p>
             </div>
           </div>
 
           {/* Category Progress Bars or Empty State */}
           {categoryBreakdown.length === 0 ? (
-            <div className="py-8 flex flex-col items-center justify-center text-center text-slate-400 font-mono text-xs">
-              <div className="p-3 rounded-xl bg-[#0B0F17] border border-[#1F293D] text-slate-500 mb-2">
-                <Wrench className="h-5 w-5 text-slate-400" />
+            <div className="py-8 flex flex-col items-center justify-center text-center text-muted-foreground font-mono text-xs">
+              <div className="p-3 rounded-xl bg-muted border border-border text-muted-foreground mb-2">
+                <Wrench className="h-5 w-5" />
               </div>
-              <p className="font-semibold text-slate-200">Sem histórico de máquinas</p>
-              <p className="text-[11px] text-slate-500 mt-1 max-w-[210px]">
+              <p className="font-semibold text-foreground">Sem histórico de máquinas</p>
+              <p className="text-[11px] text-muted-foreground mt-1 max-w-[210px]">
                 Cadastre novas Ordens de Serviço para calcular o percentual por modelo de máquina.
               </p>
             </div>
@@ -123,12 +123,12 @@ export function CockpitAnalytics({
               {categoryBreakdown.map((cat, idx) => (
                 <div key={idx} className="space-y-1.5 font-mono">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-300 font-medium truncate max-w-[190px]" title={cat.name}>
+                    <span className="text-foreground/90 font-medium truncate max-w-[190px]" title={cat.name}>
                       {cat.name}
                     </span>
-                    <span className="font-bold text-white">{cat.count}%</span>
+                    <span className="font-bold text-foreground">{cat.count}%</span>
                   </div>
-                  <div className="h-2 w-full bg-[#0B0F17] rounded-full overflow-hidden border border-[#1F293D]/60">
+                  <div className="h-2 w-full bg-muted dark:bg-[#0B0F17] rounded-full overflow-hidden border border-border/60 dark:border-[#1F293D]/60">
                     <div
                       style={{ width: `${cat.count}%`, backgroundColor: cat.color }}
                       className="h-full rounded-full transition-all duration-700"
@@ -140,9 +140,9 @@ export function CockpitAnalytics({
           )}
         </div>
 
-        <div className="mt-5 pt-3 border-t border-[#1F293D] flex items-center justify-between text-[11px] font-mono text-slate-400">
-          <span>Total Mês: <strong className="text-[#00F5D4]">{totalOrdersMonth} Atendimentos</strong></span>
-          <span className="text-emerald-400 flex items-center gap-1">
+        <div className="mt-5 pt-3 border-t border-border flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+          <span>Total Mês: <strong className="text-cyan-600 dark:text-cyan-400">{totalOrdersMonth} Atendimentos</strong></span>
+          <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
             <CheckCircle2 className="h-3.5 w-3.5" /> {totalOrdersMonth > 0 ? "100% Auditado" : "Sem pendências"}
           </span>
         </div>
