@@ -1,3 +1,5 @@
+import { isFeatureAllowedForPlan } from "@/lib/features";
+import { useAccess } from "@/hooks/use-access";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -35,6 +37,7 @@ export function UsersManager({
   allowRoleAdmin?: boolean;
 }) {
   const qc = useQueryClient();
+  const access = useAccess();
   const listUsersFn = useServerFn(listCompanyUsers);
   const createUserFn = useServerFn(createSubUser);
   const removeUserFn = useServerFn(removeCompanyUser);
@@ -101,7 +104,12 @@ export function UsersManager({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5" /> Criar usuário</CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5" /> Criar usuário</CardTitle>
+            <span className="text-xs font-mono text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded">
+              Cota: {users.data?.users?.length || 0} / {access.maxTechnicians || 2} técnico(s)
+            </span>
+          </div>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-3 sm:grid-cols-5">
@@ -139,7 +147,8 @@ export function UsersManager({
             <Label>Funções disponíveis</Label>
             <div className="flex flex-wrap gap-3">
               {ALL_FEATURES.map((f) => {
-                const isRestricted = nu.role === "technician" && (f.key === "clientes" || f.key === "tecnicos");
+                const planNotAllowed = !access.isMaster && !isFeatureAllowedForPlan(access.planType, f.key);
+                const isRestricted = (nu.role === "technician" && (f.key === "clientes" || f.key === "tecnicos")) || planNotAllowed;
                 const checked = isRestricted ? false : nu.features.includes(f.key);
                 return (
                   <label key={f.key} className={`flex items-center gap-2 text-sm ${isRestricted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
@@ -148,7 +157,7 @@ export function UsersManager({
                       checked={checked}
                       onCheckedChange={() => setNu({ ...nu, features: toggleFeature(nu.features, f.key) })}
                     />
-                    {f.label}
+                    {f.label} {planNotAllowed && <span className="text-[10px] text-cyan-500 font-mono">(Pro)</span>}
                   </label>
                 );
               })}

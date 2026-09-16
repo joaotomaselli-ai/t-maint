@@ -25,6 +25,7 @@ export function useAccess() {
     companyName: q.data?.companyName ?? null,
     allowedFeatures: q.data?.allowedFeatures ?? null,
     planType: q.data?.planType ?? "basic",
+    maxTechnicians: (q.data as any)?.maxTechnicians ?? ((q.data?.planType === "pro") ? 2 : (q.data?.planType === "elite" || q.data?.planType === "elite_pro") ? 20 : 2),
     isBlocked: q.data?.isBlocked ?? false,
     blockedReason: q.data?.blockedReason ?? null,
     subscription: q.data?.subscription ?? null,

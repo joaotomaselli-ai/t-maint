@@ -118,17 +118,16 @@ export function MasterPanel() {
             <Label>Plano</Label>
             <Select value={newCo.planType} onValueChange={(v: any) => {
               let fee = newCo.subscriptionFee;
-              if (v === "basic") fee = 97;
-              if (v === "pro") fee = 197;
-              if (v === "elite") fee = 397;
+              if (v === "basic") fee = 197;
+              if (v === "pro") fee = 397;
+              if (v === "elite" || v === "elite_pro") fee = 997;
               setNewCo({ ...newCo, planType: v, subscriptionFee: fee });
             }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="basic">Básico</SelectItem>
-                <SelectItem value="pro">Pro</SelectItem>
-                <SelectItem value="elite">Elite</SelectItem>
-                <SelectItem value="elite_pro">Elite Pro</SelectItem>
+                <SelectItem value="basic">Básico (Essencial) — R$ 197</SelectItem>
+                <SelectItem value="pro">Pro Industrial (Profissional) — R$ 397</SelectItem>
+                <SelectItem value="elite_pro">Elite Enterprise (Corporativo) — Sob Consulta</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -1,3 +1,4 @@
+import { useAccess } from "@/hooks/use-access";
 import React, { useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -20,6 +21,8 @@ export function MachineQRModal({
   tagNumber,
 }: MachineQRModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const { planType, isMaster } = useAccess();
+  const isBasic = !isMaster && planType === "basic";
 
   // Encode machine parameter cleanly
   const encodedId = encodeURIComponent(machineName.trim());
@@ -42,6 +45,16 @@ export function MachineQRModal({
             Adesivo para identificação no painel elétrico da máquina.
           </DialogDescription>
         </DialogHeader>
+
+        {isBasic && (
+          <div className="p-3 mb-3 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-xs text-cyan-300 flex items-start gap-2">
+            <ShieldCheck className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white block font-mono">Recurso Pro Industrial & Elite Enterprise</strong>
+              As etiquetas Machine QR Tag e o Portal B2B de consulta rápida fazem parte dos planos Pro e Enterprise.
+            </div>
+          </div>
+        )}
 
         {/* Printable Physical Tag Preview */}
         <div className="my-4">

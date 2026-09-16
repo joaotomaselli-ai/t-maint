@@ -3,23 +3,34 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { type PlanType, PLAN_CONFIGS, calculateSuggestedFee } from "@/lib/features";
 
 async function checkUserLimit(companyId: string) {
-  const { data: company } = await supabaseAdmin.from("companies").select("plan_type").eq("id", companyId).single();
+  const { data: company } = await supabaseAdmin.from("companies").select("plan_type, name").eq("id", companyId).single();
   if (!company) throw new Error("Empresa não encontrada.");
   
-  if (company.plan_type === "elite_pro") return;
+  const planType = (company.plan_type as PlanType) || "basic";
+  if (planType === "master" || planType === "elite_pro" || company.name.trim().toLowerCase() === "t-maint") return;
+
+  const { data: adminRole } = await supabaseAdmin
+    .from("user_roles")
+    .select("allowed_features")
+    .eq("company_id", companyId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  const maxTechTag = ((adminRole?.allowed_features || []) as string[]).find((f: string) => f.startsWith("sub:max_tech:"));
+  let limit = maxTechTag ? parseInt(maxTechTag.slice("sub:max_tech:".length), 10) : 0;
+  if (!limit || isNaN(limit)) {
+    limit = planType === "pro" ? 2 : planType === "elite" ? 20 : 2;
+  }
 
   const { count } = await supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true }).eq("company_id", companyId);
   const currentCount = count ?? 0;
-  
-  let limit = 2; // basic
-  if (company.plan_type === "pro") limit = 5;
-  if (company.plan_type === "elite") limit = 15;
 
   if (currentCount >= limit) {
-    const planName = company.plan_type === "basic" ? "Básico" : company.plan_type === "pro" ? "Pro" : "Elite";
-    throw new Error(`Limite de usuários atingido para o plano ${planName} (máx ${limit} usuários). Mude de plano para adicionar mais acessos.`);
+    const planName = planType === "basic" ? "Básico" : planType === "pro" ? "Pro Industrial" : "Elite Enterprise";
+    throw new Error(`Limite de técnicos/usuários atingido para o plano ${planName} (${currentCount} de ${limit} utilizados). Contrate técnicos adicionais ou altere o plano para liberar novos acessos.`);
   }
 }
 
@@ -235,6 +246,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
       isBlocked,
       blockedReason,
       subscription,
+      maxTechnicians: subscription?.maxTechnicians ?? (planType === "pro" ? 2 : planType === "elite" || planType === "elite_pro" ? 20 : 2),
     };
   });
 
@@ -255,6 +267,7 @@ export interface CompanySubscription {
   autoBlockOnExpire: boolean;
   daysRemaining: number;
   status: SubscriptionStatus;
+  maxTechnicians: number;
 }
 
 function parseCompanySubscription(
@@ -278,6 +291,7 @@ function parseCompanySubscription(
   const phoneTag = getTag("sub:phone:");
   const emailTag = getTag("sub:email:");
   const autoBlockTag = getTag("sub:autoblock:");
+  const maxTechTag = getTag("sub:max_tech:");
 
   const cycle: SubscriptionCycle = (cycleTag as any) || (company.subscription_cycle as any) || "mensal";
   
@@ -317,6 +331,9 @@ function parseCompanySubscription(
     status = "active";
   }
 
+  const defaultMaxTech = (company.plan_type === "pro" ? 2 : company.plan_type === "elite" || company.plan_type === "elite_pro" ? 20 : 2);
+  const maxTechnicians = maxTechTag ? parseInt(maxTechTag, 10) || defaultMaxTech : defaultMaxTech;
+
   return {
     cycle,
     startDate,
@@ -328,6 +345,7 @@ function parseCompanySubscription(
     autoBlockOnExpire,
     daysRemaining,
     status,
+    maxTechnicians,
   };
 }
 
@@ -342,6 +360,7 @@ function mergeSubscriptionFeatures(
     contactPhone: string | null;
     contactEmail: string | null;
     autoBlockOnExpire: boolean;
+    maxTechnicians: number;
   }>
 ): string[] {
   const existing = (currentFeatures || []).filter(f => !f.startsWith("sub:"));
@@ -356,6 +375,7 @@ function mergeSubscriptionFeatures(
   if (sub.contactPhone) next.push(`sub:phone:${sub.contactPhone}`);
   if (sub.contactEmail) next.push(`sub:email:${sub.contactEmail}`);
   if (sub.autoBlockOnExpire !== undefined) next.push(`sub:autoblock:${sub.autoBlockOnExpire}`);
+  if (sub.maxTechnicians !== undefined) next.push(`sub:max_tech:${sub.maxTechnicians}`);
   return next;
 }
 
@@ -373,6 +393,7 @@ export const createCompany = createServerFn({ method: "POST" })
         adminName: z.string().trim().max(120).optional(),
         contactPhone: z.string().trim().max(30).optional(),
         subscriptionFee: z.number().min(0).optional(),
+        maxTechnicians: z.number().min(1).max(9999).optional(),
         planType: z.enum(["basic", "pro", "elite", "elite_pro"]).default("basic"),
         subscriptionCycle: z.enum(["mensal", "semestral", "anual", "personalizado"]).default("mensal"),
         subscriptionStartDate: z.string().optional(),
@@ -446,14 +467,16 @@ export const createCompany = createServerFn({ method: "POST" })
       phone: data.contactPhone || "",
     });
 
+    const initialMaxTech = data.maxTechnicians ?? (data.planType === "pro" ? 2 : data.planType === "elite" || data.planType === "elite_pro" ? 20 : 2);
     const subFeatures = mergeSubscriptionFeatures([], {
       cycle: data.subscriptionCycle,
       startDate,
       endDate,
       isBlocked: false,
-      contactPhone: data.contactPhone || null,
+      contactPhone: data.contactPhone,
       contactEmail: adminEmail,
       autoBlockOnExpire: data.autoBlockOnExpire,
+      maxTechnicians: initialMaxTech,
     });
 
     const { error: re } = await supabaseAdmin
@@ -614,6 +637,7 @@ export const updateCompany = createServerFn({ method: "POST" })
       contactPhone: z.string().trim().max(50).nullable().optional(),
       contactEmail: z.string().trim().email("E-mail inválido").or(z.literal("")).nullable().optional(),
       subscriptionFee: z.number().min(0).optional(),
+      maxTechnicians: z.number().min(1).max(9999).optional(),
       planType: z.enum(["basic", "pro", "elite", "elite_pro", "master"]).optional(),
       subscriptionCycle: z.enum(["mensal", "semestral", "anual", "personalizado"]).optional(),
       subscriptionStartDate: z.string().nullable().optional(),
@@ -691,6 +715,7 @@ export const updateCompany = createServerFn({ method: "POST" })
             contactPhone: data.contactPhone,
             contactEmail: data.contactEmail,
             autoBlockOnExpire: data.autoBlockOnExpire,
+            maxTechnicians: data.maxTechnicians,
           });
 
           await supabaseAdmin

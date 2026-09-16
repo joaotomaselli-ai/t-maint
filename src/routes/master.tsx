@@ -23,6 +23,7 @@ import {
   type SubscriptionCycle
 } from "@/lib/admin.functions";
 import { useAccess } from "@/hooks/use-access";
+import { PLAN_CONFIGS, calculateSuggestedFee, type PlanType } from "@/lib/features";
 
 export const Route = createFileRoute("/master")({ component: MasterPage });
 
@@ -58,6 +59,7 @@ function MasterPage() {
     contactPhone: "",
     subscriptionFee: 397,
     planType: "pro" as "basic" | "pro" | "elite" | "elite_pro",
+    maxTechnicians: 2,
     subscriptionCycle: "mensal" as SubscriptionCycle,
     subscriptionStartDate: new Date().toISOString().slice(0, 10),
     subscriptionEndDate: "",
@@ -83,6 +85,7 @@ function MasterPage() {
     contactEmail: "",
     subscriptionFee: 0,
     planType: "pro" as "basic" | "pro" | "elite" | "elite_pro",
+    maxTechnicians: 2,
     subscriptionCycle: "mensal" as SubscriptionCycle,
     subscriptionStartDate: "",
     subscriptionEndDate: "",
@@ -121,6 +124,7 @@ function MasterPage() {
         contactPhone: "",
         subscriptionFee: 397,
         planType: "pro",
+        maxTechnicians: 2,
         subscriptionCycle: "mensal",
         subscriptionStartDate: new Date().toISOString().slice(0, 10),
         subscriptionEndDate: "",
@@ -143,6 +147,7 @@ function MasterPage() {
       if (!isMaster) {
         payload.subscriptionFee = editForm.subscriptionFee;
         payload.planType = editForm.planType;
+        payload.maxTechnicians = editForm.maxTechnicians;
         payload.subscriptionCycle = editForm.subscriptionCycle;
         payload.subscriptionStartDate = editForm.subscriptionStartDate || undefined;
         payload.subscriptionEndDate = editForm.subscriptionEndDate || undefined;
@@ -220,6 +225,7 @@ function MasterPage() {
       contactEmail: c.subscription?.contactEmail || c.ownerEmail || "",
       subscriptionFee: c.subscriptionFee ?? 0,
       planType: c.isMasterAccount ? "pro" : (c.planType ?? "pro"),
+      maxTechnicians: c.subscription?.maxTechnicians ?? (c.planType === "pro" ? 2 : c.planType === "elite" || c.planType === "elite_pro" ? 20 : 2),
       subscriptionCycle: c.subscription?.cycle ?? "mensal",
       subscriptionStartDate: c.subscription?.startDate ?? "",
       subscriptionEndDate: c.subscription?.endDate ?? "",
@@ -336,22 +342,41 @@ function MasterPage() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
+              <div className="grid sm:grid-cols-3 gap-3">
+                <div className="grid gap-1.5 sm:col-span-2">
                   <Label>Plano de Acesso</Label>
                   <Select
                     value={createForm.planType}
-                    onValueChange={(v: any) => setCreateForm({ ...createForm, planType: v })}
+                    onValueChange={(v: any) => {
+                      const newFee = calculateSuggestedFee(v, createForm.maxTechnicians);
+                      setCreateForm({ ...createForm, planType: v, subscriptionFee: newFee });
+                    }}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="basic">Básico (até 2 usuários)</SelectItem>
-                      <SelectItem value="pro">Pro (até 5 usuários)</SelectItem>
-                      <SelectItem value="elite">Elite (até 15 usuários)</SelectItem>
-                      <SelectItem value="elite_pro">Elite Pro (ilimitado)</SelectItem>
+                      <SelectItem value="basic">Básico (Essencial) — R$ 197/mês (até 2 técnicos, máx. 10)</SelectItem>
+                      <SelectItem value="pro">Pro Industrial (Profissional) — R$ 397/mês (até 2 técnicos, máx. 20)</SelectItem>
+                      <SelectItem value="elite_pro">Elite Enterprise (Corporativo) — Sob Consulta (20+ técnicos)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid gap-1.5">
+                  <Label>Técnicos Contratados</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={createForm.maxTechnicians}
+                    onChange={(e) => {
+                      const qty = Math.max(1, parseInt(e.target.value, 10) || 1);
+                      const newFee = calculateSuggestedFee(createForm.planType, qty);
+                      setCreateForm({ ...createForm, maxTechnicians: qty, subscriptionFee: newFee });
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
                   <Label>Ciclo da Assinatura</Label>
                   <Select
@@ -529,9 +554,13 @@ function MasterPage() {
                             <div>
                               <div className="font-semibold text-foreground">{c.name}</div>
                               <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="text-xs font-medium text-muted-foreground uppercase">{c.planType}</span>
+                                <Badge variant="outline" className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800">
+                                  {c.planType === "basic" ? "Básico" : c.planType === "pro" ? "Pro Industrial" : c.planType === "elite_pro" || c.planType === "elite" ? "Elite Enterprise" : c.planType}
+                                </Badge>
                                 <span className="text-muted-foreground text-xs">·</span>
-                                <span className="text-xs text-muted-foreground">{c.usersCount} usuário(s)</span>
+                                <span className="text-xs text-muted-foreground font-mono">
+                                  {c.usersCount}/{c.subscription?.maxTechnicians || 2} técnico(s)
+                                </span>
                               </div>
                             </div>
                           )}
@@ -778,22 +807,41 @@ function MasterPage() {
 
               {!editingCompany.isMasterAccount && (
                 <>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div className="grid gap-1.5">
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div className="grid gap-1.5 sm:col-span-2">
                       <Label>Plano de Acesso</Label>
                       <Select
                         value={editForm.planType}
-                        onValueChange={(v: any) => setEditForm({ ...editForm, planType: v })}
+                        onValueChange={(v: any) => {
+                          const newFee = calculateSuggestedFee(v, editForm.maxTechnicians);
+                          setEditForm({ ...editForm, planType: v, subscriptionFee: newFee });
+                        }}
                       >
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="basic">Básico (até 2 usuários)</SelectItem>
-                          <SelectItem value="pro">Pro (até 5 usuários)</SelectItem>
-                          <SelectItem value="elite">Elite (até 15 usuários)</SelectItem>
-                          <SelectItem value="elite_pro">Elite Pro (ilimitado)</SelectItem>
+                          <SelectItem value="basic">Básico (Essencial) — R$ 197/mês (até 2 técnicos, máx. 10)</SelectItem>
+                          <SelectItem value="pro">Pro Industrial (Profissional) — R$ 397/mês (até 2 técnicos, máx. 20)</SelectItem>
+                          <SelectItem value="elite_pro">Elite Enterprise (Corporativo) — Sob Consulta (20+ técnicos)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="grid gap-1.5">
+                      <Label>Técnicos Contratados</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="999"
+                        value={editForm.maxTechnicians}
+                        onChange={(e) => {
+                          const qty = Math.max(1, parseInt(e.target.value, 10) || 1);
+                          const newFee = calculateSuggestedFee(editForm.planType, qty);
+                          setEditForm({ ...editForm, maxTechnicians: qty, subscriptionFee: newFee });
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
                     <div className="grid gap-1.5">
                       <Label>Valor da Assinatura (R$)</Label>
                       <Input

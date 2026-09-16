@@ -3,6 +3,14 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MachineQRModal } from '../MachineQRModal';
 
+vi.mock('@/hooks/use-access', () => ({
+  useAccess: () => ({
+    planType: 'pro',
+    isMaster: false,
+    isAdmin: true,
+  }),
+}));
+
 describe('MachineQRModal Component', () => {
   it('renders machine name and client info when opened', () => {
     render(
