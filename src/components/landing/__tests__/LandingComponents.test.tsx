@@ -47,8 +47,13 @@ describe('Landing Page Components', () => {
         whatsappUrlService="https://wa.me/serv"
       />
     );
-    expect(screen.getByText(/Pro Industrial/i)).toBeTruthy();
-    expect(screen.getByText(/R\$ 397/i)).toBeTruthy();
+    const proMatches = screen.getAllByText(/Pro Industrial/i);
+    expect(proMatches.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Contratar Essencial/i)).toBeTruthy();
+    expect(screen.getByText(/Assinar Plano Pro/i)).toBeTruthy();
+    expect(screen.getByText(/Falar com Especialista/i)).toBeTruthy();
+    expect(screen.getByText(/Elite Enterprise/i)).toBeTruthy();
+    expect(screen.getByText(/Sob Consulta/i)).toBeTruthy();
   });
 
   it('renders LandingFooter with legal terms links', () => {
