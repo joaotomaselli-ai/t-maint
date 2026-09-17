@@ -16,8 +16,9 @@ Antes de iniciar qualquer código, verifique ou crie a **Issue correspondente no
 - 🔵 **`[Melhoria]` (Label: `Melhoria`):** Para refatorações, otimizações de performance, ajustes visuais ou melhorias de UX.
 - 🔴 **`[Correção]` (Label: `Correção`):** Para resolução de bugs, discrepâncias de dados ou quebras de layout.
 
-### 1.2 Estratégia de Branches
-- `main`: Branch de produção protegida. **Nunca faça commits diretos na `main`**.
+### 1.2 Estratégia de Branches & Governança de Deploy
+- `main`: Branch de produção protegida. **NUNCA faça commits ou pushes diretos na `main`**.
+- **Regra Absoluta de Governança**: Todo deploy e qualquer alteração de código DEVE ser realizada via branch dedicada (`feat/*`, `fix/*`, `refactor/*`) e aprovada formalmente pelo usuário através de Pull Request (PR) antes do merge para produção.
 - `feat/<nome-curto>`: Para novas funcionalidades.
 - `fix/<nome-curto>`: Para correções de bugs.
 - `refactor/<nome-curto>`: Para melhorias e polimento de UI.
