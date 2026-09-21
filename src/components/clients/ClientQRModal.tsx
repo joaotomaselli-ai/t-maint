@@ -20,15 +20,13 @@ export function ClientQRModal({ isOpen, onClose, client }: ClientQRModalProps) {
 
   const companyName = companySettings?.companyName || settings?.companyName || "T-MAINT INDUSTRIAL";
 
-  if (!client) return null;
-
   const origin = typeof window !== "undefined" ? window.location.origin : "https://t-maint.com.br";
-  const encodedClient = encodeURIComponent(client.name.trim());
-  const clientLoginUrl = `${origin}/login?client=${encodedClient}&clientId=${client.id}`;
+  const encodedClient = client ? encodeURIComponent(client.name.trim()) : "";
+  const clientLoginUrl = client ? `${origin}/login?client=${encodedClient}&clientId=${client.id}` : origin;
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: `QR-Tag-Cliente-${client.name.replace(/[^a-zA-Z0-9]/g, "_")}`,
+    documentTitle: client ? `QR-Tag-Cliente-${client.name.replace(/[^a-zA-Z0-9]/g, "_")}` : "QR-Tag-Cliente",
     pageStyle: `
       @page { size: auto; margin: 10mm; }
       @media print { 
@@ -36,6 +34,8 @@ export function ClientQRModal({ isOpen, onClose, client }: ClientQRModalProps) {
       }
     `,
   });
+
+  if (!client) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
