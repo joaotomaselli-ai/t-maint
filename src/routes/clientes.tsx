@@ -17,7 +17,7 @@ import { useMoney } from "@/hooks/use-money-visibility";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { createClientLogin, updateSubUser, disableClientLogin } from "@/lib/admin.functions";
-import { Plus, Pencil, Trash2, Users, QrCode, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle, Shield, KeyRound } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle, Shield, KeyRound, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -351,6 +351,27 @@ function Clientes() {
                     </div>
                   </div>
                 )}
+
+                {editing.id && (
+                  <div className="pt-3 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <div className="text-xs text-muted-foreground">
+                      Etiqueta física com QR Code para máquinas deste cliente:
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs font-semibold border-cyan-500/40 hover:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 shrink-0"
+                      onClick={() => {
+                        const fullClient = clients.find(c => c.id === editing.id);
+                        if (fullClient) setQrClient(fullClient);
+                      }}
+                    >
+                      <QrCode className="h-4 w-4 text-cyan-500" />
+                      Gerar Etiqueta QR Code
+                    </Button>
+                  </div>
+                )}
               </div>
 
             </div>
@@ -386,6 +407,7 @@ function Clientes() {
               onRemove={remove}
               onViewPdf={viewPdf}
               onOpenCompliance={(clientObj) => setComplianceClient(clientObj)}
+              onOpenQr={(clientObj) => setQrClient(clientObj)}
             />
           ))}
         </div>
@@ -417,6 +439,7 @@ function ClientCardItem({
   onRemove,
   onViewPdf,
   onOpenCompliance,
+  onOpenQr,
 }: {
   c: Client;
   money: (v: number) => string;
@@ -424,6 +447,7 @@ function ClientCardItem({
   onRemove: (id: string) => void;
   onViewPdf: (path: string) => void;
   onOpenCompliance: (c: Client) => void;
+  onOpenQr: (c: Client) => void;
 }) {
   const { clientReq } = useClientRequirements(c.id);
   const subStatus = getSubmissionStatus(clientReq?.nextSubmissionDate);
@@ -500,16 +524,28 @@ function ClientCardItem({
           )}
         </div>
 
-        {/* Industrial Integration Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full mt-4 gap-1.5 text-xs font-semibold border-blue-300 dark:border-blue-800 hover:bg-blue-500/10 text-blue-700 dark:text-blue-400"
-          onClick={() => onOpenCompliance(c)}
-        >
-          <Building2 className="h-4 w-4 text-blue-600" />
-          Exigências & Integração
-        </Button>
+        {/* Action Buttons: QR Tag do Cliente + Exigências */}
+        <div className="grid grid-cols-2 gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs font-semibold border-cyan-500/30 dark:border-cyan-500/30 hover:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400"
+            onClick={() => onOpenQr(c)}
+            title="Gerar etiqueta QR Code para máquinas deste cliente"
+          >
+            <QrCode className="h-4 w-4 text-cyan-500 shrink-0" />
+            QR Tag
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs font-semibold border-blue-300 dark:border-blue-800 hover:bg-blue-500/10 text-blue-700 dark:text-blue-400"
+            onClick={() => onOpenCompliance(c)}
+          >
+            <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
+            Exigências
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
