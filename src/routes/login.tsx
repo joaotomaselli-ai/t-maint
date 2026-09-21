@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,16 +21,23 @@ import {
   Cpu, 
   Sparkles,
   Lock,
-  User
+  User,
+  Building2,
+  QrCode
 } from "lucide-react";
 import { toast } from "sonner";
 import { NoiseGridBackground } from "@/components/ui/noise-grid-background";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 
-export const Route = createFileRoute("/login")({ component: LoginPage });
+export const Route = createFileRoute("/login")({
+  component: LoginPage,
+});
 
 function LoginPage() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const clientParam = searchParams.get("client") || undefined;
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -170,6 +177,25 @@ function LoginPage() {
                   Digite seu usuário ou e-mail corporativo para continuar.
                 </p>
               </div>
+
+              {clientParam && (
+                <div className="mb-5 p-3.5 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-xs text-cyan-200 flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0 mt-0.5">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 block font-bold">
+                      Portal do Cliente • Acesso via QR Tag
+                    </span>
+                    <span className="text-white font-extrabold text-sm truncate block">
+                      {decodeURIComponent(clientParam)}
+                    </span>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      Entre com seu usuário para visualizar suas máquinas e laudos.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={signIn} className="space-y-5 font-mono">
                 {/* Identifier */}

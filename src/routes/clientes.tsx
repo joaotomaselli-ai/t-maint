@@ -10,13 +10,14 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { useClients } from "@/hooks/use-data";
 import { useClientRequirements, getSubmissionStatus } from "@/hooks/use-client-requirements";
 import { ClientComplianceModal } from "@/components/ClientComplianceModal";
+import { ClientQRModal } from "@/components/clients/ClientQRModal";
 import { fmtCurrency, uploadClientContract, getAttachmentUrl, type Client } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { createClientLogin, updateSubUser, disableClientLogin } from "@/lib/admin.functions";
-import { Plus, Pencil, Trash2, Users, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle, Shield, KeyRound } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, QrCode, Loader2, Building2, FileText, CheckCircle2, AlertTriangle, XCircle, Shield, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -57,6 +58,7 @@ function Clientes() {
   const [isSaving, setIsSaving] = useState(false);
   const [editing, setEditing] = useState<Editing>(empty());
   const [complianceClient, setComplianceClient] = useState<Client | null>(null);
+  const [qrClient, setQrClient] = useState<Client | null>(null);
 
   const createLogin = useServerFn(createClientLogin);
   const updateSub = useServerFn(updateSubUser);
@@ -387,6 +389,14 @@ function Clientes() {
             />
           ))}
         </div>
+      )}
+
+      {qrClient && (
+        <ClientQRModal
+          client={qrClient}
+          isOpen={!!qrClient}
+          onClose={() => setQrClient(null)}
+        />
       )}
 
       {complianceClient && (
