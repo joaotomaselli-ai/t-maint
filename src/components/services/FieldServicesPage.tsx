@@ -60,25 +60,28 @@ export function FieldServicesPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/90 border-b border-slate-800/80 font-sans">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:border-cyan-400 transition-colors">
+            <div className="h-9 w-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:border-cyan-400 transition-colors">
               <Wrench className="h-4 w-4" />
             </div>
-            <div>
-              <div className="text-base font-bold text-white tracking-tight flex items-center gap-1.5">
-                T-MAINT <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">CNC FIELD</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-extrabold tracking-tight text-white">
+                T-MAINT
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                CNC Field
+              </span>
             </div>
           </Link>
 
           <div className="flex items-center gap-3">
             <Link
               to="/"
-              className="text-xs font-mono text-slate-300 hover:text-cyan-400 transition-colors hidden sm:flex items-center gap-1 border border-slate-800 px-3 py-1.5 rounded-lg bg-slate-900/60"
+              className="text-sm font-medium text-slate-300 hover:text-white transition-colors hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-900 border border-slate-800"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> Conhecer Software SaaS
+              <ArrowLeft className="h-4 w-4 text-cyan-400" /> Conhecer Software SaaS
             </Link>
 
             <a
@@ -89,7 +92,7 @@ export function FieldServicesPage() {
               <ShimmerButton
                 variant="amber"
                 shimmerDuration="2s"
-                className="text-xs uppercase tracking-wider py-2 px-3.5"
+                className="text-xs font-semibold uppercase tracking-wider py-2 px-3.5"
               >
                 <Phone className="h-3.5 w-3.5 mr-1.5" /> Plantão Técnico
               </ShimmerButton>
