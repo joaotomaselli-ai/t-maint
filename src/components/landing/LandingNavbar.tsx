@@ -10,6 +10,7 @@ import {
   BarChart3,
   ChevronRight,
   ShieldCheck,
+  Wrench,
 } from "lucide-react";
 
 export function LandingNavbar() {
@@ -20,8 +21,7 @@ export function LandingNavbar() {
   const navLinks = [
     { label: "Soluções", href: "#solucoes" },
     { label: "Antes vs. Depois", href: "#comparativo" },
-    { label: "Plataforma", href: "#plataforma" },
-    { label: "Serviços CNC", href: "#manutencao-cnc" },
+    { label: "Módulos SaaS", href: "#plataforma" },
     { label: "QR Tag Máquinas", href: "#qr-machines" },
     { label: "Especialista", href: "#autoridade" },
     { label: "Planos", href: "#planos", highlight: true },
@@ -52,13 +52,13 @@ export function LandingNavbar() {
               </span>
             </span>
             <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
-              Manutenção Especializada CNC & Gestão Técnica
+              Software CMMS & Gestão de Manutenção Industrial
             </span>
           </div>
         </a>
 
         {/* Desktop Navigation */}
-        <nav className="hidden xl:flex items-center gap-6 text-xs font-medium text-slate-300">
+        <nav className="hidden xl:flex items-center gap-5 text-xs font-medium text-slate-300">
           {navLinks.map((link, idx) => (
             <a
               key={idx}
@@ -74,6 +74,20 @@ export function LandingNavbar() {
               {link.label}
             </a>
           ))}
+
+          {/* Dedicated CNC Services Route Item */}
+          <a
+            href="/servicos-cnc"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate({ to: "/servicos-cnc" });
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/30 transition-all font-mono font-semibold"
+            title="Atendimento técnico elétrico e diagnóstico em campo para máquinas CNC"
+          >
+            <Wrench className="h-3.5 w-3.5 text-amber-400" />
+            <span>Atendimento CNC em Campo →</span>
+          </a>
         </nav>
 
         {/* Actions & Mobile Trigger */}
@@ -131,6 +145,23 @@ export function LandingNavbar() {
                 <ChevronRight className="h-4 w-4 text-slate-500" />
               </a>
             ))}
+
+            <a
+              href="/servicos-cnc"
+              onClick={(e) => {
+                e.preventDefault();
+                setMobileMenuOpen(false);
+                navigate({ to: "/servicos-cnc" });
+              }}
+              className="text-sm font-semibold text-amber-400 hover:text-amber-300 py-2.5 px-3 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-between transition-colors font-mono"
+            >
+              <span className="flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-amber-400" />
+                Atendimento CNC em Campo →
+              </span>
+              <ChevronRight className="h-4 w-4 text-amber-500" />
+            </a>
+
             <div className="pt-4 border-t border-slate-800 flex flex-col gap-2">
               <Button
                 onClick={() => {
