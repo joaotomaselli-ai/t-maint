@@ -29,7 +29,7 @@ export function HeroSection({ whatsappUrlService }: HeroSectionProps) {
   };
 
   return (
-    <section className="relative pt-14 pb-20 sm:pt-16 sm:pb-24 overflow-hidden border-b border-slate-800/80">
+    <section id="solucoes" className="relative pt-14 pb-20 sm:pt-16 sm:pb-24 overflow-hidden border-b border-slate-800/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Authority Pill Badge */}
         <div className="flex justify-center mb-6">
