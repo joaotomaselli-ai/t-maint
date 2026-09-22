@@ -1,4 +1,5 @@
-import { Check } from "lucide-react";
+import { useState } from "react";
+import { Check, ChevronDown, HelpCircle } from "lucide-react";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 
@@ -11,6 +12,8 @@ export function PricingAndContactSection({
   whatsappUrlSoftware: _whatsappUrlSoftware,
   whatsappUrlService: _whatsappUrlService,
 }: PricingAndContactSectionProps) {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   const whatsappUrlBasico =
     "https://wa.me/5547988485668?text=Ol%C3%A1!%20Gostaria%20de%20assinar%20o%20Plano%20B%C3%A1sico%20do%20T-MAINT.";
   const whatsappUrlPro =
@@ -18,9 +21,29 @@ export function PricingAndContactSection({
   const whatsappUrlEnterprise =
     "https://wa.me/5547988485668?text=Ol%C3%A1!%20Gostaria%20de%20um%20diagn%C3%B3stico%20e%20proposta%20personalizada%20para%20o%20Plano%20Elite%20Enterprise.";
 
+  const technicalFaqs = [
+    {
+      q: "Preciso instalar algum aplicativo pesado na Play Store ou App Store?",
+      a: "Não. O T-MAINT opera como uma aplicação web progressiva (PWA) de alta performance. Ele roda diretamente pelo navegador do celular, tablet ou computador (Chrome, Safari, Edge) sem ocupar memória interna do aparelho, sem exigir downloads lentos e com atualizações automáticas instantâneas sem interromper o trabalho do técnico em campo.",
+    },
+    {
+      q: "Como funciona a leitura de QR Code nos painéis das máquinas (Machine QR Tag)?",
+      a: "Você gera e imprime etiquetas adesivas resistentes com Machine QR Tag diretamente pela plataforma. Ao apontar qualquer câmera de smartphone para a etiqueta colada no painel elétrico da máquina, o operador ou encarregado acessa imediatamente o prontuário completo, histórico de manutenções e o botão de abertura de chamado no WhatsApp, sem necessidade de login ou instalação.",
+    },
+    {
+      q: "Os laudos técnicos em PDF podem ser gerados e assinados na tela em locais sem sinal de internet?",
+      a: "Sim. O T-MAINT foi projetado para a realidade do chão de fábrica: os dados do atendimento e as fotos são armazenados localmente no dispositivo durante a execução. A coleta da assinatura do cliente é feita diretamente na tela touch do celular ou tablet. Ao finalizar o atendimento, o laudo formal em PDF é gerado com layout profissional para envio imediato por WhatsApp ou e-mail.",
+    },
+    {
+      q: "Como é calculado o deslocamento e a quilometragem (KM) dos técnicos em campo?",
+      a: "O apontamento de campo possui campos específicos para odômetro e quilometragem percorrida. Ao encerrar a ordem de serviço, o T-MAINT consolida automaticamente a distância rodada e aplica a tarifa por KM cadastrada pela sua empresa, protegendo sua margem financeira no fechamento e eliminando divergências de reembolso.",
+    },
+  ];
+
   return (
     <section id="planos" className="py-24 border-b border-slate-800/80 bg-slate-950/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-xs font-mono uppercase font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded bg-cyan-950/40">
             Planos & Contratação
@@ -29,10 +52,11 @@ export function PricingAndContactSection({
             Adquira o Software T-MAINT para sua Operação
           </h2>
           <p className="mt-3 text-base text-slate-400">
-            Escolha o plano ideal para gerenciar seus técnicos em campo e elevar o padrão dos seus laudos.
+            Escolha o plano ideal para gerenciar seus técnicos em campo, blindar suas margens e elevar o padrão dos seus laudos.
           </p>
         </div>
 
+        {/* 3 Pricing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           {/* CARD 1: PLANO BÁSICO */}
           <div className="rounded-2xl bg-slate-900 border border-slate-800 p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
@@ -202,6 +226,54 @@ export function PricingAndContactSection({
             >
               Falar com Especialista
             </a>
+          </div>
+        </div>
+
+        {/* INTEGRATED TECHNICAL FAQ SECTION */}
+        <div id="faq" className="mt-24 pt-16 border-t border-slate-800/80">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <span className="text-xs font-mono uppercase font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded bg-cyan-950/40 inline-flex items-center gap-1.5">
+              <HelpCircle className="h-3.5 w-3.5" /> Perguntas Frequentes (FAQ)
+            </span>
+            <h3 className="mt-4 text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Dúvidas Técnicas sobre a Plataforma T-MAINT
+            </h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Esclarecimentos diretos sobre arquitetura, mobilidade e robustez operacional.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-4">
+            {technicalFaqs.map((f, i) => (
+              <div
+                key={i}
+                className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden transition-all hover:border-slate-700"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full text-left p-5 flex items-center justify-between gap-4 hover:bg-slate-800/50 transition-colors cursor-pointer"
+                  aria-expanded={openFaq === i}
+                >
+                  <span className="font-bold text-white text-sm sm:text-base flex items-center gap-2.5">
+                    <span className="font-mono text-xs text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded shrink-0">
+                      0{i + 1}
+                    </span>
+                    {f.q}
+                  </span>
+                  <ChevronDown
+                    className={
+                      "h-5 w-5 text-cyan-400 shrink-0 transition-transform duration-200 " +
+                      (openFaq === i ? "rotate-180" : "")
+                    }
+                  />
+                </button>
+                {openFaq === i && (
+                  <div className="p-5 pt-0 text-sm text-slate-300 leading-relaxed border-t border-slate-800/60 mt-2 bg-slate-950/40">
+                    {f.a}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>

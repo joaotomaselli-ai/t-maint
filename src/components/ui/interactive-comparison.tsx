@@ -28,41 +28,41 @@ export function InteractiveComparison() {
     },
     {
       icon: Clock,
-      title: "Horas Técnicas Não Auditáveis",
-      desc: "Sem comprovação real do horário de início e término das intervenções mecânicas/elétricas.",
+      title: "Horas e KM Não Auditáveis",
+      desc: "Sem comprovação real do horário de início e término das intervenções mecânicas/elétricas e deslocamento.",
     },
     {
       icon: MessageSquareOff,
-      title: "Fotos & Orçamentos no WhatsApp",
+      title: "Fotos Perdidas no WhatsApp",
       desc: "Comprovantes e fotos de peças defeituosas misturados em conversas pessoais sem histórico centralizado.",
     },
     {
       icon: ShieldAlert,
-      title: "Insegurança em Auditorias Industriais",
-      desc: "Dificuldade em comprovar preventivas, calibrações e trocas de componentes perante normas ISO.",
+      title: "Fechamento Financeiro Lento",
+      desc: "Dias perdidos conferindo notas fiscais, KM e horas extras, atrasando o faturamento e corroendo a margem líquida.",
     },
   ];
 
   const afterItems = [
     {
       icon: Smartphone,
-      title: "O.S. Digital & Assinatura na Tela",
-      desc: "Emissão de Ordem de Serviço pelo celular com assinatura do cliente e envio automático em PDF.",
+      title: "O.S. 100% Digital & Assinatura na Tela",
+      desc: "Emissão de Ordem de Serviço pelo celular com assinatura do cliente e laudo formal em PDF gerado na hora.",
     },
     {
       icon: Clock,
-      title: "Cronômetro & KM Georreferenciado",
-      desc: "Registro exato do tempo trabalhado e quilometragem com um toque, eliminando divergências.",
+      title: "Apontamento Rastreável com Cronômetro e KM",
+      desc: "Registro exato do tempo trabalhado e quilometragem com um toque, eliminando divergências de cobrança.",
     },
     {
       icon: FileCheck2,
-      title: "Orçamentos Instantâneos",
-      desc: "Composição de peças, serviços e deslocamento com envio profissional com 1 clique no WhatsApp.",
+      title: "Histórico Consolidado no Prontuário",
+      desc: "Fotos antes/depois e intervenções vinculadas à máquina via QR Code, prontas para auditorias ISO e laudos.",
     },
     {
       icon: BarChart3,
-      title: "Histórico & Portal do Cliente",
-      desc: "Acesso total à linha do tempo de cada máquina CNC (Romi, Fanuc, Okuma) para auditorias sem estresse.",
+      title: "Margem Protegida & Fechamento Ágil",
+      desc: "Deslocamento, peças e horas apuradas automaticamente no encerramento da O.S., blindando o lucro da empresa.",
     },
   ];
 
@@ -223,7 +223,7 @@ export function InteractiveComparison() {
                 <span className="w-2 h-2 rounded-full bg-[#00F5D4] animate-pulse"></span>
                 100% Digital & Auditado
               </span>
-              <span>Economia de até 10h/semana</span>
+              <span>Margem líquida blindada</span>
             </div>
           </div>
         )}

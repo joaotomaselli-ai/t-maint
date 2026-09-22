@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as TecnicosRouteImport } from './routes/tecnicos'
+import { Route as ServicosCncRouteImport } from './routes/servicos-cnc'
 import { Route as RequisicoesRouteImport } from './routes/requisicoes'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -35,6 +36,11 @@ const TermosRoute = TermosRouteImport.update({
 const TecnicosRoute = TecnicosRouteImport.update({
   id: '/tecnicos',
   path: '/tecnicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicosCncRoute = ServicosCncRouteImport.update({
+  id: '/servicos-cnc',
+  path: '/servicos-cnc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RequisicoesRoute = RequisicoesRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
+  '/servicos-cnc': typeof ServicosCncRoute
   '/tecnicos': typeof TecnicosRoute
   '/termos': typeof TermosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
+  '/servicos-cnc': typeof ServicosCncRoute
   '/tecnicos': typeof TecnicosRoute
   '/termos': typeof TermosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/relatorios': typeof RelatoriosRoute
   '/requisicoes': typeof RequisicoesRoute
+  '/servicos-cnc': typeof ServicosCncRoute
   '/tecnicos': typeof TecnicosRoute
   '/termos': typeof TermosRoute
   '/estoque/$itemId': typeof EstoqueItemIdRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/relatorios'
     | '/requisicoes'
+    | '/servicos-cnc'
     | '/tecnicos'
     | '/termos'
     | '/estoque/$itemId'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/relatorios'
     | '/requisicoes'
+    | '/servicos-cnc'
     | '/tecnicos'
     | '/termos'
     | '/estoque/$itemId'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/relatorios'
     | '/requisicoes'
+    | '/servicos-cnc'
     | '/tecnicos'
     | '/termos'
     | '/estoque/$itemId'
@@ -244,6 +256,7 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   RelatoriosRoute: typeof RelatoriosRoute
   RequisicoesRoute: typeof RequisicoesRoute
+  ServicosCncRoute: typeof ServicosCncRoute
   TecnicosRoute: typeof TecnicosRoute
   TermosRoute: typeof TermosRoute
   EstoqueItemIdRoute: typeof EstoqueItemIdRoute
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/tecnicos'
       fullPath: '/tecnicos'
       preLoaderRoute: typeof TecnicosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/servicos-cnc': {
+      id: '/servicos-cnc'
+      path: '/servicos-cnc'
+      fullPath: '/servicos-cnc'
+      preLoaderRoute: typeof ServicosCncRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/requisicoes': {
@@ -388,6 +408,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   RelatoriosRoute: RelatoriosRoute,
   RequisicoesRoute: RequisicoesRoute,
+  ServicosCncRoute: ServicosCncRoute,
   TecnicosRoute: TecnicosRoute,
   TermosRoute: TermosRoute,
   EstoqueItemIdRoute: EstoqueItemIdRoute,
