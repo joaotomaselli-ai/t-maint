@@ -84,7 +84,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return allowedFeatures.includes(item.feature);
   });
 
-  const isPublic = location.pathname === "/login" || location.pathname === "/landing";
+  const publicRoutes = ["/login", "/landing", "/servicos-cnc", "/privacidade", "/termos"];
+  const isPublic = publicRoutes.includes(location.pathname) || location.pathname.startsWith("/m/");
 
   useEffect(() => {
     if (!loading && !user && !isPublic) {
