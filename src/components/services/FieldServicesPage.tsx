@@ -136,7 +136,7 @@ export function FieldServicesPage() {
 
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/50 hover:bg-slate-900 text-xs sm:text-sm font-medium text-cyan-300 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/50 hover:bg-slate-900 text-xs sm:text-sm font-mono text-cyan-300 transition-all"
               >
                 Conhecer Software T-MAINT <ChevronRight className="h-4 w-4" />
               </Link>
