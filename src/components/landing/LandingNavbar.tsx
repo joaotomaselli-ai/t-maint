@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
@@ -58,25 +58,21 @@ export function LandingNavbar() {
             <a
               key={idx}
               href={link.href}
-              className="transition-colors hover:text-white py-1 whitespace-nowrap"
+              className="transition-colors hover:text-white py-1 whitespace-nowrap text-slate-300"
             >
               {link.label}
             </a>
           ))}
 
-          {/* Dedicated CNC Services Link with subtle badge */}
-          <a
-            href="/servicos-cnc"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate({ to: "/servicos-cnc" });
-            }}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all whitespace-nowrap shadow-[0_0_10px_rgba(245,158,11,0.15)]"
+          {/* Dedicated CNC Services Route Link */}
+          <Link
+            to="/servicos-cnc"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all whitespace-nowrap shadow-[0_0_10px_rgba(245,158,11,0.15)]"
             title="Atendimento técnico elétrico e diagnóstico em campo para máquinas CNC"
           >
-            <Wrench className="h-3 w-3 text-amber-400" />
+            <Wrench className="h-3.5 w-3.5 text-amber-400" />
             <span>Atendimento CNC em Campo →</span>
-          </a>
+          </Link>
         </nav>
 
         {/* Actions & Mobile Trigger */}
@@ -135,13 +131,9 @@ export function LandingNavbar() {
               </a>
             ))}
 
-            <a
-              href="/servicos-cnc"
-              onClick={(e) => {
-                e.preventDefault();
-                setMobileMenuOpen(false);
-                navigate({ to: "/servicos-cnc" });
-              }}
+            <Link
+              to="/servicos-cnc"
+              onClick={() => setMobileMenuOpen(false)}
               className="text-sm font-medium text-amber-400 hover:text-amber-300 py-2.5 px-3 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-between transition-colors"
             >
               <span className="flex items-center gap-2">
@@ -149,7 +141,7 @@ export function LandingNavbar() {
                 Atendimento CNC em Campo →
               </span>
               <ChevronRight className="h-4 w-4 text-amber-500" />
-            </a>
+            </Link>
 
             <div className="pt-4 border-t border-slate-800 flex flex-col gap-2">
               <Button
