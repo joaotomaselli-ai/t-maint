@@ -74,7 +74,7 @@ describe('Landing Page Components (SaaS Repositioning)', () => {
 
   it('renders SoftwareShowcaseSection with 5 modules', () => {
     render(<SoftwareShowcaseSection />);
-    expect(screen.getByText(/Engenharia de Software Criada para a Rotina de Manutenção/i)).toBeTruthy();
+    expect(screen.getByText(/Software Industrial Criado para a Rotina de Manutenção/i)).toBeTruthy();
     expect(screen.getByText(/Cockpit & Ordens de Serviço/i)).toBeTruthy();
     expect(screen.getByText(/Apontamento de Campo/i)).toBeTruthy();
     expect(screen.getByText(/Machine QR Tag/i)).toBeTruthy();
@@ -94,6 +94,7 @@ describe('Landing Page Components (SaaS Repositioning)', () => {
     expect(screen.getByText(/Formação em Mecatrônica/i)).toBeTruthy();
     expect(screen.getAllByText(/Vocabulário Nativo/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Robustez Sem Frescuras/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Fundador & Especialista em Manutenção de Máquinas de Usinagem/i)).toBeTruthy();
   });
 
   it('renders FieldServicesSection with CNC brands and diagnostics', () => {

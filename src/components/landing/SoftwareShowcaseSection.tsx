@@ -19,7 +19,7 @@ export function SoftwareShowcaseSection() {
             Por Dentro do Sistema
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Engenharia de Software Criada para a Rotina de Manutenção
+            Software Industrial Criado para a Rotina de Manutenção
           </h2>
           <p className="mt-3 text-base text-slate-400">
             Navegue pelos 5 módulos fundamentais do T-MAINT e entenda como cada tela resolve um gargalo real do técnico e do gestor industrial.

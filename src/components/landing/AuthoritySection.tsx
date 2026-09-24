@@ -14,10 +14,10 @@ export function AuthoritySection() {
               Desenvolvido por quem vive a pressão de uma máquina parada.
             </h2>
             <p className="mt-4 text-base text-slate-300 leading-relaxed">
-              O T-MAINT não nasceu em um escritório corporativo distante da indústria. Ele foi concebido por <strong className="text-white">João Batista Tomaselli</strong>, técnico graduado em Mecatrônica com sólida experiência em linhas industriais de alta criticidade.
+              O T-MAINT não nasceu em um escritório corporativo distante da indústria. Ele foi concebido por <strong className="text-white">João Batista Tomaselli</strong>, profissional com formação técnica em Mecatrônica e sólida experiência em linhas industriais de alta criticidade.
             </p>
             <div className="mt-4 p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-cyan-200 text-sm leading-relaxed">
-              <strong className="text-cyan-300 block mb-1">Engenharia Prática & Robustez Fabril</strong>
+              <strong className="text-cyan-300 block mb-1">Experiência Prática & Robustez Fabril</strong>
               A vivência de 7 anos em manutenção na multinacional WEG e em campo com máquinas CNC serviram de base para criar um software com vocabulário nativo de chão de fábrica e robustez industrial sem frescuras.
             </div>
             <p className="mt-4 text-sm text-slate-400 leading-relaxed">
@@ -65,7 +65,7 @@ export function AuthoritySection() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-white">João Batista Tomaselli</h4>
-                  <span className="text-xs font-mono text-cyan-400">Fundador & Especialista em Engenharia de Manutenção</span>
+                  <span className="text-xs font-mono text-cyan-400">Fundador & Especialista em Manutenção de Máquinas de Usinagem</span>
                 </div>
               </div>
 
