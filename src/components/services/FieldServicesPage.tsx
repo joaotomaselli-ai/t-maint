@@ -116,7 +116,7 @@ export function FieldServicesPage() {
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-slate-300 leading-relaxed">
-              Atuação presencial de engenharia para identificar a causa-raiz de paradas críticas em tornos e centros de usinagem CNC. Suporte elétrico especializado integrado a uma rede de parceiros homologados para serviços mecânicos pesados e bancada eletrônica.
+              Atuação técnica especializada em campo para identificar a causa-raiz de paradas críticas em tornos e centros de usinagem CNC. Suporte elétrico especializado integrado a uma rede de parceiros homologados para serviços mecânicos pesados e bancada eletrônica.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
