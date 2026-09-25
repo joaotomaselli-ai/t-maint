@@ -27,7 +27,9 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
   
   const beforePhotos = photos.filter(p => p.kind.includes('before'));
   const afterPhotos = photos.filter(p => p.kind.includes('after'));
-  const hasPhotos = beforePhotos.length > 0 || afterPhotos.length > 0;
+  const reqPhotos = photos.filter(p => p.kind.includes('future') || p.kind.includes('replacement'));
+  const otherPhotos = photos.filter(p => !p.kind.includes('before') && !p.kind.includes('after') && !p.kind.includes('future') && !p.kind.includes('replacement'));
+  const hasPhotos = photos.length > 0;
 
   const renderPhotoTable = (photosList: {url: string}[], altText: string) => {
     const rows = [];
@@ -300,11 +302,29 @@ export const OSReportPrint = forwardRef<HTMLDivElement, OSReportPrintProps>(({
           )}
 
           {afterPhotos.length > 0 && (
-            <div>
+            <div className="mb-8">
               <h4 className="text-md font-semibold text-[#003B73] mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#003B73]"></span> Depois do Serviço
               </h4>
               {renderPhotoTable(afterPhotos, "Depois")}
+            </div>
+          )}
+
+          {reqPhotos.length > 0 && (
+            <div className="mb-8">
+              <h4 className="text-md font-semibold text-amber-700 mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span> Evidências de Peças / Requisições Futuras
+              </h4>
+              {renderPhotoTable(reqPhotos, "Requisições")}
+            </div>
+          )}
+
+          {otherPhotos.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-slate-500"></span> Outras Evidências e Anexos
+              </h4>
+              {renderPhotoTable(otherPhotos, "Anexo")}
             </div>
           )}
         </section>
