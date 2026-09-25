@@ -669,20 +669,41 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
 
   const totalLunchDeducted = (r.deductLunchFromClient ? (r.lunchHours || 0) : 0) + sessions.reduce((acc, s) => acc + (s.deductLunchFromClient ? (s.lunchHours || 0) : 0), 0);
 
+  const loadReportPhotos = async (activityId: string) => {
+    try {
+      const { listAttachments, getAttachmentUrl } = await import("@/lib/api");
+      const atts = await listAttachments(activityId);
+      return await Promise.all(
+        atts.map(async a => ({ kind: a.kind, url: await getAttachmentUrl(a.storagePath) }))
+      );
+    } catch (e) {
+      console.error("Erro ao carregar anexos:", e);
+      return [];
+    }
+  };
+
   const exportInformative = async () => {
     try {
       toast.loading("Preparando relatório e fotos...", { id: "pdf-gen" });
-      const { listAttachments, getAttachmentUrl } = await import("@/lib/api");
-      const atts = await listAttachments(r.id);
-      const photos = await Promise.all(atts.map(async a => ({ kind: a.kind, url: await getAttachmentUrl(a.storagePath) })));
+      const photos = await loadReportPhotos(r.id);
       setPrintProps({ includeValues: false, photos, showLunchDeductionDetail });
       toast.success("Pronto para imprimir!", { id: "pdf-gen" });
-    } catch (e: any) { console.error(e); toast.error(e?.message ?? "Erro ao gerar PDF", { id: "pdf-gen" }); }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message ?? "Erro ao gerar PDF", { id: "pdf-gen" });
+    }
   };
-  const exportOperational = (includeValues: boolean) => {
-    toast.loading("Preparando relatório...", { id: "pdf-gen" });
-    setPrintProps({ includeValues, photos: [], showLunchDeductionDetail });
-    setTimeout(() => toast.success("Pronto para imprimir!", { id: "pdf-gen" }), 500);
+
+  const exportOperational = async (includeValues: boolean) => {
+    try {
+      toast.loading("Preparando relatório e fotos...", { id: "pdf-gen" });
+      const photos = await loadReportPhotos(r.id);
+      setPrintProps({ includeValues, photos, showLunchDeductionDetail });
+      toast.success("Pronto para imprimir!", { id: "pdf-gen" });
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message ?? "Erro ao gerar PDF", { id: "pdf-gen" });
+    }
   };
 
   return (
@@ -712,27 +733,28 @@ function PdfChoiceDialog({ state, onClose, clientMap, settings, companySettings,
               </p>
             </div>
           )}
-          {r.type === "preventiva" && (
-            <div className="rounded-md border p-3 space-y-2">
-              <div className="font-semibold text-sm">Informativo (cliente)</div>
-              <div className="text-xs text-muted-foreground">Layout profissional com fotos antes/depois e requisições futuras — sem valores</div>
-              <div className="flex gap-2">
-                <Button onClick={exportInformative} size="sm" variant="outline" className="flex-1 w-full">Exportar / Imprimir PDF</Button>
-              </div>
+          
+          <div className="rounded-md border p-3 space-y-2">
+            <div className="font-semibold text-sm">Informativo (cliente)</div>
+            <div className="text-xs text-muted-foreground">Layout profissional com galeria de fotos (antes/depois), requisições futuras e resumo técnico — sem valores</div>
+            <div className="flex gap-2">
+              <Button onClick={exportInformative} size="sm" variant="outline" className="flex-1 w-full">Exportar / Imprimir PDF</Button>
             </div>
-          )}
+          </div>
+
           {isAdmin && (
             <div className="rounded-md border p-3 space-y-2">
-              <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — com valores" : "Completo — com valores"}</div>
-              <div className="text-xs text-muted-foreground">Inclui apuração de valores cobrados do cliente e pagos ao técnico</div>
+              <div className="font-semibold text-sm">Completo — com valores</div>
+              <div className="text-xs text-muted-foreground">Inclui galeria de fotos, histórico de sessões e apuração de valores cobrados e pagos</div>
               <div className="flex gap-2">
                 <Button onClick={() => exportOperational(true)} size="sm" variant="outline" className="flex-1 w-full">Exportar / Imprimir PDF</Button>
               </div>
             </div>
           )}
+          
           <div className="rounded-md border p-3 space-y-2">
-            <div className="font-semibold text-sm">{r.type === "preventiva" ? "Operacional — Relatório técnico" : "Relatório técnico"}</div>
-            <div className="text-xs text-muted-foreground">Apenas informações técnicas, horas e KM</div>
+            <div className="font-semibold text-sm">Relatório técnico operacional</div>
+            <div className="text-xs text-muted-foreground">Apenas informações técnicas, galeria de fotos, horas e KM</div>
             <div className="flex gap-2">
               <Button onClick={() => exportOperational(false)} size="sm" variant="outline" className="flex-1 w-full">Exportar / Imprimir PDF</Button>
             </div>
