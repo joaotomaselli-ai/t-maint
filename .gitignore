@@ -36,3 +36,5 @@ token_git.txt
 recovery-codes_*.txt
 *.env
 *.env.*
+.vercel
+.env*
