@@ -115,3 +115,12 @@ Antes de qualquer alteração ser mesclada na branch `main`, ela deve passar pel
      2. O que mudou
      3. Como foi validado
      4. Riscos, Limitações e Próximos Passos.
+
+---
+
+## ⚡ 6. Protocolo de Execução 100% Autônoma Pós-Aprovação
+
+Após o usuário aprovar o plano de implementação (seja clicando em **Proceed**, respondendo *"Prosseguir"* ou confirmando os requisitos):
+1. O agente **DEVE executar todas as tarefas, edições de arquivos e testes de forma 100% contínua e autônoma**, sem pausar para pedir autorizações adicionais.
+2. O agente deve validar toda a esteira de qualidade (`npx tsc --noEmit`, `npm test`, `npm run build`), criar a branch, fazer o commit/push e abrir o Pull Request no GitHub.
+3. O agente só deve finalizar seu turno no final com o link do PR pronto para aprovação do usuário.
