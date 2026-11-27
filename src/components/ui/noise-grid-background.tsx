@@ -323,7 +323,7 @@ export function NoiseGridBackground({
   }, [direction, speed, squareSize]);
 
   return (
-    <div className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-[#0B0F17] ${className}`}>
+    <div className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-background ${className}`}>
       {/* Soft Cyber Teal & Deep Navy Radial Spotlight */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_50%_180px,rgba(0,245,212,0.08),transparent_70%)]" />
 
@@ -356,7 +356,7 @@ export function NoiseGridBackground({
       </div>
 
       {/* Bottom Vignette */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0B0F17]/80" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80" />
     </div>
   );
 }

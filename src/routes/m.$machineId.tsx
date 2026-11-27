@@ -157,18 +157,18 @@ export function MachineTimelinePage() {
   )}`;
 
   return (
-    <div className="min-h-screen bg-[#090D14] text-slate-100 font-sans pb-16">
+    <div className="min-h-screen bg-background text-slate-100 font-sans pb-16">
       {/* Header Bar */}
       <header className="border-b border-slate-800 bg-slate-950/90 sticky top-0 z-40 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logoTmaint} alt="T-MAINT" className="h-8 w-8 object-contain" />
             <div>
-              <span className="text-sm font-extrabold text-white">T-MAINT INDUSTRIAL</span>
-              <span className="text-[10px] font-mono text-cyan-400 block">Linha do Tempo do Equipamento</span>
+              <span className="text-sm font-semibold text-white">T-MAINT INDUSTRIAL</span>
+              <span className="text-[10px] font-mono text-brand-400 block">Linha do Tempo do Equipamento</span>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 text-[10px] font-mono font-bold uppercase">
+          <span className="px-2.5 py-1 rounded bg-brand-950/60 border border-brand-500/40 text-brand-400 text-[10px] font-mono font-bold uppercase">
             Machine Tag Ativa
           </span>
         </div>
@@ -176,13 +176,13 @@ export function MachineTimelinePage() {
 
       <main className="max-w-4xl mx-auto px-4 pt-8">
         {/* Machine Identity Banner */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden">
+        <div className="p-6 sm:p-8 rounded-lg bg-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-wider mb-2">
+              <div className="inline-flex items-center gap-2 text-xs font-mono text-brand-400 uppercase tracking-wider mb-2">
                 <Cog className="h-4 w-4" /> Histórico da máquina
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
                 {machineName || "Equipamento Industrial"}
               </h1>
               {clientName && (
@@ -204,7 +204,7 @@ export function MachineTimelinePage() {
                 variant="teal"
                 shimmerDuration="2s"
                 glow={true}
-                className="w-full sm:w-auto text-xs uppercase tracking-wider py-3 px-5 shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                className="w-full sm:w-auto text-xs uppercase tracking-wider py-3 px-5"
               >
                 <Phone className="h-4 w-4 mr-1.5" /> Chamar Suporte Técnico
               </ShimmerButton>
@@ -213,21 +213,21 @@ export function MachineTimelinePage() {
 
           {/* Quick Metrics */}
           <div className="mt-6 pt-6 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="p-3 rounded-md bg-slate-950 border border-slate-800">
               <span className="text-[10px] text-slate-500 uppercase block">Total Intervenções</span>
               <strong className="text-lg font-bold text-white">{reports.length}</strong>
             </div>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="p-3 rounded-md bg-slate-950 border border-slate-800">
               <span className="text-[10px] text-slate-500 uppercase block">Preventivas</span>
               <strong className="text-lg font-bold text-emerald-400">{preventivas}</strong>
             </div>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="p-3 rounded-md bg-slate-950 border border-slate-800">
               <span className="text-[10px] text-slate-500 uppercase block">Corretivas</span>
               <strong className="text-lg font-bold text-amber-400">{corretivas}</strong>
             </div>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="p-3 rounded-md bg-slate-950 border border-slate-800">
               <span className="text-[10px] text-slate-500 uppercase block">Horas de Parada</span>
-              <strong className="text-lg font-bold text-cyan-400">{totalDowntime}h</strong>
+              <strong className="text-lg font-bold text-brand-400">{totalDowntime}h</strong>
             </div>
           </div>
         </div>
@@ -236,7 +236,7 @@ export function MachineTimelinePage() {
         <section className="mt-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Clock className="h-5 w-5 text-cyan-400" />
+              <Clock className="h-5 w-5 text-brand-400" />
               Histórico Cronológico de Atendimentos
             </h2>
             <span className="text-xs font-mono text-slate-400">
@@ -249,14 +249,14 @@ export function MachineTimelinePage() {
               Carregando histórico do equipamento...
             </div>
           ) : reports.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center font-mono text-xs text-slate-400">
+            <div className="p-8 rounded-lg bg-slate-900 border border-slate-800 text-center font-mono text-xs text-slate-400">
               <AlertTriangle className="h-8 w-8 text-amber-400 mx-auto mb-2" />
               {loadError ? (
                 <>Não foi possível carregar o histórico agora. Tente novamente em instantes.</>
               ) : !user ? (
                 <>
                   O histórico de manutenção desta máquina é restrito à equipe responsável.{" "}
-                  <Link to="/login" className="text-cyan-400 underline underline-offset-4">
+                  <Link to="/login" className="text-brand-400 underline underline-offset-4">
                     Entre no T-Maint
                   </Link>{" "}
                   para consultar, ou use o botão de suporte acima.
@@ -272,7 +272,7 @@ export function MachineTimelinePage() {
                 return (
                   <div
                     key={report.id}
-                    className="p-5 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-cyan-500/40 transition-colors"
+                    className="p-5 sm:p-6 rounded-lg bg-slate-900 border border-slate-800 hover:border-brand-500/40 transition-colors"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                       <div className="flex items-center gap-2.5">

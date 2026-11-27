@@ -45,10 +45,10 @@ export function PricingAndContactSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono uppercase font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded bg-cyan-950/40">
+          <span className="text-xs font-bold text-brand-400 border border-brand-500/30 px-2.5 py-1 rounded bg-brand-950/40">
             Planos & Contratação
           </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="mt-4 text-3xl sm:text-4xl font-semibold text-white tracking-tight">
             Adquira o Software T-MAINT para sua Operação
           </h2>
           <p className="mt-3 text-base text-slate-400">
@@ -59,44 +59,44 @@ export function PricingAndContactSection({
         {/* 3 Pricing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           {/* CARD 1: PLANO BÁSICO */}
-          <div className="rounded-2xl bg-slate-900 border border-slate-800 p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
+          <div className="rounded-lg bg-slate-900 border border-slate-800 p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
             <div>
-              <div className="text-xs font-mono uppercase tracking-wider text-slate-400">Essencial</div>
+              <div className="text-xs text-slate-400">Essencial</div>
               <h3 className="text-2xl font-bold text-white mt-1">Básico</h3>
               <p className="text-xs text-slate-400 mt-2 leading-relaxed min-h-[36px]">
                 Para técnicos autônomos e pequenas assistências que precisam de agilidade em campo.
               </p>
-              <div className="mt-6 text-3xl font-extrabold text-white font-mono flex items-baseline gap-1">
+              <div className="mt-6 text-3xl font-semibold text-white flex items-baseline gap-1">
                 R$ 197<span className="text-xs font-normal text-slate-400">/mês</span>
               </div>
 
-              <ul className="mt-8 space-y-3 text-xs text-slate-300 font-mono">
+              <ul className="mt-8 space-y-3 text-xs text-slate-300">
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span className="font-bold text-slate-100">Inclui até 2 Técnicos</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Emissão de O.S. e Laudos em PDF Ilimitados com Assinatura na Tela</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Apontamento em Campo via Celular/Tablet (Horas e Fotos do Serviço)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Painel de Deslocamento e Cálculo Automático de KM</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Orçamentos Rápidos com Envio Direto no WhatsApp</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Cadastro Completo de Clientes e Equipamentos</span>
                 </li>
                 <li className="flex items-start gap-2.5 pt-2 text-[11px] text-slate-400 border-t border-slate-800/80">
-                  <span className="text-cyan-400 font-bold">•</span>
+                  <span className="text-brand-400 font-bold">•</span>
                   <span>Adicional: +R$ 69,50/mês por técnico extra (máx. 10)</span>
                 </li>
               </ul>
@@ -106,56 +106,56 @@ export function PricingAndContactSection({
               href={whatsappUrlBasico}
               target="_blank"
               rel="noreferrer"
-              className="mt-8 w-full block text-center py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-white border border-slate-800 hover:border-cyan-500/50 font-mono text-xs uppercase tracking-wider transition-all"
+              className="mt-8 w-full block text-center py-3 rounded-md bg-slate-950 hover:bg-slate-800 text-white border border-slate-800 hover:border-brand-500/50 text-xs transition-all"
             >
               Contratar Essencial
             </a>
           </div>
 
           {/* CARD 2: PLANO PRO INDUSTRIAL (MAIS RECOMENDADO) */}
-          <div className="relative rounded-2xl bg-slate-900 border-2 border-cyan-500 p-8 flex flex-col justify-between shadow-[0_0_30px_rgba(6,182,212,0.15)] overflow-hidden">
+          <div className="relative rounded-lg bg-slate-900 border-2 border-brand-500 p-8 flex flex-col justify-between overflow-hidden">
             <BorderBeam size={240} duration={8} colorFrom="#06b6d4" colorTo="#38bdf8" />
 
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-mono font-bold uppercase tracking-widest z-10 shadow-md">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-brand-500 text-slate-950 text-[10px] font-bold z-10 shadow-md">
               Mais Recomendado
             </div>
             <div>
-              <div className="text-xs font-mono uppercase tracking-wider text-cyan-400">Profissional</div>
+              <div className="text-xs text-brand-400">Profissional</div>
               <h3 className="text-2xl font-bold text-white mt-1">Pro Industrial</h3>
               <p className="text-xs text-slate-400 mt-2 leading-relaxed min-h-[36px]">
                 Para oficinas e assistências que precisam de controle total de peças, QR Code e portal para clientes.
               </p>
-              <div className="mt-6 text-3xl font-extrabold text-white font-mono flex items-baseline gap-1">
+              <div className="mt-6 text-3xl font-semibold text-white flex items-baseline gap-1">
                 R$ 397<span className="text-xs font-normal text-slate-400">/mês</span>
               </div>
 
-              <ul className="mt-8 space-y-3 text-xs text-slate-200 font-mono">
+              <ul className="mt-8 space-y-3 text-xs text-slate-200">
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span className="font-bold text-white">Inclui até 2 Técnicos</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Todos os recursos operacionais do Plano Básico inclusos</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Gestão de Estoque e Requisição de Peças com Baixa Automática na O.S.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Etiquetas Machine QR Tag para Colagem nos Painéis das Máquinas</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Portal B2B do Cliente Liberado (Histórico e Auditoria Online)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Rastreabilidade Completa para Auditorias Industriais (ISO)</span>
                 </li>
                 <li className="flex items-start gap-2.5 pt-2 text-[11px] text-slate-400 border-t border-slate-800/80">
-                  <span className="text-cyan-400 font-bold">•</span>
+                  <span className="text-brand-400 font-bold">•</span>
                   <span>Adicional: +R$ 89,50/mês por técnico extra (máx. 20)</span>
                 </li>
               </ul>
@@ -171,7 +171,7 @@ export function PricingAndContactSection({
                 variant="teal"
                 shimmerDuration="2s"
                 glow={true}
-                className="w-full text-xs uppercase tracking-wider py-3.5 shadow-[0_0_25px_rgba(6,182,212,0.35)]"
+                className="w-full text-xs py-3.5"
               >
                 Assinar Plano Pro
               </ShimmerButton>
@@ -179,40 +179,40 @@ export function PricingAndContactSection({
           </div>
 
           {/* CARD 3: PLANO ELITE ENTERPRISE */}
-          <div className="rounded-2xl bg-slate-900 border border-slate-800 p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
+          <div className="rounded-lg bg-slate-900 border border-slate-800 p-8 flex flex-col justify-between hover:border-slate-700 transition-all">
             <div>
-              <div className="text-xs font-mono uppercase tracking-wider text-slate-400">Corporativo</div>
+              <div className="text-xs text-slate-400">Corporativo</div>
               <h3 className="text-2xl font-bold text-white mt-1">Elite Enterprise</h3>
               <p className="text-xs text-slate-400 mt-2 leading-relaxed min-h-[36px]">
                 Para indústrias e frotas estruturadas com necessidades específicas de integração e governança.
               </p>
-              <div className="mt-6 text-3xl font-extrabold text-white font-mono flex items-baseline gap-1">
+              <div className="mt-6 text-3xl font-semibold text-white flex items-baseline gap-1">
                 Sob Consulta<span className="text-xs font-normal text-slate-400">/sob medida</span>
               </div>
 
-              <ul className="mt-8 space-y-3 text-xs text-slate-300 font-mono">
+              <ul className="mt-8 space-y-3 text-xs text-slate-300">
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span className="font-bold text-slate-100">A partir de 20 Técnicos (20+)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Todos os recursos do Plano Pro Industrial incluídos</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Operação em Grande Escala (20+ usuários)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Implantação e Treinamento Dedicado para a Equipe</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Suporte Prioritário VIP para correções e melhorias contínuas</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <Check className="h-4 w-4 text-brand-400 shrink-0 mt-0.5" />
                   <span>Viabilidade de pequenas adaptações e integrações operacionais</span>
                 </li>
               </ul>
@@ -222,7 +222,7 @@ export function PricingAndContactSection({
               href={whatsappUrlEnterprise}
               target="_blank"
               rel="noreferrer"
-              className="mt-8 w-full block text-center py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-white border border-slate-800 hover:border-cyan-500/50 font-mono text-xs uppercase tracking-wider transition-all"
+              className="mt-8 w-full block text-center py-3 rounded-md bg-slate-950 hover:bg-slate-800 text-white border border-slate-800 hover:border-brand-500/50 text-xs transition-all"
             >
               Falar com Especialista
             </a>
@@ -232,10 +232,10 @@ export function PricingAndContactSection({
         {/* INTEGRATED TECHNICAL FAQ SECTION */}
         <div id="faq" className="mt-24 pt-16 border-t border-slate-800/80">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <span className="text-xs font-mono uppercase font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded bg-cyan-950/40 inline-flex items-center gap-1.5">
+            <span className="text-xs font-bold text-brand-400 border border-brand-500/30 px-2.5 py-1 rounded bg-brand-950/40 inline-flex items-center gap-1.5">
               <HelpCircle className="h-3.5 w-3.5" /> Perguntas Frequentes (FAQ)
             </span>
-            <h3 className="mt-4 text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h3 className="mt-4 text-2xl sm:text-3xl font-semibold text-white tracking-tight">
               Dúvidas Técnicas sobre a Plataforma T-MAINT
             </h3>
             <p className="mt-2 text-sm text-slate-400">
@@ -247,7 +247,7 @@ export function PricingAndContactSection({
             {technicalFaqs.map((f, i) => (
               <div
                 key={i}
-                className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden transition-all hover:border-slate-700"
+                className="rounded-lg bg-slate-900 border border-slate-800 overflow-hidden transition-all hover:border-slate-700"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -255,14 +255,14 @@ export function PricingAndContactSection({
                   aria-expanded={openFaq === i}
                 >
                   <span className="font-bold text-white text-sm sm:text-base flex items-center gap-2.5">
-                    <span className="font-mono text-xs text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded shrink-0">
+                    <span className="text-xs text-brand-400 bg-brand-950/60 border border-brand-500/30 px-2 py-0.5 rounded shrink-0">
                       0{i + 1}
                     </span>
                     {f.q}
                   </span>
                   <ChevronDown
                     className={
-                      "h-5 w-5 text-cyan-400 shrink-0 transition-transform duration-200 " +
+                      "h-5 w-5 text-brand-400 shrink-0 transition-transform duration-200 " +
                       (openFaq === i ? "rotate-180" : "")
                     }
                   />

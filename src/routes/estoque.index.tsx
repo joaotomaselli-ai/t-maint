@@ -97,8 +97,8 @@ function EstoquePage() {
     <div className="space-y-6">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Estoque</h1>
-          <p className="text-muted-foreground mt-1">Gerencie seus materiais, rastreabilidade e histórico de compras.</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Estoque</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Gerencie seus materiais, rastreabilidade e histórico de compras.</p>
         </div>
         <Button onClick={() => setIsAddOpen(true)} className="gap-2 shrink-0">
           <Plus className="h-4 w-4" />

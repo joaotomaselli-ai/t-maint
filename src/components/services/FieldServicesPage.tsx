@@ -25,11 +25,11 @@ export function FieldServicesPage() {
   const servicePillars = [
     {
       icon: Zap,
-      iconColor: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+      iconColor: "text-brand-400 bg-brand-500/10 border-brand-500/20",
       title: "Diagnóstico Elétrico em Campo",
       desc: "Intervenção direta na fábrica para diagnóstico de alarmes críticos, falhas de barramento DC, servomotores, drivers, fontes, encoders, réguas ópticas e I/O de segurança.",
       badge: "Atendimento Presencial",
-      badgeColor: "text-cyan-400 border-cyan-500/30",
+      badgeColor: "text-brand-400 border-brand-500/30",
     },
     {
       icon: ShieldCheck,
@@ -58,16 +58,16 @@ export function FieldServicesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-brand-500 selection:text-slate-950">
       {/* Top Navbar */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/90 border-b border-slate-800/80 font-sans">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="h-9 w-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:border-cyan-400 transition-colors">
+            <div className="h-9 w-9 rounded-lg bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-400 group-hover:border-brand-400 transition-colors">
               <Wrench className="h-4 w-4" />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-lg font-extrabold tracking-tight text-white">
+              <span className="text-lg font-semibold tracking-tight text-white">
                 T-MAINT
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 whitespace-nowrap">
@@ -81,7 +81,7 @@ export function FieldServicesPage() {
               to="/"
               className="text-sm font-medium text-slate-300 hover:text-white transition-colors hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-900 border border-slate-800"
             >
-              <ArrowLeft className="h-4 w-4 text-cyan-400" /> Conhecer Software SaaS
+              <ArrowLeft className="h-4 w-4 text-brand-400" /> Conhecer Software SaaS
             </Link>
 
             <a
@@ -111,7 +111,7 @@ export function FieldServicesPage() {
               <Activity className="h-3.5 w-3.5 animate-pulse" /> Atendimento Técnico Especializado em Campo
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight">
               Diagnóstico Elétrico, Parametrização e Manutenção de Máquinas CNC.
             </h1>
 
@@ -136,7 +136,7 @@ export function FieldServicesPage() {
 
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/50 hover:bg-slate-900 text-xs sm:text-sm font-medium text-cyan-300 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-md border border-slate-800 bg-slate-900/60 hover:border-brand-500/50 hover:bg-slate-900 text-xs sm:text-sm font-medium text-brand-300 transition-all"
               >
                 Conhecer Software T-MAINT <ChevronRight className="h-4 w-4" />
               </Link>
@@ -149,10 +149,10 @@ export function FieldServicesPage() {
       <section className="py-20 border-b border-slate-800/80 bg-slate-950/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12">
-            <span className="text-xs font-mono uppercase font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded bg-cyan-950/40">
+            <span className="text-xs font-mono uppercase font-bold tracking-widest text-brand-400 border border-brand-500/30 px-2.5 py-1 rounded bg-brand-950/40">
               Escopo de Atuação
             </span>
-            <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="mt-4 text-2xl sm:text-3xl font-semibold text-white tracking-tight">
               Soluções Completas para Redução Imediata de Máquina Parada
             </h2>
           </div>
@@ -163,10 +163,10 @@ export function FieldServicesPage() {
               return (
                 <div
                   key={i}
-                  className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between"
+                  className="p-6 rounded-lg bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between"
                 >
                   <div>
-                    <div className={`p-3 rounded-xl border w-fit mb-4 ${pillar.iconColor}`}>
+                    <div className={`p-3 rounded-md border w-fit mb-4 ${pillar.iconColor}`}>
                       <Icon className="h-6 w-6" />
                     </div>
                     <h3 className="text-lg font-bold text-white">{pillar.title}</h3>
@@ -188,12 +188,12 @@ export function FieldServicesPage() {
       {/* CNC Brands & Controllers Matrix */}
       <section className="py-20 border-b border-slate-800/80 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-8 sm:p-10 rounded-2xl bg-slate-900/60 border border-slate-800 relative overflow-hidden">
+          <div className="p-8 sm:p-10 rounded-lg bg-slate-900/60 border border-slate-800 relative overflow-hidden">
             <div className="text-center max-w-2xl mx-auto mb-10">
-              <span className="text-xs font-mono uppercase font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded bg-cyan-950/40">
+              <span className="text-xs font-mono uppercase font-bold tracking-widest text-brand-400 border border-brand-500/30 px-2.5 py-1 rounded bg-brand-950/40">
                 Domínio Tecnológico
               </span>
-              <h3 className="mt-4 text-2xl font-extrabold text-white tracking-tight">
+              <h3 className="mt-4 text-2xl font-semibold text-white tracking-tight">
                 Principais Comandos e Fabricantes Atendidos
               </h3>
               <p className="mt-2 text-xs font-mono text-slate-400">
@@ -205,7 +205,7 @@ export function FieldServicesPage() {
               {cncBrands.map((b, i) => (
                 <div
                   key={i}
-                  className="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 text-center hover:border-cyan-500/40 transition-colors"
+                  className="p-4 rounded-md bg-slate-950/80 border border-slate-800/80 text-center hover:border-brand-500/40 transition-colors"
                 >
                   <div className="text-sm font-bold text-white">{b.name}</div>
                   <div className="text-[11px] font-mono text-slate-400 mt-1">{b.desc}</div>
@@ -238,10 +238,10 @@ export function FieldServicesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-mono mb-4">
                 <Users className="h-3.5 w-3.5" /> Rede de Especialistas
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
                 É prestador de serviços ou oficina de manutenção CNC?
               </h2>
               <p className="mt-4 text-sm text-slate-300 leading-relaxed">
@@ -264,8 +264,8 @@ export function FieldServicesPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-5 p-6 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-mono space-y-3 text-slate-300">
-              <div className="text-cyan-400 font-bold text-sm border-b border-slate-800 pb-2 flex items-center gap-2">
+            <div className="lg:col-span-5 p-6 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono space-y-3 text-slate-300">
+              <div className="text-brand-400 font-bold text-sm border-b border-slate-800 pb-2 flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4" /> Critérios de Homologação
               </div>
               <div className="flex items-start gap-2">
@@ -315,9 +315,9 @@ export function FieldServicesPage() {
             © {new Date().getFullYear()} T-MAINT • Atendimento Técnico & Diagnóstico CNC em Campo
           </div>
           <div className="flex items-center gap-4 text-slate-400">
-            <Link to="/" className="hover:text-cyan-400 transition-colors">Software SaaS</Link>
-            <Link to="/privacidade" className="hover:text-cyan-400 transition-colors">Privacidade (LGPD)</Link>
-            <Link to="/termos" className="hover:text-cyan-400 transition-colors">Termos de Uso</Link>
+            <Link to="/" className="hover:text-brand-400 transition-colors">Software SaaS</Link>
+            <Link to="/privacidade" className="hover:text-brand-400 transition-colors">Privacidade (LGPD)</Link>
+            <Link to="/termos" className="hover:text-brand-400 transition-colors">Termos de Uso</Link>
           </div>
         </div>
       </footer>

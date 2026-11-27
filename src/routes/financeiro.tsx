@@ -39,8 +39,8 @@ function Financeiro() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">Financeiro</h1>
-        <p className="text-muted-foreground mt-1">Controle de pagamentos recebidos dos clientes e pagos aos técnicos</p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Financeiro</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Controle de pagamentos recebidos dos clientes e pagos aos técnicos</p>
       </header>
 
       <Tabs defaultValue={!isAdmin ? "tecnicos" : "clientes"} className="space-y-4">
@@ -92,8 +92,8 @@ function MasterFinanceiro() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">Financeiro Master</h1>
-        <p className="text-muted-foreground mt-1">Gestão de assinaturas dos administradores</p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Financeiro Master</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Gestão de assinaturas dos administradores</p>
       </header>
 
       <div className="grid gap-4">

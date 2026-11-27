@@ -260,7 +260,7 @@ export function TechnicianComplianceModal({
           <div className="p-3.5 rounded-lg bg-red-500/15 border border-red-300 dark:border-red-900 text-red-700 dark:text-red-400 text-xs font-semibold flex items-center gap-2.5">
             <XCircle className="h-5 w-5 shrink-0 text-red-600" />
             <div>
-              <b className="text-sm block">🔴 Cadastro Irregular — Documento Vencido:</b>
+              <b className="text-sm block"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />Cadastro Irregular — Documento Vencido:</b>
               Este técnico possui <b>{expiredDocs.length} documento(s) com validade VENCIDA</b>! Providencie a reciclagem/renovação imediatamente.
             </div>
           </div>
@@ -442,7 +442,7 @@ export function TechnicianComplianceModal({
                   const statusBadge = {
                     valido: <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-300 dark:text-emerald-400 font-semibold">🟢 Válido ({val.daysLeft} dias)</Badge>,
                     vencendo: <Badge className="bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400 font-semibold">⚠️ Vencendo em {val.daysLeft} dias</Badge>,
-                    vencido: <Badge className="bg-red-500/15 text-red-700 border-red-300 dark:text-red-400 font-bold">🔴 Vencido há {Math.abs(val.daysLeft || 0)} dias</Badge>,
+                    vencido: <Badge className="bg-red-500/15 text-red-700 border-red-300 dark:text-red-400 font-bold"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />Vencido há {Math.abs(val.daysLeft || 0)} dias</Badge>,
                     sem_validade: <Badge variant="outline" className="text-muted-foreground">Sem validade</Badge>,
                   }[val.status];
 
@@ -608,7 +608,7 @@ export function TechnicianComplianceModal({
                       <Select value={status} onValueChange={(v) => setStatus(v as EPIStatus)}>
                         <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="entregue">✅ Entregue e Ativo</SelectItem>
+                          <SelectItem value="entregue"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-success" />Entregue e Ativo</SelectItem>
                           <SelectItem value="troca_pendente">⚠️ Troca / Renovação Pendente</SelectItem>
                           <SelectItem value="devolvido">↩️ Devolvido</SelectItem>
                         </SelectContent>
@@ -664,7 +664,7 @@ export function TechnicianComplianceModal({
               <div className="space-y-2.5">
                 {techEPIs.map(item => {
                   const statusLabel = {
-                    entregue: <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-300 dark:text-emerald-400">✅ Entregue e Ativo</Badge>,
+                    entregue: <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-300 dark:text-emerald-400"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-success" />Entregue e Ativo</Badge>,
                     troca_pendente: <Badge className="bg-amber-500/15 text-amber-700 border-amber-300 dark:text-amber-400">⚠️ Troca Pendente</Badge>,
                     devolvido: <Badge variant="outline" className="text-muted-foreground">↩️ Devolvido</Badge>,
                   }[item.status];

@@ -123,8 +123,8 @@ function Tecnicos() {
     <div className="space-y-6">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Técnicos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie a equipe, valores de cobrança, ASO, NRs e entrega de EPIs</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Técnicos</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Gerencie a equipe, valores de cobrança, ASO, NRs e entrega de EPIs</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -341,19 +341,19 @@ function TechnicianCardItem({
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
             {hasNoDocs && hasNoEPIs ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
-                🔴 Irregular (Sem Docs/EPI)
+                <span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />Irregular (Sem Docs/EPI)
               </span>
             ) : hasNoDocs ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
-                🔴 Irregular (Sem Docs/NR)
+                <span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />Irregular (Sem Docs/NR)
               </span>
             ) : hasNoEPIs ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
-                🔴 Irregular (Sem Ficha EPI)
+                <span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />Irregular (Sem Ficha EPI)
               </span>
             ) : expiredDocs.length > 0 ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
-                🔴 {expiredDocs.length} Doc(s) Vencido(s)
+                <span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />{expiredDocs.length} Doc(s) Vencido(s)
               </span>
             ) : expiringDocs.length > 0 ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300">
@@ -411,10 +411,10 @@ function TechnicianGridSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 animate-fade-in-up">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="p-5 rounded-2xl bg-card border border-border space-y-4">
+        <div key={i} className="p-5 rounded-lg bg-card border border-border space-y-4">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-3">
-              <Skeleton className="h-10 w-10 rounded-xl" />
+              <Skeleton className="h-10 w-10 rounded-md" />
               <div className="space-y-1.5">
                 <Skeleton className="h-5 w-36" />
                 <Skeleton className="h-3 w-24" />
