@@ -170,7 +170,7 @@ export function ClientComplianceModal({
           <div className="p-3.5 rounded-lg bg-red-500/15 border border-red-300 dark:border-red-900 text-red-700 dark:text-red-400 text-xs font-semibold flex items-center gap-2.5">
             <XCircle className="h-5 w-5 shrink-0 text-red-600" />
             <div>
-              <b className="text-sm block">🔴 PRAZO DE REENVIO VENCIDO:</b>
+              <b className="text-sm block"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />PRAZO DE REENVIO VENCIDO:</b>
               A documentação da equipe para o cliente <b>{client.name}</b> precisava ter sido reenviada em <b>{format(new Date(clientReq!.nextSubmissionDate! + "T00:00:00"), "dd/MM/yyyy")}</b> (vencido há {Math.abs(submissionVal.daysLeft!)} dias). Providencie o reenvio urgente dos lotes para liberar o acesso da portaria!
             </div>
           </div>

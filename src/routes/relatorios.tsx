@@ -25,8 +25,8 @@ function Relatorios() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">Relatórios</h1>
-        <p className="text-muted-foreground mt-1">Gere relatórios consolidados em PDF</p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Relatórios</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Gere relatórios consolidados em PDF</p>
       </header>
 
       <Tabs defaultValue={!isAdmin ? "tecnicos" : "clientes"} className="space-y-4">

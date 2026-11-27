@@ -157,7 +157,7 @@ export function UsersManager({
                       checked={checked}
                       onCheckedChange={() => setNu({ ...nu, features: toggleFeature(nu.features, f.key) })}
                     />
-                    {f.label} {planNotAllowed && <span className="text-[10px] text-cyan-500 font-mono">(Pro)</span>}
+                    {f.label} {planNotAllowed && <span className="text-[10px] text-brand-500 font-mono">(Pro)</span>}
                   </label>
                 );
               })}

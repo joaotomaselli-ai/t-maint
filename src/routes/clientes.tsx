@@ -217,8 +217,8 @@ function Clientes() {
     <div className="space-y-6">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground mt-1">Gerencie clientes, acesso ao Portal do Cliente e documentação industrial</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Clientes</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Gerencie clientes, acesso ao Portal do Cliente e documentação industrial</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -294,7 +294,7 @@ function Clientes() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-semibold flex items-center gap-1.5">
-                      <Shield className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> Acesso ao Portal do Cliente
+                      <Shield className="h-4 w-4 text-brand-600 dark:text-brand-400" /> Acesso ao Portal do Cliente
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       Permite que o cliente acesse o sistema para visualizar o histórico de suas máquinas e emitir relatórios (sem valores).
@@ -331,13 +331,13 @@ function Clientes() {
 
                 {editing.hasLogin && editing.userId && (
                   <div className="space-y-3 pt-3 border-t">
-                    <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-xs text-cyan-800 dark:text-cyan-300 flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-cyan-600 shrink-0" />
+                    <div className="p-3 bg-brand-500/10 border border-brand-500/20 rounded-lg text-xs text-brand-800 dark:text-brand-300 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-brand-600 shrink-0" />
                       <span>Acesso ao Portal ativo para este cliente.</span>
                     </div>
                     <div className="grid gap-1.5">
                       <Label className="text-xs font-medium flex items-center gap-1">
-                        <KeyRound className="h-3.5 w-3.5 text-cyan-600" /> Redefinir Senha do Cliente (Opcional)
+                        <KeyRound className="h-3.5 w-3.5 text-brand-600" /> Redefinir Senha do Cliente (Opcional)
                       </Label>
                       <Input
                         type="password"
@@ -361,13 +361,13 @@ function Clientes() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 text-xs font-semibold border-cyan-500/40 hover:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 shrink-0"
+                      className="gap-1.5 text-xs font-semibold border-brand-500/40 hover:bg-brand-500/10 text-brand-700 dark:text-brand-400 shrink-0"
                       onClick={() => {
                         const fullClient = clients.find(c => c.id === editing.id);
                         if (fullClient) setQrClient(fullClient);
                       }}
                     >
-                      <QrCode className="h-4 w-4 text-cyan-500" />
+                      <QrCode className="h-4 w-4 text-brand-500" />
                       Gerar Etiqueta QR Code
                     </Button>
                   </div>
@@ -473,14 +473,14 @@ function ClientCardItem({
           {/* Badges */}
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
             {c.userId && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-300 flex items-center gap-1">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-400 border border-brand-300 flex items-center gap-1">
                 <Shield className="h-3 w-3" /> Portal Ativo
               </span>
             )}
 
             {subStatus.status === "vencido" ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-400 border border-red-300">
-                🔴 Reenvio Vencido (há {Math.abs(subStatus.daysLeft || 0)}d)
+                <span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />Reenvio Vencido (há {Math.abs(subStatus.daysLeft || 0)}d)
               </span>
             ) : subStatus.status === "vencendo" ? (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300">
@@ -529,11 +529,11 @@ function ClientCardItem({
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs font-semibold border-cyan-500/30 dark:border-cyan-500/30 hover:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400"
+            className="gap-1.5 text-xs font-semibold border-brand-500/30 dark:border-brand-500/30 hover:bg-brand-500/10 text-brand-700 dark:text-brand-400"
             onClick={() => onOpenQr(c)}
             title="Gerar etiqueta QR Code para máquinas deste cliente"
           >
-            <QrCode className="h-4 w-4 text-cyan-500 shrink-0" />
+            <QrCode className="h-4 w-4 text-brand-500 shrink-0" />
             QR Tag
           </Button>
           <Button
@@ -555,7 +555,7 @@ function ClientGridSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 animate-fade-in-up">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="p-5 rounded-2xl bg-card border border-border space-y-4">
+        <div key={i} className="p-5 rounded-lg bg-card border border-border space-y-4">
           <div className="flex justify-between items-start">
             <div className="space-y-1.5">
               <Skeleton className="h-5 w-40" />
