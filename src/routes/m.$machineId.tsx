@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ServiceReport, ServiceSession } from "@/lib/api";
@@ -18,6 +18,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { useAuth } from "@/hooks/use-auth";
 import logoTmaint from "@/assets/logo-tmaint-icon.png";
 
 export const Route = createFileRoute("/m/$machineId")({
@@ -32,17 +33,26 @@ export function MachineTimelinePage() {
   const [reports, setReports] = useState<ServiceReport[]>([]);
   const [sessions, setSessions] = useState<ServiceSession[]>([]);
   const [clientName, setClientName] = useState<string>("");
+  const [loadError, setLoadError] = useState(false);
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     async function loadMachineData() {
       if (!machineName) return;
       setLoading(true);
+      setLoadError(false);
+      setReports([]);
+      setSessions([]);
+      setClientName("");
       try {
-        // Query activities for this machine (case-insensitive match)
+        // As OS ficam em service_reports (a tabela "activities" não existe).
+        // Comparação exata sem diferenciar maiúsculas: "TORNO" não pode trazer
+        // o histórico de "TORNO 2". Curingas do LIKE são escapados.
+        const pattern = machineName.trim().replace(/[\\%_]/g, (c) => "\\" + c);
         const { data: acts, error: actErr } = await (supabase as any)
-          .from("activities")
+          .from("service_reports")
           .select("*")
-          .ilike("machine", `%${machineName}%`)
+          .ilike("machine", pattern)
           .order("date", { ascending: false });
 
         if (actErr) throw actErr;
@@ -127,13 +137,15 @@ export function MachineTimelinePage() {
         }
       } catch (e) {
         console.error("Error loading machine timeline:", e);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
     }
 
+    if (authLoading) return;
     loadMachineData();
-  }, [machineName]);
+  }, [machineName, authLoading, user?.id]);
 
   const totalDowntime = reports.reduce((acc, r) => acc + (r.downtimeHours || 0), 0);
   const corretivas = reports.filter((r) => r.type === "corretiva").length;
@@ -168,7 +180,7 @@ export function MachineTimelinePage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-wider mb-2">
-                <Cog className="h-4 w-4" /> Equipamento Cadastrado
+                <Cog className="h-4 w-4" /> Histórico da máquina
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                 {machineName || "Equipamento Industrial"}
@@ -239,7 +251,19 @@ export function MachineTimelinePage() {
           ) : reports.length === 0 ? (
             <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center font-mono text-xs text-slate-400">
               <AlertTriangle className="h-8 w-8 text-amber-400 mx-auto mb-2" />
-              Nenhum laudo registrado para esta máquina até o momento.
+              {loadError ? (
+                <>Não foi possível carregar o histórico agora. Tente novamente em instantes.</>
+              ) : !user ? (
+                <>
+                  O histórico de manutenção desta máquina é restrito à equipe responsável.{" "}
+                  <Link to="/login" className="text-cyan-400 underline underline-offset-4">
+                    Entre no T-Maint
+                  </Link>{" "}
+                  para consultar, ou use o botão de suporte acima.
+                </>
+              ) : (
+                <>Nenhuma OS registrada para a máquina "{machineName}" na sua empresa.</>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
