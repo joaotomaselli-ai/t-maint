@@ -24,7 +24,7 @@ vi.mock('@tanstack/react-router', () => ({
 describe('Landing Page Components (SaaS Repositioning)', () => {
   it('renders LandingNavbar with link to /servicos-cnc', () => {
     render(<LandingNavbar />);
-    expect(screen.getByText(/T-MAINT/i)).toBeTruthy();
+    expect(screen.getByText(/T-Maint/i)).toBeTruthy();
     const cncLinks = screen.getAllByRole('link', { name: /Atendimento CNC em Campo/i });
     expect(cncLinks.length).toBeGreaterThan(0);
     expect(cncLinks[0].getAttribute('href')).toBe('/servicos-cnc');
@@ -33,20 +33,20 @@ describe('Landing Page Components (SaaS Repositioning)', () => {
   it('renders HeroSection with new SaaS headline, authority badges and CTAs', () => {
     render(<HeroSection whatsappUrlSoftware="https://wa.me/test-soft" />);
     expect(
-      screen.getByText(/O Software de Gestão de Manutenção Criado para o/i)
+      screen.getByRole('heading', { level: 1, name: /Manutenção sob controle, do chão de fábrica ao faturamento/i })
     ).toBeTruthy();
-    expect(
-      screen.getByText(/Chão de Fábrica e Serviços Técnicos/i)
-    ).toBeTruthy();
-    expect(
-      screen.getByText(/Elimine o papel rasurado, os apontamentos perdidos no WhatsApp e a conferência manual de horas/i)
-    ).toBeTruthy();
-    expect(screen.getByText(/EXPERTISE WEG/i)).toBeTruthy();
-    expect(screen.getByText(/SOFTWARE CMMS & GESTÃO DE CAMPO INDUSTRIAL/i)).toBeTruthy();
-    
-    // Check CTAs
-    expect(screen.getByText(/Iniciar Demonstração Gratuita/i)).toBeTruthy();
-    expect(screen.getByText(/Ver Demonstração Prática/i)).toBeTruthy();
+    expect(screen.getByText(/Ordens de serviço no celular, laudo assinado na hora/i)).toBeTruthy();
+    expect(screen.getByText(/Criado por técnico com 7 anos na WEG/i)).toBeTruthy();
+    expect(screen.getByText(/Dados isolados por empresa/i)).toBeTruthy();
+
+    // CTAs: demonstração via WhatsApp e âncora para os módulos
+    const demo = screen.getByRole('link', { name: /Agendar demonstração/i });
+    expect(demo.getAttribute('href')).toBe('https://wa.me/test-soft');
+    const tour = screen.getByRole('link', { name: /Ver o sistema por dentro/i });
+    expect(tour.getAttribute('href')).toBe('#plataforma');
+
+    // A prévia do produto deixa claro que usa dados de exemplo
+    expect(screen.getByText(/Painel do T-Maint com dados de exemplo/i)).toBeTruthy();
   });
 
   it('renders BeforeAfterSection with 4 critical questions and pain matrix', () => {
@@ -152,7 +152,7 @@ describe('Landing Page Components (SaaS Repositioning)', () => {
   it('renders LandingPage in full 100% SaaS sequence without FieldServicesSection', () => {
     render(<LandingPage />);
     // Verify SaaS sections are present
-    expect(screen.getByText(/O Software de Gestão de Manutenção Criado para o/i)).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: /Manutenção sob controle/i })).toBeTruthy();
     expect(screen.getByText(/Cockpit & Ordens de Serviço/i)).toBeTruthy();
     const proIndustrialElements = screen.getAllByText(/Pro Industrial/i);
     expect(proIndustrialElements.length).toBeGreaterThan(0);

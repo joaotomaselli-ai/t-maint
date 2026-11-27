@@ -59,8 +59,8 @@ function Configuracoes() {
   return (
     <div className="space-y-6 max-w-3xl">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
-        <p className="text-muted-foreground mt-1">Dados da empresa e gestão de usuários</p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Configurações</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Dados da empresa e gestão de usuários</p>
       </header>
 
       <Tabs defaultValue="empresa">

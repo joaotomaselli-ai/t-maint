@@ -418,7 +418,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-2">
             <Calculator className="h-4 w-4" /> Propostas Comerciais & Orçamentos
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Orçamentos de Serviços</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px] text-foreground">Orçamentos</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Gere propostas ágeis, envie via WhatsApp, imprima PDFs profissionais e converta em Ordens de Serviço em 1 clique.
           </p>
@@ -435,10 +435,10 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total em Aberto</p>
-              <p className="text-2xl font-black text-amber-600 mt-1">{money(totalOpen)}</p>
+              <p className="text-2xl font-semibold text-amber-600 mt-1">{money(totalOpen)}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">Aguardando aprovação</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+            <div className="h-11 w-11 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center">
               <Clock className="h-6 w-6" />
             </div>
           </CardContent>
@@ -448,10 +448,10 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Aprovado</p>
-              <p className="text-2xl font-black text-emerald-600 mt-1">{money(totalApproved)}</p>
+              <p className="text-2xl font-semibold text-emerald-600 mt-1">{money(totalApproved)}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">Fechados & Em execução</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+            <div className="h-11 w-11 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
               <CheckCircle2 className="h-6 w-6" />
             </div>
           </CardContent>
@@ -461,10 +461,10 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Taxa de Conversão</p>
-              <p className="text-2xl font-black text-primary mt-1">{conversionRate}%</p>
+              <p className="text-2xl font-semibold text-primary mt-1">{conversionRate}%</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">Aprovados / Total</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <div className="h-11 w-11 rounded-md bg-primary/10 text-primary flex items-center justify-center">
               <TrendingUp className="h-6 w-6" />
             </div>
           </CardContent>
@@ -474,10 +474,10 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total de Propostas</p>
-              <p className="text-2xl font-black text-foreground mt-1">{quotes.length}</p>
+              <p className="text-2xl font-semibold text-foreground mt-1">{quotes.length}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">Cadastradas no sistema</p>
             </div>
-            <div className="h-11 w-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+            <div className="h-11 w-11 rounded-md bg-blue-500/10 text-blue-600 flex items-center justify-center">
               <FileText className="h-6 w-6" />
             </div>
           </CardContent>
@@ -600,7 +600,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
 
                         {/* Total Amount */}
                         <TableCell>
-                          <div className="font-black text-sm text-foreground">
+                          <div className="font-semibold text-sm text-foreground">
                             {money(quote.totalAmount)}
                           </div>
                           {quote.discountAmount > 0 && (
@@ -735,7 +735,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
 
           <div className="space-y-5 py-2">
             {/* ETAPA 1: CLIENTE E MÁQUINA */}
-            <div className="bg-muted/30 p-4 rounded-xl border space-y-3">
+            <div className="bg-muted/30 p-4 rounded-md border space-y-3">
               <div className="font-bold text-sm text-foreground flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-primary" /> 1. Dados do Cliente & Equipamento
               </div>
@@ -814,7 +814,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
             </div>
 
             {/* ETAPA 2: ADIÇÃO DE ITENS (SERVIÇOS E PEÇAS) */}
-            <div className="bg-muted/30 p-4 rounded-xl border space-y-4">
+            <div className="bg-muted/30 p-4 rounded-md border space-y-4">
               <div className="flex items-center justify-between">
                 <div className="font-bold text-sm text-foreground flex items-center gap-2">
                   <Wrench className="h-4 w-4 text-primary" /> 2. Itens & Serviços da Proposta
@@ -963,7 +963,7 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
             </div>
 
             {/* ETAPA 3: DESLOCAMENTO, DESCONTOS & TOTAL */}
-            <div className="bg-muted/30 p-4 rounded-xl border grid sm:grid-cols-3 gap-3 items-end">
+            <div className="bg-muted/30 p-4 rounded-md border grid sm:grid-cols-3 gap-3 items-end">
               <div className="grid gap-1.5">
                 <Label className="text-xs font-semibold">Deslocamento (Km)</Label>
                 <Input
@@ -999,19 +999,19 @@ Ficamos à disposição para esclarecer qualquer dúvida ou agendar a execução
             </div>
 
             {/* RESUMO TOTAL DA PROPOSTA */}
-            <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="bg-primary/5 border border-primary/20 p-4 rounded-md flex flex-col sm:flex-row justify-between items-center gap-3">
               <div className="text-xs text-muted-foreground space-y-0.5">
                 <div>Serviços: <b>{fmtCurrency(calculatedServicesTotal)}</b> · Peças: <b>{fmtCurrency(calculatedProductsTotal)}</b></div>
                 <div>Deslocamento: <b>{fmtCurrency(calculatedTravelTotal)}</b> · Desconto: <b>{fmtCurrency(formDiscountAmount)}</b></div>
               </div>
               <div className="text-right">
                 <span className="text-xs uppercase font-bold text-muted-foreground mr-2">Valor Total:</span>
-                <span className="text-2xl font-black text-primary">{fmtCurrency(calculatedGrandTotal)}</span>
+                <span className="text-2xl font-semibold text-primary">{fmtCurrency(calculatedGrandTotal)}</span>
               </div>
             </div>
 
             {/* ETAPA 4: CONDIÇÕES COMERCIAIS & OBSERVAÇÕES */}
-            <div className="bg-muted/30 p-4 rounded-xl border space-y-3">
+            <div className="bg-muted/30 p-4 rounded-md border space-y-3">
               <div className="font-bold text-sm text-foreground flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-primary" /> 3. Condições Comerciais & Garantia
               </div>

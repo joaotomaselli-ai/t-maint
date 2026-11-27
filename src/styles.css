@@ -1,6 +1,10 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "@fontsource-variable/ibm-plex-sans/wght.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -30,6 +34,22 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  /* Escala da marca (teal industrial, sem neon). Substitui cyan/teal/sky do Tailwind. */
+  --color-brand-50: #EEFAF7;
+  --color-brand-100: #D4F2EC;
+  --color-brand-200: #A9E3D8;
+  --color-brand-300: #74CDBE;
+  --color-brand-400: #47B5A4;
+  --color-brand-500: #2B9C8B;
+  --color-brand-600: #1F7E72;
+  --color-brand-700: #1B655D;
+  --color-brand-800: #19514B;
+  --color-brand-900: #17433F;
+  --color-brand-950: #0A2A27;
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -41,103 +61,123 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --shadow-elegant: 0 10px 30px -10px color-mix(in oklab, var(--primary) 25%, transparent);
+  --shadow-elegant: 0 1px 2px 0 oklch(0 0 0 / 0.08), 0 4px 12px -4px oklch(0 0 0 / 0.12);
   --shadow-card: 0 1px 3px 0 oklch(0 0 0 / 0.06), 0 1px 2px 0 oklch(0 0 0 / 0.04);
 }
 
-/* Light Mode (High Contrast for Daytime/Fieldwork) */
+/* ==========================================================================
+   T-Maint — paleta "painel de instrumentos" (princípio ISA-101)
+   Base neutra em grafite/cinza. Cor só comunica estado:
+   vermelho = parada/urgente · âmbar = atenção · verde = OK · azul = informação.
+   A cor da marca (teal) fica restrita a ações primárias e navegação ativa.
+   ========================================================================== */
+
+/* Modo claro — alto contraste para uso em campo, sob sol */
 :root {
-  --radius: 0.75rem;
-  --background: #F8FAFC;
-  --foreground: #0F172A;
+  color-scheme: light;
+  --radius: 0.5rem;
+
+  --background: #F4F5F7;
+  --foreground: #111418;
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #111418;
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  
-  --primary: #0F766E;
+  --popover-foreground: #111418;
+
+  --primary: #0B6E64;
   --primary-foreground: #FFFFFF;
-  
-  --secondary: #F1F5F9;
-  --secondary-foreground: #0F172A;
-  
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  
-  --accent: #00F5D4;
-  --accent-foreground: #0B0F17;
-  
-  --destructive: #EF4444;
+
+  --secondary: #ECEEF1;
+  --secondary-foreground: #111418;
+
+  --muted: #ECEEF1;
+  --muted-foreground: #586273;
+
+  --accent: #E6E9ED;
+  --accent-foreground: #111418;
+
+  --destructive: #C8282E;
   --destructive-foreground: #FFFFFF;
-  --success: #10B981;
+  --success: #17804F;
   --success-foreground: #FFFFFF;
-  --warning: #F59E0B;
-  --warning-foreground: #0B0F17;
-  
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #00F5D4;
-  
-  --sidebar: #0B0F17;
-  --sidebar-foreground: #F8FAFC;
-  --sidebar-primary: #00F5D4;
-  --sidebar-primary-foreground: #0B0F17;
-  --sidebar-accent: #131A26;
-  --sidebar-accent-foreground: #00F5D4;
-  --sidebar-border: #1F293D;
-  --sidebar-ring: #00F5D4;
+  --warning: #B36B00;
+  --warning-foreground: #FFFFFF;
+  --info: #1F5FBF;
+  --info-foreground: #FFFFFF;
+
+  --border: #D9DDE3;
+  --input: #C9CED6;
+  --ring: #0B6E64;
+
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #2A313B;
+  --sidebar-primary: #0B6E64;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #ECEEF1;
+  --sidebar-accent-foreground: #111418;
+  --sidebar-border: #D9DDE3;
+  --sidebar-ring: #0B6E64;
 }
 
-/* Dark Industrial Theme (Cockpit Telemetry #0B0F17) */
+/* Modo escuro — grafite industrial, sem neon */
 .dark, :root:has(.dark) {
-  --radius: 0.75rem;
-  --background: #0B0F17;
-  --foreground: #F3F4F6;
-  --card: #131A26;
-  --card-foreground: #F3F4F6;
-  --popover: #131A26;
-  --popover-foreground: #F3F4F6;
-  
-  --primary: #00F5D4;
-  --primary-foreground: #0B0F17;
-  
-  --secondary: #1F293D;
-  --secondary-foreground: #F3F4F6;
-  
-  --muted: #182232;
-  --muted-foreground: #94A3B8;
-  
-  --accent: #00F5D4;
-  --accent-foreground: #0B0F17;
-  
-  --destructive: #EF4444;
+  color-scheme: dark;
+  --background: #0E1116;
+  --foreground: #E7EAEE;
+  --card: #151A21;
+  --card-foreground: #E7EAEE;
+  --popover: #181E26;
+  --popover-foreground: #E7EAEE;
+
+  --primary: #2BB3A1;
+  --primary-foreground: #04201C;
+
+  --secondary: #1E252E;
+  --secondary-foreground: #E7EAEE;
+
+  --muted: #1A2028;
+  --muted-foreground: #8D97A6;
+
+  --accent: #222A34;
+  --accent-foreground: #E7EAEE;
+
+  --destructive: #E5484D;
   --destructive-foreground: #FFFFFF;
-  --success: #10B981;
-  --success-foreground: #FFFFFF;
-  --warning: #F59E0B;
-  --warning-foreground: #0B0F17;
-  
-  --border: #1F293D;
-  --input: #1F293D;
-  --ring: #00F5D4;
-  
-  --sidebar: #0B0F17;
-  --sidebar-foreground: #F3F4F6;
-  --sidebar-primary: #00F5D4;
-  --sidebar-primary-foreground: #0B0F17;
-  --sidebar-accent: #131A26;
-  --sidebar-accent-foreground: #00F5D4;
-  --sidebar-border: #1F293D;
-  --sidebar-ring: #00F5D4;
+  --success: #3DB07A;
+  --success-foreground: #04170E;
+  --warning: #E7A33E;
+  --warning-foreground: #1F1300;
+  --info: #5B9BF0;
+  --info-foreground: #06162E;
+
+  --border: #262E39;
+  --input: #2F3844;
+  --ring: #2BB3A1;
+
+  --sidebar: #11151B;
+  --sidebar-foreground: #C4CBD5;
+  --sidebar-primary: #2BB3A1;
+  --sidebar-primary-foreground: #04201C;
+  --sidebar-accent: #1C232C;
+  --sidebar-accent-foreground: #E7EAEE;
+  --sidebar-border: #232A34;
+  --sidebar-ring: #2BB3A1;
 }
 
 @layer base {
   * { border-color: var(--color-border); }
+  html { -webkit-tap-highlight-color: transparent; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-feature-settings: "cv02","cv03","cv04","cv11";
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  h1, h2, h3 { text-wrap: balance; letter-spacing: -0.015em; }
+  button, a, [role="button"], input, select, textarea { touch-action: manipulation; }
+  input::placeholder, textarea::placeholder { text-transform: none; }
+  .font-mono { font-variant-numeric: tabular-nums; letter-spacing: 0; }
 }
 
 @keyframes border-beam {
@@ -231,7 +271,7 @@ button:active:not(:disabled),
 .skeleton-shimmer {
   position: relative;
   overflow: hidden;
-  background-color: rgba(30, 41, 59, 0.5);
+  background-color: var(--color-muted);
 }
 
 .skeleton-shimmer::after {
@@ -242,7 +282,7 @@ button:active:not(:disabled),
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.05) 50%,
+    color-mix(in oklab, var(--color-foreground) 6%, transparent) 50%,
     transparent 100%
   );
   animation: shimmerSlide 1.8s infinite ease-in-out;

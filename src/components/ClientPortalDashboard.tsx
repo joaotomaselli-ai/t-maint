@@ -201,14 +201,14 @@ export function ClientPortalDashboard() {
   return (
     <div className="space-y-6">
       {/* HEADER / WELCOME BANNER */}
-      <div className="relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-lg border border-brand-500/20 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-semibold">
               <Building2 className="h-3.5 w-3.5" /> Portal de Acompanhamento Técnico
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
               {clientName || "Portal do Cliente"}
             </h1>
             <p className="text-sm text-slate-300 max-w-2xl">
@@ -219,7 +219,7 @@ export function ClientPortalDashboard() {
           <div className="flex flex-wrap items-center gap-3">
             <Button
               onClick={handleExportHistoryPdf}
-              className="gap-2 font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-900/30"
+              className="gap-2 font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/30"
             >
               <Download className="h-4 w-4" />
               {selectedMachine !== "todas" ? "PDF do Equipamento" : "PDF do Histórico Geral"}
@@ -232,7 +232,7 @@ export function ClientPortalDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+            <div className="p-3 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
               <Cpu className="h-6 w-6" />
             </div>
             <div>
@@ -244,7 +244,7 @@ export function ClientPortalDashboard() {
 
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+            <div className="p-3 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
               <Wrench className="h-6 w-6" />
             </div>
             <div>
@@ -256,7 +256,7 @@ export function ClientPortalDashboard() {
 
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+            <div className="p-3 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
               <Clock className="h-6 w-6" />
             </div>
             <div>
@@ -268,7 +268,7 @@ export function ClientPortalDashboard() {
 
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <div className="p-3 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <Calendar className="h-6 w-6" />
             </div>
             <div>
@@ -284,7 +284,7 @@ export function ClientPortalDashboard() {
         <CardHeader className="pb-3 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-cyan-600" />
+              <SlidersHorizontal className="h-4 w-4 text-brand-600" />
               <CardTitle className="text-base font-semibold">Filtros de Pesquisa & Histórico</CardTitle>
             </div>
             {(selectedMachine !== "todas" || selectedType !== "todos" || searchTerm || startDate || endDate) && (
@@ -376,11 +376,11 @@ export function ClientPortalDashboard() {
         <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
           <div>
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <History className="h-4 w-4 text-cyan-600" />
+              <History className="h-4 w-4 text-brand-600" />
               Histórico de Ordens de Serviço ({filteredReports.length})
             </CardTitle>
             {selectedMachine !== "todas" && (
-              <p className="text-xs text-cyan-600 dark:text-cyan-400 font-medium mt-0.5">
+              <p className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-0.5">
                 Exibindo apenas manutenções do equipamento: <strong>{selectedMachine}</strong>
               </p>
             )}
@@ -425,7 +425,7 @@ export function ClientPortalDashboard() {
 
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span className="font-semibold text-foreground flex items-center gap-1">
-                          <Cpu className="h-3.5 w-3.5 text-cyan-600" /> {report.machine || "Equipamento não informado"}
+                          <Cpu className="h-3.5 w-3.5 text-brand-600" /> {report.machine || "Equipamento não informado"}
                         </span>
                         {report.requester && <span>Solicitante: {report.requester}</span>}
                         {report.technician && <span>Técnico: {report.technician}</span>}
@@ -450,7 +450,7 @@ export function ClientPortalDashboard() {
                         variant="default"
                         size="sm"
                         onClick={() => handleExportSinglePdf(report)}
-                        className="gap-1.5 text-xs bg-cyan-600 hover:bg-cyan-500 text-white"
+                        className="gap-1.5 text-xs bg-brand-600 hover:bg-brand-500 text-white"
                       >
                         <Download className="h-3.5 w-3.5" /> PDF
                       </Button>
@@ -544,7 +544,7 @@ export function ClientPortalDashboard() {
                 </Button>
                 <Button
                   onClick={() => handleExportSinglePdf(selectedOsForView)}
-                  className="gap-2 bg-cyan-600 hover:bg-cyan-500 text-white"
+                  className="gap-2 bg-brand-600 hover:bg-brand-500 text-white"
                 >
                   <Download className="h-4 w-4" /> Emitir PDF da OS
                 </Button>

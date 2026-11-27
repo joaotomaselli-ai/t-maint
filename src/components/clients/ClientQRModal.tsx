@@ -42,7 +42,7 @@ export function ClientQRModal({ isOpen, onClose, client }: ClientQRModalProps) {
       <DialogContent className="max-w-md bg-slate-950 border border-slate-800 text-white p-6 shadow-2xl">
         <DialogHeader className="border-b border-slate-800 pb-4">
           <DialogTitle className="text-lg font-bold flex items-center gap-2 text-white">
-            <QrCode className="h-5 w-5 text-cyan-400" />
+            <QrCode className="h-5 w-5 text-brand-400" />
             Etiqueta QR do Cliente
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-400">
@@ -54,13 +54,13 @@ export function ClientQRModal({ isOpen, onClose, client }: ClientQRModalProps) {
         <div className="my-4">
           <div
             ref={printRef}
-            className="p-6 rounded-2xl bg-white text-slate-950 border-2 border-slate-300 shadow-inner flex flex-col items-center text-center font-mono"
+            className="p-6 rounded-lg bg-white text-slate-950 border-2 border-slate-300 shadow-inner flex flex-col items-center text-center font-mono"
           >
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-cyan-700 mb-1">
-              <Building2 className="h-4 w-4 text-cyan-600" /> {companyName.toUpperCase()}
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-700 mb-1">
+              <Building2 className="h-4 w-4 text-brand-600" /> {companyName.toUpperCase()}
             </div>
             
-            <div className="text-base font-extrabold uppercase text-slate-950 leading-tight">
+            <div className="text-base font-semibold uppercase text-slate-950 leading-tight">
               {client.name}
             </div>
             
@@ -71,7 +71,7 @@ export function ClientQRModal({ isOpen, onClose, client }: ClientQRModalProps) {
             )}
 
             {/* High-Contrast High-Res QR Code */}
-            <div className="my-4 p-3.5 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="my-4 p-3.5 rounded-md bg-white border border-slate-200 shadow-sm">
               <QRCodeSVG
                 value={clientLoginUrl}
                 size={160}
@@ -90,7 +90,7 @@ export function ClientQRModal({ isOpen, onClose, client }: ClientQRModalProps) {
 
             <div className="mt-3 pt-2 border-t border-slate-200 text-[9px] text-slate-400 flex items-center justify-between w-full">
               <span>t-maint.com.br</span>
-              <span className="flex items-center gap-1 font-semibold text-cyan-700">
+              <span className="flex items-center gap-1 font-semibold text-brand-700">
                 <ShieldCheck className="h-3.5 w-3.5" /> ACESSO SEGURO
               </span>
             </div>
@@ -103,7 +103,7 @@ export function ClientQRModal({ isOpen, onClose, client }: ClientQRModalProps) {
             href={clientLoginUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-xs font-mono text-cyan-400 hover:underline flex items-center gap-1"
+            className="text-xs font-mono text-brand-400 hover:underline flex items-center gap-1"
           >
             <ExternalLink className="h-3.5 w-3.5" /> Testar Link
           </a>
@@ -118,7 +118,7 @@ export function ClientQRModal({ isOpen, onClose, client }: ClientQRModalProps) {
             </Button>
             <Button
               onClick={() => handlePrint()}
-              className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+              className="bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold font-mono text-xs"
             >
               <Printer className="h-3.5 w-3.5 mr-1.5" /> Imprimir Etiqueta
             </Button>

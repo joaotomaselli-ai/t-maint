@@ -27,7 +27,7 @@ import {
 } from "@/lib/api";
 import { useMoney } from "@/hooks/use-money-visibility";
 import { useOSStatus, type ServiceReportStatus, type ServiceReportPriority } from "@/hooks/use-os-status";
-import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus , Loader2, QrCode } from "lucide-react";
+import { Plus, Pencil, Trash2, FileDown, Wrench, Search, Upload, X, CalendarPlus , Loader2, QrCode, SlidersHorizontal } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -84,6 +84,7 @@ function Atividades() {
   const qc = useQueryClient();
   const { getStatus, getPriority, updateStatus } = useOSStatus();
   const [open, setOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const isSavingRef = useRef(false);
   const [editing, setEditing] = useState<Editing>(empty());
@@ -108,6 +109,7 @@ function Atividades() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+  const activeFilterCount = [filterClient !== "all", filterType !== "all", filterStatus !== "all", !!dateFrom, !!dateTo].filter(Boolean).length;
   const [pageSize, setPageSize] = useState<number>(20);
   const [page, setPage] = useState<number>(1);
   const [pdfChoice, setPdfChoice] = useState<PdfChoice>({ open: false });
@@ -352,24 +354,42 @@ function Atividades() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ordem de Serviço</h1>
-          <p className="text-muted-foreground mt-1">
-            {isClient ? "Consulte os atendimentos técnicos e emita relatórios em PDF" : "Registre cada atendimento de manutenção"}
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Ordens de serviço</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isClient ? "Consulte os atendimentos técnicos e emita relatórios em PDF" : "Registre e acompanhe cada atendimento de manutenção"}
           </p>
         </div>
         {!isClient && (
-          <Button onClick={startNew} size="lg" className="gap-2"><Plus className="h-4 w-4" /> Ordem de Serviço</Button>
+          <Button onClick={startNew} className="h-10 gap-2"><Plus aria-hidden="true" className="h-4 w-4" /> Nova OS</Button>
         )}
       </header>
 
       <Card>
-        <CardContent className="p-4 space-y-3">
-          <div className={`grid gap-3 ${isClient ? "sm:grid-cols-[1fr_140px_160px]" : "sm:grid-cols-[1fr_180px_140px_160px]"}`}>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, serviço..." className="pl-9" />
+        <CardContent className="flex flex-col gap-3 p-3 sm:p-4">
+          <div className="flex gap-2 sm:hidden">
+            <div className="relative flex-1">
+              <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar OS, máquina, serviço…" aria-label="Buscar ordens de serviço" className="h-11 pl-9" />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 shrink-0 gap-2"
+              aria-expanded={filtersOpen}
+              aria-controls="filtros-os"
+              onClick={() => setFiltersOpen(o => !o)}
+            >
+              <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
+              Filtros
+              {activeFilterCount > 0 && <span className="rounded bg-primary px-1.5 font-mono text-xs text-primary-foreground">{activeFilterCount}</span>}
+            </Button>
+          </div>
+          <div id="filtros-os" className={`${filtersOpen ? "grid" : "hidden"} sm:grid gap-3 ${isClient ? "sm:grid-cols-[1fr_140px_160px]" : "sm:grid-cols-[1fr_180px_140px_160px]"}`}>
+            <div className="relative hidden sm:block">
+              <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por OS, máquina, serviço…" aria-label="Buscar ordens de serviço" className="pl-9" />
             </div>
             {!isClient && (
               <Select value={filterClient} onValueChange={setFilterClient}>
@@ -392,13 +412,13 @@ function Atividades() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="aguardando">⏳ Aguardando</SelectItem>
-                <SelectItem value="iniciada">🚀 Iniciada</SelectItem>
-                <SelectItem value="fechada">✅ Fechada</SelectItem>
+                <SelectItem value="aguardando"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-muted-foreground" />Aguardando</SelectItem>
+                <SelectItem value="iniciada"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-info" />Iniciada</SelectItem>
+                <SelectItem value="fechada"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-success" />Fechada</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_180px] sm:items-end">
+          <div className={`${filtersOpen ? "grid" : "hidden"} sm:grid gap-3 sm:grid-cols-[1fr_1fr_auto_180px] sm:items-end`}>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Período — de</Label>
               <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
@@ -430,10 +450,10 @@ function Atividades() {
 
       {filtered.length > 0 && (
         <div className={`grid ${isClient ? "grid-cols-2" : "grid-cols-3"} gap-3 text-sm`}>
-          <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Atendimentos filtrados</div><div className="text-xl font-bold mt-1">{filtered.length}</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Horas totais</div><div className="text-xl font-bold mt-1">{fmtHours(totals.hours)}</div></CardContent></Card>
+          <Card><CardContent className="p-3 sm:p-4"><div className="text-muted-foreground text-xs">OS filtradas</div><div className="mt-1 font-mono text-base font-semibold sm:text-xl">{filtered.length}</div></CardContent></Card>
+          <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Horas totais</div><div className="mt-1 font-mono text-base font-semibold sm:text-xl">{fmtHours(totals.hours)}</div></CardContent></Card>
           {!isClient && (
-            <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Valor total</div><div className="text-xl font-bold mt-1 text-primary">{money(totals.value)}</div></CardContent></Card>
+            <Card><CardContent className="p-4"><div className="text-muted-foreground text-xs">Valor total</div><div className="mt-1 truncate font-mono text-base font-semibold sm:text-xl">{money(totals.value)}</div></CardContent></Card>
           )}
         </div>
       )}
@@ -459,20 +479,20 @@ function Atividades() {
             const currentStatus = getStatus(r.id);
             const currentPriority = getPriority(r.id);
             const cardBorder = {
-              urgente: "border-l-4 border-l-red-500",
-              alta: "border-l-4 border-l-amber-500",
-              normal: "border-l-4 border-l-blue-500",
-              baixa: "border-l-4 border-l-slate-400",
+              urgente: "border-l-4 border-l-destructive",
+              alta: "border-l-4 border-l-warning",
+              normal: "",
+              baixa: "",
             }[currentPriority];
 
             return (
-              <Card key={r.id} className={`hover:shadow-elegant transition-all ${cardBorder}`}>
+              <Card key={r.id} className={`transition-colors hover:border-muted-foreground/40 ${cardBorder}`}>
                 <CardContent className="p-4 sm:p-5">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-mono font-bold bg-muted px-2 py-0.5 rounded border">OS #{r.orderNumber}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.type === "corretiva" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
+                        <span className="font-mono text-xs font-medium text-muted-foreground">OS #{r.orderNumber}</span>
+                        <span className="rounded border border-border px-2 py-0.5 text-xs text-muted-foreground">
                           {r.type === "corretiva" ? "Corretiva" : "Preventiva"}
                         </span>
                         
@@ -490,13 +510,13 @@ function Atividades() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="aguardando">⏳ Aguardando</SelectItem>
-                            <SelectItem value="iniciada">🚀 Iniciada</SelectItem>
+                            <SelectItem value="aguardando"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-muted-foreground" />Aguardando</SelectItem>
+                            <SelectItem value="iniciada"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-info" />Iniciada</SelectItem>
                             {(isAdmin || isMaster) ? (
-                              <SelectItem value="fechada">✅ Fechada</SelectItem>
+                              <SelectItem value="fechada"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-success" />Fechada</SelectItem>
                             ) : (
                               <SelectItem value="fechada" disabled className="opacity-50">
-                                🔒 Fechada (Apenas Admins)
+                                Fechada (só administradores)
                               </SelectItem>
                             )}
                           </SelectContent>
@@ -522,10 +542,10 @@ function Atividades() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="baixa">⚪ Baixa</SelectItem>
-                            <SelectItem value="normal">🔵 Normal</SelectItem>
-                            <SelectItem value="alta">🟠 Alta</SelectItem>
-                            <SelectItem value="urgente">🔴 Urgente</SelectItem>
+                            <SelectItem value="baixa"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-muted-foreground/50" />Baixa</SelectItem>
+                            <SelectItem value="normal"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-info" />Normal</SelectItem>
+                            <SelectItem value="alta"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-warning" />Alta</SelectItem>
+                            <SelectItem value="urgente"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />Urgente</SelectItem>
                           </SelectContent>
                         </Select>
 
@@ -1063,13 +1083,13 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
               >
                 <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="aguardando">⏳ Aguardando atendimento</SelectItem>
-                  <SelectItem value="iniciada">🚀 Iniciada / Em atendimento</SelectItem>
+                  <SelectItem value="aguardando"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-muted-foreground" />Aguardando atendimento</SelectItem>
+                  <SelectItem value="iniciada"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-info" />Iniciada / Em atendimento</SelectItem>
                   {isAdmin ? (
-                    <SelectItem value="fechada">✅ Fechada / Concluída</SelectItem>
+                    <SelectItem value="fechada"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-success" />Fechada / Concluída</SelectItem>
                   ) : (
                     <SelectItem value="fechada" disabled className="opacity-50">
-                      🔒 Fechada / Concluída (Apenas Admins)
+                      Fechada / concluída (só administradores)
                     </SelectItem>
                   )}
                 </SelectContent>
@@ -1092,10 +1112,10 @@ function ActivityDialog({ open, onOpenChange, editing, setEditing, extras, setEx
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="baixa">⚪ Baixa</SelectItem>
-                  <SelectItem value="normal">🔵 Normal</SelectItem>
-                  <SelectItem value="alta">🟠 Alta</SelectItem>
-                  <SelectItem value="urgente">🔴 Urgente</SelectItem>
+                  <SelectItem value="baixa"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-muted-foreground/50" />Baixa</SelectItem>
+                  <SelectItem value="normal"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-info" />Normal</SelectItem>
+                  <SelectItem value="alta"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-warning" />Alta</SelectItem>
+                  <SelectItem value="urgente"><span aria-hidden="true" className="mr-1.5 inline-block h-2 w-2 rounded-full bg-destructive" />Urgente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1735,7 +1755,7 @@ function OSListSkeleton() {
     <div className="space-y-4 animate-fade-in-up">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-4 rounded-xl bg-card border border-border space-y-2">
+          <div key={i} className="p-4 rounded-md bg-card border border-border space-y-2">
             <Skeleton className="h-3 w-28" />
             <Skeleton className="h-7 w-20" />
           </div>
@@ -1743,7 +1763,7 @@ function OSListSkeleton() {
       </div>
       <div className="space-y-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="p-5 rounded-2xl bg-card border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div key={i} className="p-5 rounded-lg bg-card border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2">
                 <Skeleton className="h-5 w-20 rounded" />

@@ -261,7 +261,7 @@ function MasterPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-2">
             <ShieldCheck className="h-4 w-4" /> Painel Master de Controle
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Gestão de Empresas & Assinaturas</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px] text-foreground">Gestão de Empresas & Assinaturas</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Controle de vigência, renovações, bloqueio de administradores e cobrança.
           </p>
@@ -445,7 +445,7 @@ function MasterPage() {
               <p className="text-xs font-semibold text-muted-foreground uppercase">Total de Empresas</p>
               <p className="text-2xl font-bold text-foreground mt-1">{totalCompanies}</p>
             </div>
-            <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-md bg-blue-500/10 text-blue-600 flex items-center justify-center">
               <Building className="h-5 w-5" />
             </div>
           </CardContent>
@@ -457,7 +457,7 @@ function MasterPage() {
               <p className="text-xs font-semibold text-muted-foreground uppercase">Assinaturas Ativas</p>
               <p className="text-2xl font-bold text-emerald-600 mt-1">{activeCompanies}</p>
             </div>
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
               <CheckCircle2 className="h-5 w-5" />
             </div>
           </CardContent>
@@ -469,7 +469,7 @@ function MasterPage() {
               <p className="text-xs font-semibold text-muted-foreground uppercase">Vencendo em ≤ 5 dias</p>
               <p className="text-2xl font-bold text-amber-600 mt-1">{expiringSoonCompanies}</p>
             </div>
-            <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center">
               <AlertTriangle className="h-5 w-5" />
             </div>
           </CardContent>
@@ -481,7 +481,7 @@ function MasterPage() {
               <p className="text-xs font-semibold text-muted-foreground uppercase">Bloqueadas / Expiradas</p>
               <p className="text-2xl font-bold text-rose-600 mt-1">{blockedOrExpired}</p>
             </div>
-            <div className="h-10 w-10 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-md bg-rose-500/10 text-rose-600 flex items-center justify-center">
               <XCircle className="h-5 w-5" />
             </div>
           </CardContent>

@@ -70,12 +70,12 @@ export function InteractiveComparison() {
     <div className="w-full">
       {/* Mode Switcher Tabs */}
       <div className="flex justify-center mb-8">
-        <div className="inline-flex p-1.5 rounded-xl bg-[#131A26] border border-[#1F293D] shadow-lg">
+        <div className="inline-flex p-1.5 rounded-md bg-card border border-border shadow-lg">
           <button
             onClick={() => setActiveMode("split")}
             className={`px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
               activeMode === "split"
-                ? "bg-[#00F5D4] text-[#0B0F17] shadow-[0_0_15px_rgba(0,245,212,0.3)]"
+                ? "bg-primary text-primary-foreground"
                 : "text-slate-400 hover:text-white"
             }`}
           >
@@ -97,7 +97,7 @@ export function InteractiveComparison() {
             onClick={() => setActiveMode("after")}
             className={`px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
               activeMode === "after"
-                ? "bg-[#00F5D4]/20 text-[#00F5D4] border border-[#00F5D4]/40"
+                ? "bg-primary/20 text-primary border border-primary/40"
                 : "text-slate-400 hover:text-white"
             }`}
           >
@@ -111,19 +111,19 @@ export function InteractiveComparison() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* BEFORE CARD */}
         {(activeMode === "split" || activeMode === "before") && (
-          <div className={`relative rounded-2xl bg-[#131A26]/80 border border-rose-900/40 p-6 md:p-8 backdrop-blur-md overflow-hidden transition-all duration-300 ${
+          <div className={`relative rounded-lg bg-card/80 border border-rose-900/40 p-6 md:p-8 backdrop-blur-md overflow-hidden transition-all duration-300 ${
             activeMode === "before" ? "lg:col-span-2 max-w-3xl mx-auto w-full" : ""
           }`}>
             {/* Header */}
             <div className="flex items-center justify-between pb-6 mb-6 border-b border-rose-900/30">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                <div className="w-10 h-10 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     Processo Tradicional
-                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
                       Gargalos Operacionais
                     </span>
                   </h3>
@@ -139,7 +139,7 @@ export function InteractiveComparison() {
                 return (
                   <div 
                     key={idx} 
-                    className="flex items-start gap-3.5 p-3.5 rounded-xl bg-[#0B0F17]/60 border border-rose-900/20 hover:border-rose-800/40 transition-colors"
+                    className="flex items-start gap-3.5 p-3.5 rounded-md bg-background/60 border border-rose-900/20 hover:border-rose-800/40 transition-colors"
                   >
                     <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
                       <Icon className="w-4 h-4" />
@@ -158,7 +158,7 @@ export function InteractiveComparison() {
             </div>
 
             {/* Bottom Tag */}
-            <div className="mt-6 pt-4 border-t border-[#1F293D] flex items-center justify-between text-xs text-rose-400/80 font-mono">
+            <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-xs text-rose-400/80">
               <span>Status: Baixa rastreabilidade</span>
               <span>Risco de perdas financeiras</span>
             </div>
@@ -167,22 +167,22 @@ export function InteractiveComparison() {
 
         {/* AFTER CARD */}
         {(activeMode === "split" || activeMode === "after") && (
-          <div className={`relative rounded-2xl bg-[#131A26]/90 border border-[#1F293D] p-6 md:p-8 backdrop-blur-md overflow-hidden transition-all duration-300 shadow-[0_0_40px_rgba(0,245,212,0.06)] ${
+          <div className={`relative rounded-lg bg-card/90 border border-border p-6 md:p-8 backdrop-blur-md overflow-hidden transition-all duration-300 ${
             activeMode === "after" ? "lg:col-span-2 max-w-3xl mx-auto w-full" : ""
           }`}>
             {/* Feixe Laser BorderBeam em volta do card T-Maint */}
             <BorderBeam size={180} duration={9} delay={0} colorFrom="#00F5D4" colorTo="#3B82F6" />
 
             {/* Header */}
-            <div className="flex items-center justify-between pb-6 mb-6 border-b border-[#1F293D]">
+            <div className="flex items-center justify-between pb-6 mb-6 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#00F5D4]/10 border border-[#00F5D4]/30 flex items-center justify-center text-[#00F5D4]">
+                <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     Com a Plataforma T-MAINT
-                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#00F5D4]/15 text-[#00F5D4] border border-[#00F5D4]/30">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/30">
                       Padrão Industrial
                     </span>
                   </h3>
@@ -198,15 +198,15 @@ export function InteractiveComparison() {
                 return (
                   <div 
                     key={idx} 
-                    className="flex items-start gap-3.5 p-3.5 rounded-xl bg-[#0B0F17]/80 border border-[#1F293D] hover:border-[#00F5D4]/40 transition-colors"
+                    className="flex items-start gap-3.5 p-3.5 rounded-md bg-background/80 border border-border hover:border-primary/40 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-[#00F5D4]/10 text-[#00F5D4] flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
                       <h4 className="text-sm font-semibold text-white flex items-center gap-2">
                         {item.title}
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#00F5D4]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
                       </h4>
                       <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
                         {item.desc}
@@ -218,9 +218,9 @@ export function InteractiveComparison() {
             </div>
 
             {/* Bottom Tag */}
-            <div className="mt-6 pt-4 border-t border-[#1F293D] flex items-center justify-between text-xs text-[#00F5D4] font-mono">
+            <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-xs text-primary">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#00F5D4] animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                 100% Digital & Auditado
               </span>
               <span>Margem líquida blindada</span>

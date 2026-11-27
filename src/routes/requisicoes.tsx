@@ -172,8 +172,8 @@ function Requisicoes() {
     <div className="space-y-6">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Requisições</h1>
-          <p className="text-muted-foreground mt-1">Controle de requisições de materiais e compras futuras.</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Requisições</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Controle de requisições de materiais e compras futuras.</p>
         </div>
         <Button onClick={() => setIsAvulsaOpen(true)} className="gap-2 shrink-0">
           <Plus className="h-4 w-4" />
